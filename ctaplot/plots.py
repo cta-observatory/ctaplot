@@ -1197,6 +1197,7 @@ def plot_angular_res_requirement(cta_site ,ax=None, **kwargs):
     cta_req.site = cta_site
     e_cta, ar_cta = cta_req.get_angular_resolution()
     ax.plot(e_cta, ar_cta, label="CTA requirements {}".format(cta_site), **kwargs)
+    ax.set_xscale('log')
     return ax
 
 
@@ -1502,6 +1503,7 @@ def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
         kwargs['color'] = 'black'
 
     ax.plot(e_cta, ar_cta, label="CTA requirements {}".format(cta_site), **kwargs)
+    ax.set_xscale('log')
     return ax
 
 
