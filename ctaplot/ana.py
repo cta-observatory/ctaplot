@@ -394,7 +394,7 @@ def RQ(x, Q=68):
         return np.percentile(x, Q)
 
 
-def angular_separation_altaz(alt1, az1, alt2, az2, unit='deg'):
+def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
     """
     Compute the angular separation between two pointing direction given with alt-az
 
