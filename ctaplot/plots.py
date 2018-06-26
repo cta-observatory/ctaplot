@@ -1138,9 +1138,13 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
     ax.set_xscale('log')
 
     E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
+    # Angular resolution is traditionnaly presented in degrees
+    RES = np.degrees(RES)
+
     E = ana.logbin_mean(E_bin)
 
-    ax.errorbar(E, RES[:,0], xerr=(E_bin[1:] - E_bin[:-1]) / 2., yerr=(RES[:,0]-RES[:,1], RES[:,2]-RES[:,0]), fmt='o', **kwargs)
+    ax.errorbar(E, RES[:,0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
+                yerr=(RES[:,0]-RES[:,1], RES[:,2]-RES[:,0]), fmt='o', **kwargs)
 
     return ax
 
