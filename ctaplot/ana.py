@@ -418,12 +418,12 @@ def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
         alt2 = np.radians(alt2)
         az2 = np.radians(az2)
 
-    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2)
+    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2) \
                 + np.sin(alt1) * np.sin(alt2)
     cosdelta[cosdelta > 1] = 1.
     cosdelta[cosdelta < -1] = -1.
 
-    ang_sep = np.degrees(np.arccos(cosdelta)) if unit=='deg'
+    ang_sep = np.degrees(np.arccos(cosdelta)) if unit=='deg' \
                 else np.arccos(cosdelta)
 
     return ang_sep
