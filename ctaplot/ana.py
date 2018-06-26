@@ -217,18 +217,18 @@ def get_angles_0pi(angles):
 
 def theta2(RecoAlt, RecoAz, AltSource, AzSource):
     """
-    Compute the theta2
+    Compute the theta2 in radians
 
     Parameters
     ----------
-    RecoAlt: 1d numpy array
-    RecoAz: 1d numpy array
-    AltSource: float
-    AzSource: float
+    RecoAlt: 1d `numpy.ndarray` - reconstructed Altitude in radians
+    RecoAz: 1d `numpy.ndarray` - reconstructed Azimuth in radians
+    AltSource: 1d `numpy.ndarray` - true Altitude in radians
+    AzSource: 1d `numpy.ndarray` -  true Azimuth in radians
 
     Returns
     -------
-    1d numpy array
+    1d `numpy.ndarray`
     """
     assert (len(RecoAz) == len(RecoAlt))
     if len(RecoAlt) == 0:
@@ -240,8 +240,9 @@ def theta2(RecoAlt, RecoAz, AltSource, AzSource):
 
 def angular_resolution(RecoAlt, RecoAz, SimuAlt, SimuAz, Q = 68, conf=1.645):
     """
-    Compute the angular resolution as the Qth (standard being 68) containment radius of theta2
-    with lower and upper limits on this value corresponding to the confidence value required (1.645 for 95% confidence)
+    Compute the angular resolution as the Qth (standard being 68)
+    containment radius of theta2 with lower and upper limits on this value
+    corresponding to the confidence value required (1.645 for 95% confidence)
 
     Parameters
     ----------
@@ -396,7 +397,8 @@ def RQ(x, Q=68):
 
 def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
     """
-    Compute the angular separation between two pointing direction given with alt-az
+    Compute the angular separation in radians or degrees
+    between two pointing direction given with alt-az
 
     Parameters
     ----------
@@ -416,11 +418,13 @@ def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
         alt2 = np.radians(alt2)
         az2 = np.radians(az2)
 
-    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2) + np.sin(alt1) * np.sin(alt2)
+    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2)
+                + np.sin(alt1) * np.sin(alt2)
     cosdelta[cosdelta > 1] = 1.
     cosdelta[cosdelta < -1] = -1.
 
-    ang_sep = np.degrees(np.arccos(cosdelta)) if unit=='deg' else np.arccos(cosdelta)
+    ang_sep = np.degrees(np.arccos(cosdelta)) if unit=='deg'
+                else np.arccos(cosdelta)
 
     return ang_sep
 
