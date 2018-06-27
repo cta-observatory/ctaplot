@@ -83,11 +83,14 @@ class cta_performances:
 
     def get_sensitivity(self, observation_time=50):
         if self.site in ['south', 'paranal']:
-            self.E, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-DiffSens.txt'),
-                                                  unpack=True)
+            Emin, Emax, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-DiffSens.txt'),
+                                                  skiprows=10, unpack=True)
+            self.E = logbin_mean(np.append(Emin, Emax[-1]))
+
         if self.site in ['north', 'lapalma']:
-            self.E, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-DiffSens.txt'),
-                                                  unpack=True)
+            Emin, Emax, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-DiffSens.txt'),
+                                                  skiprows=10, unpack=True)
+            self.E = logbin_mean(np.append(Emin, Emax[-1]))
 
         return self.E, self.sensitivity
 
