@@ -15,4 +15,5 @@ install:
   - pip install numpy scipy matplotlib
 
 script:
-  - pytest --cov-report term-missing --cov app -v
+  - pytest 
+  #--cov-report term-missing --cov app -v
