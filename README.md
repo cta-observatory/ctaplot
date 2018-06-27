@@ -8,10 +8,9 @@
 
 -----
 
-### Install:
+## Install:
 
 Required packages:
-- astropy  
 - numpy  
 - scipy>=0.19    
 - matplotlib>=2.0   
@@ -23,3 +22,16 @@ In the ctaplot directory:
 ```
 python setup.py install
 ```
+
+
+-----
+
+## Examples
+
+![CTA angular resolution](share/images/CTA_angular_resolution.png)
+
+![CTA effective area](share/images/CTA_effective_area.png)
+
+![CTA energy resolution](share/images/CTA_energy_resolution.png)
+
+![CTA sensitivity](share/images/CTA_sensitivity.png)
