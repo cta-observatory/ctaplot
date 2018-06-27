@@ -3,9 +3,13 @@ language: python
 python:
   - "3.5"
   - "3.6"
+  
 # command to install dependencies
-# install:
-#   - pip install -r requirements.txt
+install:
+    - conda create --name ctaplot python=$TRAVIS_PYTHON_VERSION
+    - conda env update -n ctaplot --file environment.yml
+    - source activate ctaplot
+    
 # command to run tests
 script:
   - pytest # or py.test for Python versions 3.5 and below
