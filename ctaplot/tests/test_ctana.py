@@ -13,6 +13,7 @@ def test_class_cta_requirements():
     ctaq.get_effective_area()
     ctaq.get_angular_resolution()
     ctaq.get_energy_resolution()
+    ctaq.get_sensitivity()
 
 
 def test_class_cta_performances():
@@ -20,6 +21,7 @@ def test_class_cta_performances():
     ctaq.get_effective_area()
     ctaq.get_angular_resolution()
     ctaq.get_energy_resolution()
+    ctaq.get_sensitivity()
 
 
 def test_impact_resolution_per_energy():

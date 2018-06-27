@@ -29,6 +29,7 @@ class cta_performances:
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
         self.energy_resolution = np.empty(0)
+        self.sensitivity = np.empty(0)
 
     def get_effective_area(self, observation_time=50):
         """
@@ -80,6 +81,17 @@ class cta_performances:
 
         return self.E, self.energy_resolution
 
+    def get_sensitivity(self, observation_time=50):
+        if self.site in ['south', 'paranal']:
+            self.E, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-DiffSens.txt'),
+                                                  unpack=True)
+        if self.site in ['north', 'lapalma']:
+            self.E, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-DiffSens.txt'),
+                                                  unpack=True)
+
+        return self.E, self.sensitivity
+
+
 
 class cta_requirements:
     def __init__(self):
@@ -88,6 +100,7 @@ class cta_requirements:
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
         self.energy_resolution = np.empty(0)
+        self.sensitivity = np.empty(0)
 
     def get_effective_area(self, observation_time=50):
         """

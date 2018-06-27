@@ -1081,6 +1081,70 @@ def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile=
     return ax
 
 
+def plot_sensitivity_requirement(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA requirement for the sensitivity
+    Parameters
+    ----------
+    cta_site: string - see `ctaplot.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_requirements()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_sensitivity()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel('Seff [m2]')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
+def plot_sensitivity_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA performances for the sensitivity
+    Parameters
+    ----------
+    cta_site: string - see `ctaplot.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_sensitivity()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel('Seff [m2]')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
 def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     """
     Plot the layout map
