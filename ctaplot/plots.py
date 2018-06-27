@@ -1016,6 +1016,38 @@ def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
     return ax
 
 
+def plot_effective_area_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA performances for the effective area
+    Parameters
+    ----------
+    cta_site: string - see `hipectaold.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_effective_area()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel('Seff [m2]')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
 def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile="AngRes", cta_site=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy and save the plot in png format
@@ -1523,9 +1555,6 @@ def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
     cta_req.site = cta_site
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
-    if not ('color' in kwargs or 'c' in kwargs):
-        kwargs['color'] = 'black'
-
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirements {}".format(cta_site)
 
@@ -1553,9 +1582,6 @@ def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_performances()
     cta_req.site = cta_site
     e_cta, ar_cta = cta_req.get_energy_resolution()
-
-    if not ('color' in kwargs or 'c' in kwargs):
-        kwargs['color'] = 'black'
 
     if not 'label' in kwargs:
         kwargs['label'] = "CTA performances {}".format(cta_site)
