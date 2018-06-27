@@ -44,12 +44,20 @@ class cta_performances:
         `numpy.ndarray`, `numpy.ndarray`
         """
         if self.site == 'south':
-            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
+            if observation_time == 50:
+                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-EffArea.txt'),
                                                      skiprows=11, unpack=True)
-        if self.site == 'north':
-            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
+            if observation_time == 0.5:
+                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
                                                      skiprows=11, unpack=True)
 
+        if self.site == 'north':
+            if observation_time == 50:
+                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
+                                                     skiprows=11, unpack=True)
+            if observation_time == 0.5:
+                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
+                                                     skiprows=11, unpack=True)
         return self.E, self.effective_area
 
     def get_angular_resolution(self):
@@ -81,7 +89,7 @@ class cta_requirements:
         self.angular_resolution = np.empty(0)
         self.energy_resolution = np.empty(0)
 
-    def get_effective_area(self, observation_time=0.5):
+    def get_effective_area(self, observation_time=50):
         """
         Return the effective area at the given observation time in hours.
         NB: Only 0.5h supported
