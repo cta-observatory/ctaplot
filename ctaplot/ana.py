@@ -45,30 +45,30 @@ class cta_performances:
         """
         if self.site == 'south':
             self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
-                                                     skiprows=10, unpack=True)
+                                                     skiprows=11, unpack=True)
         if self.site == 'north':
             self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
-                                                     skiprows=10, unpack=True)
+                                                     skiprows=11, unpack=True)
 
         return self.E, self.effective_area
 
     def get_angular_resolution(self):
         if self.site == 'south':
             self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
-                                                         skiprows=10, unpack=True)
+                                                         skiprows=11, unpack=True)
         if self.site == 'north':
             self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Angres.txt'),
-                                                         skiprows=10, unpack=True)
+                                                         skiprows=11, unpack=True)
 
         return self.E, self.angular_resolution
 
     def get_energy_resolution(self):
         if self.site in ['south', 'paranal']:
             self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Eres.txt'),
-                                                        skiprows=10, unpack=True)
+                                                        skiprows=11, unpack=True)
         if self.site in ['north', 'lapalma']:
-            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Eres'),
-                                                        skiprows=10, unpack=True)
+            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Eres.txt'),
+                                                        skiprows=11, unpack=True)
 
         return self.E, self.energy_resolution
 

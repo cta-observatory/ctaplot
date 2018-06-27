@@ -90,7 +90,7 @@ class plot_from_anadata:
             irf = ana.irf_cta()
             self.SimuArea = irf.ParanalArea
 
-    def plot_all(self, MultiplicityMin=[2,4]):
+    def plot_all(self, MultiplicityMin=[2, 4]):
         self.multiplicity_hist()
         self.impact_heatmap()
         self.energy_hist()
@@ -123,8 +123,6 @@ class plot_from_anadata:
         self.energy_bias()
         plt.close('all')
 
-
-
     def multiplicity_hist(self, ER=(-inf, inf), xmin=0, xmax=100):
         """
         historgram of the telescopes multiplicity.
@@ -156,7 +154,8 @@ class plot_from_anadata:
 
     def energy_hist(self):
         saveplot_energy_distribution(self.a.SimuE, self.a.SimuE[self.a.maskSimuRecoed],
-                                 Outfile=self.outdir + "EnergyDistribution", maskSimuDetected=self.a.maskSimuDetected)
+                                     Outfile=self.outdir + "EnergyDistribution",
+                                     maskSimuDetected=self.a.maskSimuDetected)
 
     def fov_map(self):
         plot_field_of_view_map(self.a.RecoAlt, self.a.RecoAz, self.a.AltSource, self.a.AzSource, E=False,
@@ -223,7 +222,6 @@ class plot_from_anadata:
 
         return ax
 
-
     def impact_point_map_distri(self):
         plot_impact_point_map_distri(self.a.RecoX, self.a.RecoY, self.a.telX, self.a.telY, kde=True,
                                      Outfile=self.outdir + "ImpactMapDistri")
@@ -258,7 +256,6 @@ class plot_from_anadata:
             kwargs['alpha'] = 0.8
         elif not 'alpha' in kwargs:
             kwargs['alpha'] = 1.0
-
 
         if len(self.a.MultiplicityReco) >= 0:
             for i, mult in enumerate(MultiplicityMin):
@@ -356,14 +353,14 @@ class plot_from_anadata:
         if cta_goal:
             ax = plot_energy_resolution_requirements(self.site, ax=ax, color='black')
 
-        alpha=1.0
+        alpha = 1.0
         if len(MultiplicityMin) > 1:
-            alpha=0.8
+            alpha = 0.8
 
         if len(self.a.MultiplicityReco) > 0:
             for mult in MultiplicityMin:
                 mask = self.a.MultiplicityReco >= mult
-                ax = plot_energy_resolution (
+                ax = plot_energy_resolution(
                     self.a.SimuE[self.a.maskSimuRecoed][mask],
                     self.a.RecoE[mask],
                     bias_correction=bias_correction,
@@ -379,20 +376,20 @@ class plot_from_anadata:
                                         label="No cut on multiplicity")
         ax.legend()
         plt.savefig(self.outdir + '/' + 'EnergyResolution.png', bbox_inches="tight", format='png', dpi=200)
-        #plt.close('all')
+        # plt.close('all')
 
     def energy_bias(self, cta_goal=True, MultiplicityMin=[2]):
 
         ax = plt.gca()
 
-        alpha=1.0
+        alpha = 1.0
         if len(MultiplicityMin) > 1:
-            alpha=0.8
+            alpha = 0.8
 
         if len(self.a.MultiplicityReco) > 0:
             for mult in MultiplicityMin:
                 mask = self.a.MultiplicityReco >= mult
-                ax = plot_energy_bias (
+                ax = plot_energy_bias(
                     self.a.SimuE[self.a.maskSimuRecoed][mask],
                     self.a.RecoE[mask],
                     ax=ax,
@@ -401,13 +398,12 @@ class plot_from_anadata:
                 )
         else:
             ax = plot_energy_bias(self.a.SimuE[self.a.maskSimuRecoed],
-                                        self.a.RecoE,
-                                        ax=ax,
-                                        label="No cut on multiplicity")
+                                  self.a.RecoE,
+                                  ax=ax,
+                                  label="No cut on multiplicity")
         ax.legend()
         plt.savefig(self.outdir + '/' + 'EnergyBias.png', bbox_inches="tight", format='png', dpi=200)
         plt.close('all')
-
 
     def impact_resolution_per_energy(self, MultiplicityMin=[2], ax=None, **kwargs):
         """
@@ -426,7 +422,7 @@ class plot_from_anadata:
 
         ax = plt.gca() if ax is None else ax
 
-        if len(MultiplicityMin)>1:
+        if len(MultiplicityMin) > 1:
             if 'alpha' not in kwargs:
                 kwargs['alpha'] = 0.8
 
@@ -954,8 +950,6 @@ def plot_multiplicity_per_telescope_type(EventTup, Outfile="MultiplicityPerTeles
     return LST, MST, SST
 
 
-
-
 def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     """
 
@@ -1013,10 +1007,13 @@ def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
     ax.set_yscale('log')
     ax.set_xlabel('Energy [TeV]')
     ax.set_ylabel('Seff [m2]')
-    ax.plot(e_cta, ef_cta, label="CTA requirements {}".format(cta_site), **kwargs)
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
 
     return ax
-
 
 
 def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile="AngRes", cta_site=None, **kwargs):
@@ -1050,8 +1047,6 @@ def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile=
     plt.close()
 
     return ax
-
-
 
 
 def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
@@ -1105,8 +1100,6 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.close()
 
 
-
-
 def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
@@ -1128,7 +1121,6 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
 
     ax = plt.gca() if ax is None else ax
 
-
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
@@ -1143,13 +1135,14 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
 
     E = ana.logbin_mean(E_bin)
 
-    ax.errorbar(E, RES[:,0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
-                yerr=(RES[:,0]-RES[:,1], RES[:,2]-RES[:,0]), fmt='o', **kwargs)
+    ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
+                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
 
     return ax
 
 
-def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, Outfile="AngRes", cta_site=None, **kwargs):
+def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, Outfile="AngRes",
+        cta_site=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy and save the plot in png format
 
@@ -1182,7 +1175,7 @@ def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
     return ax
 
 
-def plot_angular_res_requirement(cta_site ,ax=None, **kwargs):
+def plot_angular_res_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the angular resolution
     Parameters
@@ -1200,7 +1193,39 @@ def plot_angular_res_requirement(cta_site ,ax=None, **kwargs):
     cta_req = ana.cta_requirements()
     cta_req.site = cta_site
     e_cta, ar_cta = cta_req.get_angular_resolution()
-    ax.plot(e_cta, ar_cta, label="CTA requirements {}".format(cta_site), **kwargs)
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xscale('log')
+    return ax
+
+
+def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
+    """
+    Plot the official CTA performances (June 2018) for the angular resolution
+
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_performances`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_angular_resolution()
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     return ax
 
@@ -1295,7 +1320,6 @@ def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, Ou
     return E, np.array(err_mean)
 
 
-
 def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Multiplicity, max=None,
         Outfile="ImpactParameterErrorPerMultiplicity"):
     """
@@ -1355,10 +1379,6 @@ def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Mul
     return M, np.array(e_mean)
 
 
-
-
-
-
 def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
     """
     Map of the site with telescopes positions
@@ -1412,7 +1432,6 @@ def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="Impact
     plt.close()
 
 
-
 def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     """
 
@@ -1427,7 +1446,7 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(SimuE)==len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
+    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1435,7 +1454,7 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
-        kwargs['fmt']='o'
+        kwargs['fmt'] = 'o'
 
     ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
     ax.set_xlabel("log(E/TeV)")
@@ -1443,7 +1462,7 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     plt.legend()
     plt.title('Energy bias')
 
-    ax.errorbar(E, biasE, xerr=(E-E_bin[:-1], E_bin[1:]-E), **kwargs)
+    ax.errorbar(E, biasE, xerr=(E - E_bin[:-1], E_bin[1:] - E), **kwargs)
 
     return ax
 
@@ -1471,14 +1490,15 @@ def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwarg
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
-        kwargs['fmt']='o'
+        kwargs['fmt'] = 'o'
 
     ax.set_ylabel("R_68")
     ax.set_xlabel("log(E/TeV)")
     ax.set_xscale('log')
     plt.title('Energy resolution')
 
-    ax.errorbar(E, Eres[:,0], xerr=(E-E_bin[:-1], E_bin[1:]-E), yerr=(Eres[:,0]-Eres[:,1], Eres[:,2] - Eres[:,0]), **kwargs)
+    ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
+                yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
 
     return ax
 
@@ -1506,10 +1526,43 @@ def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
     if not ('color' in kwargs or 'c' in kwargs):
         kwargs['color'] = 'black'
 
-    ax.plot(e_cta, ar_cta, label="CTA requirements {}".format(cta_site), **kwargs)
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     return ax
 
+
+def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the cta performances (June 2018) for the energy resolution
+
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_performances`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_energy_resolution()
+
+    if not ('color' in kwargs or 'c' in kwargs):
+        kwargs['color'] = 'black'
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xscale('log')
+    return ax
 
 
 def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta_site=None):
@@ -1519,7 +1572,7 @@ def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta
     ----------
     SimuE: `numpy.ndarray`
     RecoE: `numpy.ndarray`
-    cta_goal: boolean - If True CTA energy resolution goal is plotted
+    cta_goal: boolean - If True CTA energy resolution requirement is plotted
 
     Returns
     -------
@@ -1528,7 +1581,7 @@ def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta
 
     ax = plot_energy_resolution(SimuE, RecoE)
 
-    if cta_site!=None:
+    if cta_site != None:
         ax = plot_energy_resolution_requirements(cta_site, ax=ax)
 
     plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
@@ -1585,7 +1638,6 @@ def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile=
     plt.close()
 
 
-
 def plot_site(telX, telY, ax=None, **kwargs):
     """
     Plot the telescopes positions
@@ -1606,7 +1658,6 @@ def plot_site(telX, telY, ax=None, **kwargs):
     ax.axis('equal')
 
     return ax
-
 
 
 def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None, **kwargs):
@@ -1630,7 +1681,6 @@ def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None
 
     ax = plt.gca() if ax is None else ax
 
-
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
@@ -1644,8 +1694,8 @@ def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None
 
     ax.errorbar(
         E, RES[:, 0],
-        xerr=(E-E_bin[:-1], E_bin[1:]-E),
-        yerr=(RES[:, 0]-RES[:, 1], RES[:, 2]-RES[:, 0]),
+        xerr=(E - E_bin[:-1], E_bin[1:] - E),
+        yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
         fmt='o',
         **kwargs,
     )
@@ -1729,7 +1779,6 @@ def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
 
 
 def plot_features_importance(learn_class, ax=None):
-
     ax = plt.gca() if ax is None else ax
 
     sns.barplot(learn_class.input_features_keys, learn_class.model.feature_importances_, ax=ax)
