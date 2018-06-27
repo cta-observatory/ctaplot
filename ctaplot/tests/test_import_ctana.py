@@ -1,5 +1,5 @@
 def test_import():
     try:
-        from hipectaold import ana
+        from ctaplot import ana
     except:
         raise()

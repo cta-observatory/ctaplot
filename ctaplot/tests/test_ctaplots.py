@@ -1,4 +1,4 @@
-from hipectaold import plots
+from ctaplot import plots
 import matplotlib.pyplot as plt
 
 

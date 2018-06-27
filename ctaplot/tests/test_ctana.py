@@ -1,4 +1,4 @@
-import hipectaold.ana as ana
+import ctaplot.ana as ana
 
 
 def tests_logspace_decades_nbin():
@@ -10,6 +10,13 @@ def tests_logspace_decades_nbin():
 
 def test_class_cta_requirements():
     ctaq = ana.cta_requirements()
+    ctaq.get_effective_area()
+    ctaq.get_angular_resolution()
+    ctaq.get_energy_resolution()
+
+
+def test_class_cta_performances():
+    ctaq = ana.cta_performances()
     ctaq.get_effective_area()
     ctaq.get_angular_resolution()
     ctaq.get_energy_resolution()
