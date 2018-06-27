@@ -18,7 +18,10 @@ def test_plot_energy_resolution_requirements():
 
 def test_saveplot_energy_resolution():
     import numpy as np
+    import os
     plt.close('all')
     E = np.logspace(-2, 2, 10)
     plots.saveplot_energy_resolution(E, E**2, Outfile="eres.png")
+    assert os.path.isfile("eres.png")
+    os.remove("eres.png")
 
