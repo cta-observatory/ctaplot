@@ -22,7 +22,7 @@ class irf_cta:
         self.E = logbin_mean(self.E_bin)
 
 
-class cta_requirements:
+class cta_performances:
     def __init__(self):
         self.site = ''
         self.E = np.empty(0)
@@ -31,35 +31,99 @@ class cta_requirements:
         self.energy_resolution = np.empty(0)
 
     def get_effective_area(self, observation_time=50):
+        """
+        Return the effective area at the given observation time in hours.
+        NB: Only 50h supported
+        Returns the energy array and the effective area array
+        Parameters
+        ----------
+        observation_time: optional
+
+        Returns
+        -------
+        `numpy.ndarray`, `numpy.ndarray`
+        """
         if self.site == 'south':
-            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-South-50h-EffArea.txt'),
+            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
                                                      skiprows=10, unpack=True)
         if self.site == 'north':
-            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-North-50h-EffArea.txt'),
+            self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
                                                      skiprows=10, unpack=True)
 
         return self.E, self.effective_area
 
     def get_angular_resolution(self):
         if self.site == 'south':
-            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-South-Angres.txt'),
+            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
                                                          skiprows=10, unpack=True)
         if self.site == 'north':
-            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-North-Angres.txt'),
+            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Angres.txt'),
                                                          skiprows=10, unpack=True)
 
         return self.E, self.angular_resolution
 
     def get_energy_resolution(self):
         if self.site in ['south', 'paranal']:
-            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-South-Eres.txt'),
+            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Eres.txt'),
                                                         skiprows=10, unpack=True)
         if self.site in ['north', 'lapalma']:
-            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-North-Eres.txt'),
+            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Eres'),
                                                         skiprows=10, unpack=True)
 
         return self.E, self.energy_resolution
 
+
+class cta_requirements:
+    def __init__(self):
+        self.site = ''
+        self.E = np.empty(0)
+        self.effective_area = np.empty(0)
+        self.angular_resolution = np.empty(0)
+        self.energy_resolution = np.empty(0)
+
+    def get_effective_area(self, observation_time=0.5):
+        """
+        Return the effective area at the given observation time in hours.
+        NB: Only 0.5h supported
+        Returns the energy array and the effective area array
+        Parameters
+        ----------
+        observation_time: optional
+
+        Returns
+        -------
+        `numpy.ndarray`, `numpy.ndarray`
+        """
+        if self.site == 'south':
+            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'), unpack=True)
+        if self.site == 'north':
+            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'), unpack=True)
+
+        return self.E, self.effective_area
+
+    def get_angular_resolution(self):
+        if self.site == 'south':
+            self.E, self.angular_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-AngRes.dat'), unpack=True)
+        if self.site == 'north':
+            self.E, self.angular_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-AngRes.dat'), unpack=True)
+
+        return self.E, self.angular_resolution
+
+    def get_energy_resolution(self):
+        if self.site in ['south', 'paranal']:
+            self.E, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-ERes.dat'), unpack=True)
+        if self.site in ['north', 'lapalma']:
+            self.E, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-ERes.dat'), unpack=True)
+
+        return self.E, self.energy_resolution
+
+    def get_sensitivity(self, observation_time=50):
+        if self.site in ['south', 'paranal']:
+            self.E, self.sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
+        if self.site in ['north', 'lapalma']:
+            self.E, self.sensitivity = np.loadtxt(ds.get('cta_requirements_North-50h.dat'), unpack=True)
+
+        return self.E, self.sensitivity
 
 
 
