@@ -3,7 +3,6 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from scipy.stats import binned_statistic
 from scipy.stats import gaussian_kde
 from numpy import floor
 from math import inf
