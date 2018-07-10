@@ -17,7 +17,6 @@ dataset = package_files('share')
 
 print("dataset {}".format(dataset))
 
-
 setup(name='ctaplot',
       version=1.0,
       description="DESCRIPTION",
@@ -25,11 +24,9 @@ setup(name='ctaplot',
       # don't need to list the sub-dependencies like numpy, since
       # astropy already depends on it)
       install_requires=[
-          # 'astropy',
-          # 'numpy',
-          # 'scipy>=0.19',
-          # 'matplotlib>=2.0',
-          # 'numba'
+          'numpy',
+          'matplotlib>=2.0',
+          'scipy>=0.19',
       ],
       packages=['ctaplot'],
       tests_require=['pytest'],
