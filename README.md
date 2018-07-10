@@ -1,4 +1,10 @@
-# small collection of function to make useful plots for IACT
+# small collection of function to make useful plots for Imaging Atmospheric Cherenkov Telescopes
+
+Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions:
+- angular resolution
+- energy resolution
+- effective surface
+- impact point resolution
 
 -----
 
