@@ -10,7 +10,7 @@ class irf_cta:
     """
     def __init__(self):
         self.site = ''
-        self.E_bin = np.logspace(np.log10(3e-2), 2, 21)
+        self.E_bin = np.logspace(np.log10(2.51e-02), 2, 19)
         self.E = logbin_mean(self.E_bin)
 
         # Area of CTA sites in meters
