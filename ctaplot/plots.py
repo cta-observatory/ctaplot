@@ -1,3 +1,10 @@
+"""
+plot.py
+============
+Functions to make IRF and other reconstruction quality-check plots
+"""
+
+
 import numpy as np
 import os
 import matplotlib as mpl
@@ -55,7 +62,7 @@ class plot_from_anadata:
         if not os.path.isdir(self.outdir): os.mkdir(self.outdir)
 
         if len(anadata.TelTypes) > 0:
-            if len(set(np.concatenate(anadata.TelTypes))) > 2:
+            if len(set(numpy.concatenate(anadata.TelTypes))) > 2:
                 self.set_site('south')
             else:
                 self.set_site('north')
@@ -333,10 +340,10 @@ class plot_from_anadata:
         for k in self.a.__dict__:
             fig = plt.figure()
             value = getattr(self.a, k)
-            mask = np.concatenate(self.a.ImageQuality) == 0
-            if type(value) == np.ndarray and len(value) > 0:
-                if type(value[0]) == np.ndarray:
-                    ar = np.nan_to_num(np.concatenate(value))[mask]
+            mask = numpy.concatenate(self.a.ImageQuality) == 0
+            if type(value) == numpy.ndarray and len(value) > 0:
+                if type(value[0]) == numpy.ndarray:
+                    ar = numpy.nan_to_num(numpy.concatenate(value))[mask]
                 else:
                     ar = value
                 plt.hist(ar, label=str(k), bins=40);
@@ -500,9 +507,9 @@ def saveplot_energy_distribution(SimuE, RecoE, Outfile="EnergyDistribution", mas
     ax1.set_ylabel('Count')
 
     ax1.set_xscale('log')
-    count_S, bin_S, o = ax1.hist(SimuE, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
-    count_D, bin_D, o = ax1.hist(SimuE[maskSimuDetected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
-    count_R, bin_R, o = ax1.hist(RecoE, log=True, bins=np.logspace(-3, 3, 30), label="Reconstructed")
+    count_S, bin_S, o = ax1.hist(SimuE, log=True, bins=numpy.logspace(-3, 3, 30), label="Simulated")
+    count_D, bin_D, o = ax1.hist(SimuE[maskSimuDetected], log=True, bins=numpy.logspace(-3, 3, 30), label="Detected")
+    count_R, bin_R, o = ax1.hist(RecoE, log=True, bins=numpy.logspace(-3, 3, 30), label="Reconstructed")
     plt.legend(fontsize=SizeLabel)
     plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
     plt.close()
@@ -574,7 +581,7 @@ def plot_field_of_view_map(RecoAlt, RecoAz, AltSource, AzSource, E=False, Outfil
 
     c = BrewBlues[-1]
     if E:
-        c = np.log10(E)
+        c = numpy.log10(E)
         plt.colorbar()
 
     plt.scatter(RecoAz, RecoAlt, c=c)
@@ -589,13 +596,14 @@ def plot_field_of_view_map(RecoAlt, RecoAz, AltSource, AzSource, E=False, Outfil
 def plot_angles_distribution(RecoAlt, RecoAz, AltSource, AzSource, Outfile="AnglesDistribution"):
     """
     Plot the disitribution of reconstructed angles. Save figure to Outfile in png format.
+
     Parameters
     ----------
-    RecoAlt: 1d numpy array
-    RecoAz: 1d numpy array
-    AltSource: float
-    AzSource: float
-    Outfile: string
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: `float`
+    AzSource: `float`
+    Outfile: `string`
     """
 
     dx = 1
@@ -637,8 +645,8 @@ def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, Outfile="theta2"):
     Plot the theta2 distribution and save it under Outfile
     Parameters
     ----------
-    RecoAlt: 1d numpy array
-    RecoAz: 1d numpy array
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
     AltSource: float
     AzSource: float
     Outfile: string
@@ -672,11 +680,11 @@ def plot_angles_map_distri(RecoAlt, RecoAz, AltSource, AzSource, E, Outfile="Ang
 
     Parameters
     ----------
-    RecoAlt
-    RecoAz
-    AltSource
-    AzSource
-    E
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float
+    AzSource: float
+    E: `numpy.ndarray`
     Outfile
 
     Returns
@@ -706,7 +714,7 @@ def plot_angles_map_distri(RecoAlt, RecoAz, AltSource, AzSource, E, Outfile="Ang
         ax1.hist2d(a.RecoAlt, a.RecoAz, bins=60,
                    range=([AltSource - dx, AltSource + dx], [AzSource - dx, AzSource + dx]))
     else:
-        ax1.scatter(RecoAz, RecoAlt, c=np.log10(E))
+        ax1.scatter(RecoAz, RecoAlt, c=numpy.log10(E))
     ax1.scatter(AzSource, AltSource, marker='+', linewidths=3, s=200, c='black')
 
     ax1.xaxis.set_label_position('top')
@@ -746,10 +754,10 @@ def plot_impact_point_map_distri(RecoX, RecoY, telX, telY, **options):
 
     Parameters
     ----------
-    RecoX: 1D numpy array
-    RecoY: 1D numpy array
-    telX: 1D numpy array
-    telY: 1D numpy array
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
     options:
         kde=True : make a gaussian fit of the point density
         Outfile='string' : save a png image of the plot under 'string.png'
@@ -810,8 +818,8 @@ def plot_impact_point_heatmap(RecoX, RecoY, Outfile="ImpactHeatmap"):
     Plot the heatmap of the impact points on the site ground and save it under Outfile
     Parameters
     ----------
-    RecoX: 1d numpy array
-    RecoY: 1d numpy array
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
     Outfile: string
     """
 
@@ -838,12 +846,12 @@ def plot_multiplicity_hist(multiplicity, Outfile="Multiplicity", xmin=0, xmax=10
     Histogram of the telescopes multiplicity
     Parameters
     ----------
-    multiplicity: numpy array
+    multiplicity: `numpy.ndarray`
     Outfile: string
     xmin: float
     xmax: float
     """
-    m = np.sort(multiplicity)
+    m = numpy.sort(multiplicity)
     plt.figure(figsize=(12, 9))
     ax1 = plt.subplot(111)
     ax1.spines["top"].set_visible(False)
@@ -858,7 +866,7 @@ def plot_multiplicity_hist(multiplicity, Outfile="Multiplicity", xmin=0, xmax=10
     if len(m) > 0:
         ax1.set_xlim(xmin, xmax + 1)
         n, b, s = ax1.hist(m, bins=(xmax - xmin), align='left', range=(xmin, xmax), label='Telescope multiplicity')
-        ax1.xaxis.set_ticks(np.append(np.linspace(xmin, xmax, 10, dtype=int), [1, 2, 3, 4, 5]))
+        ax1.xaxis.set_ticks(numpy.append(numpy.linspace(xmin, xmax, 10, dtype=int), [1, 2, 3, 4, 5]))
         x50 = m[int(floor(0.5 * len(m)))] + 0.5
         x90 = m[int(floor(0.9 * len(m)))] + 0.5
         if (x50 > xmin and x50 < xmax):
@@ -951,18 +959,28 @@ def plot_multiplicity_per_telescope_type(EventTup, Outfile="MultiplicityPerTeles
 
 def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     """
+    Plot the effective area as a function of the energy
 
     Parameters
     ----------
-    SimuE
-    RecoE
-    simuArea
-    ax
-    kwargs
+    SimuE: `numpy.ndarray` - all simulated event energies
+    RecoE: `numpy.ndarray` - all reconstructed event energies
+    simuArea: float
+    ax: `matplotlib.pyplot.axes`
+    kwargs: options for `maplotlib.pyplot.errorbar`
 
     Returns
     -------
+    ax: `matplotlib.pyplot.axes`
 
+    Example
+    -------
+    >>> import numpy as np
+    >>> import ctaplot
+    >>> irf = ctaplot.ana.irf()
+    >>> simue = 10**(-2 + 4*np.random.rand(1000))
+    >>> recoe = 10**(-2 + 4*np.random.rand(100))
+    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -986,6 +1004,7 @@ def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
 def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the effective area
+
     Parameters
     ----------
     cta_site: string - see `hipectaold.ana.cta_requirements`
@@ -1018,6 +1037,7 @@ def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
 def plot_effective_area_performances(cta_site, ax=None, **kwargs):
     """
     Plot the CTA performances for the effective area
+
     Parameters
     ----------
     cta_site: string - see `hipectaold.ana.cta_requirements`
@@ -1061,7 +1081,7 @@ def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile=
     ax: `matplotlib.pyplot.axes`
     Outfile: string
     cta_site: string
-    kwargs: args for `hipectaold.plots.plot_angular_res_per_energy`
+    kwargs: args for `ctaplot.plots.plot_angular_res_per_energy`
 
     Returns
     -------
@@ -1146,15 +1166,16 @@ def plot_sensitivity_performances(cta_site, ax=None, **kwargs):
 
 def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     """
-    Plot the layout map
+    Plot the layout map of telescopes positions - depreciated
+
     Parameters
     ----------
-    TelX
-    TelY
-    TelId
-    TelType
-    LayoutId
-    Outfile
+    TelX: `numpy.ndarray`
+    TelY: `numpy.ndarray`
+    TelId: `numpy.ndarray`
+    TelType: `numpy.ndarray`
+    LayoutId: `numpy.ndarray`
+    Outfile: string
 
     Returns
     -------
@@ -1162,7 +1183,7 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     """
 
     # 0 LST, (1,2,3) MST, (4,5,6) SST => 0 for LST, 1 for MST, 2 fot SST
-    type = np.floor((2 + TelType) / 3)
+    type = numpy.floor((2 + TelType) / 3)
     plt.figure(figsize=(12, 12))
 
     ax = plt.subplot(111)
@@ -1174,10 +1195,10 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.xlabel("X [m]")
     plt.ylabel("Y [m]")
 
-    mask_layout = np.in1d(TelId, LayoutId)
-    mask_lst = mask_layout & np.in1d(TelType, [0])
-    mask_mst = mask_layout & np.in1d(TelType, [1, 2, 3])
-    mask_sst = mask_layout & np.in1d(TelType, [4, 5, 6])
+    mask_layout = numpy.in1d(TelId, LayoutId)
+    mask_lst = mask_layout & numpy.in1d(TelType, [0])
+    mask_mst = mask_layout & numpy.in1d(TelType, [1, 2, 3])
+    mask_sst = mask_layout & numpy.in1d(TelType, [4, 5, 6])
 
     plt.axis('equal')
     plt.xlim(-1000, 1000)
@@ -1226,7 +1247,7 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
 
     E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
     # Angular resolution is traditionnaly presented in degrees
-    RES = np.degrees(RES)
+    RES = numpy.degrees(RES)
 
     E = ana.logbin_mean(E_bin)
 
@@ -1336,13 +1357,13 @@ def plot_impact_parameter_error(RecoX, RecoY, SimuX, SimuY, Outfile="ImpactParam
     plot impact parameter error distribution and save it under Outfile
     Parameters
     ----------
-    RecoX: 1d numpy array
-    RecoY
-    SimuX
-    SimuY
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
     Outfile: string
     """
-    d = np.sqrt((RecoX - SimuX) ** 2 + (RecoY - SimuY) ** 2)
+    d = numpy.sqrt((RecoX - SimuX) ** 2 + (RecoY - SimuY) ** 2)
 
     plt.figure(figsize=(12, 9))
 
@@ -1365,11 +1386,11 @@ def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, Ou
     plot the impact parameter error distance as a function of energy and save the plot as Outfile
     Parameters
     ----------
-    RecoX: 1d numpy array
-    RecoY
-    SimuX
-    SimuY
-    SimuE
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
+    SimuE: `numpy.ndarray`
     Outfile: string
 
     Returns
@@ -1385,13 +1406,13 @@ def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, Ou
     err_std = []
     for i, eb in enumerate(E_bin[:-1]):
         mask = (SimuE > E_bin[i]) & (SimuE < E_bin[i + 1])
-        E.append(np.mean([E_bin[i], E_bin[i + 1]]))
+        E.append(numpy.mean([E_bin[i], E_bin[i + 1]]))
         if True in mask:
             d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
             err_mean.append(d.mean())
             err_min.append(d.min())
             err_max.append(d.max())
-            err_std.append(np.std(d))
+            err_std.append(numpy.std(d))
         else:
             err_mean.append(0)
             err_min.append(0)
@@ -1418,29 +1439,31 @@ def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, Ou
     plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
     plt.close()
 
-    return E, np.array(err_mean)
+    return E, numpy.array(err_mean)
 
 
 def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Multiplicity, max=None,
         Outfile="ImpactParameterErrorPerMultiplicity"):
     """
+    Plot the impact parameter error as a function of multiplicity
+    TODO: refactor and clean code
 
     Parameters
     ----------
-    RecoX
-    RecoY
-    SimuX
-    SimuY
-    Multiplicity
-    max
-    Outfile
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
+    Multiplicity: `numpy.ndarray`
+    max: optional, max multiplicity - float
+    Outfile: string
 
     Returns
     -------
 
     """
     if max == None: max = Multiplicity.max() + 1
-    M = np.arange(Multiplicity.min(), max)
+    M = numpy.arange(Multiplicity.min(), max)
     e_mean = []
     e_min = []
     e_max = []
@@ -1452,7 +1475,7 @@ def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Mul
             e_mean.append(d.mean())
             e_min.append(d.min())
             e_max.append(d.max())
-            e_std.append(np.std(d))
+            e_std.append(numpy.std(d))
         else:
             e_mean.append(0)
             e_min.append(0)
@@ -1477,17 +1500,18 @@ def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Mul
     plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
     plt.close()
 
-    return M, np.array(e_mean)
+    return M, numpy.array(e_mean)
 
 
 def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
     """
     Map of the site with telescopes positions
+
     Parameters
     ----------
-    telX: numpy array
-    telY: numpy array
-    telTypes: numpy array
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
+    telTypes: `numpy.ndarray`
     Outfile: string - name of the output file
     """
     plt.figure(figsize=(12, 12))
@@ -1507,13 +1531,14 @@ def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
 def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="ImpactMap.png"):
     """
     Map of the site with telescopes positions and impact points heatmap
+
     Parameters
     ----------
-    impactX: numpy array
-    impactY: numpy array
-    telX: numpy array
-    telY: numpy array
-    telTypes: numpy array
+    impactX: `numpy.ndarray`
+    impactY: `numpy.ndarray`
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
+    telTypes: `numpy.ndarray`
     Outfile: string - name of the output file
     """
     plt.figure(figsize=(12, 12))
@@ -1535,6 +1560,7 @@ def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="Impact
 
 def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     """
+    Plot the energy bias
 
     Parameters
     ----------
@@ -1570,6 +1596,7 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
 
 def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwargs):
     """
+    Plot the enregy resolution as a function of the energy
 
     Parameters
     ----------
@@ -1727,7 +1754,7 @@ def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile=
     sns.set(style="white", color_codes=True)
 
     imp_err = ana.impact_parameter_error(a.RecoX, a.RecoY, a.SimuX[a.maskSimuRecoed], a.SimuY[a.maskSimuRecoed])
-    dCenter = np.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
+    dCenter = numpy.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
 
     sns.jointplot(dCenter, imp_err, kind='reg')
 
@@ -1871,7 +1898,7 @@ def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
     if not 'bins' in kwargs:
         kwargs['bins'] = 50
 
-    x = np.log10(X_true) if x_log else X_true
+    x = numpy.log10(X_true) if x_log else X_true
 
     ax.hist2d(x, X_true - X_exp, **kwargs)
     return ax

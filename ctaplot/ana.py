@@ -1,4 +1,9 @@
-## contain mathematical functions to make results analysis (compute angular resolution, effective surface, energy resolution... )
+"""
+ana.py
+=========
+Contain mathematical functions to make results analysis (compute angular resolution, effective surface, energy resolution... )
+"""
+
 
 import numpy as np
 import ctaplot.dataset as ds
