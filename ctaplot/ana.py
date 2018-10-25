@@ -324,10 +324,10 @@ def theta2(RecoAlt, RecoAz, AltSource, AzSource):
     1d `numpy.ndarray`
     """
     assert (len(RecoAz) == len(RecoAlt))
+    assert (len(RecoAlt) == len(AltSource))
     if len(RecoAlt) == 0:
         return np.empty(0)
     else:
-        # return (RecoAlt - AltSource) ** 2 + (RecoAz - AzSource) ** 2
         return angular_separation_altaz(RecoAlt, RecoAz, AltSource, AzSource)**2
 
 
