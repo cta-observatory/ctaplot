@@ -640,40 +640,32 @@ def plot_angles_distribution(RecoAlt, RecoAz, AltSource, AzSource, Outfile="Angl
     plt.close()
 
 
-def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, Outfile="theta2"):
+def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, ax=None, **kwargs):
     """
     Plot the theta2 distribution and save it under Outfile
+
     Parameters
     ----------
     RecoAlt: `numpy.ndarray`
     RecoAz: `numpy.ndarray`
-    AltSource: float
-    AzSource: float
-    Outfile: string
+    AltSource: `numpy.ndarray`
+    AzSource: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    **kwargs: options for `matplotlib.pyplot.hist`
     """
+
+    ax = plt.gca() if ax is None else ax
 
     theta2 = ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)
     AngRes = ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource)
 
-    plt.figure(figsize=(12, 9))
+    ax.set_xlabel(r'$\theta^2 [deg^2]$')
+    ax.set_ylabel('Count')
 
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_xlabel(r'$\theta^2 [deg^2]$')
-    ax1.set_ylabel('Count')
+    ax.hist(theta2, **kwargs)
+    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f})'.format(AngRes[0], AngRes[2], AngRes[1]))
 
-    plt.figtext(0.6, 0.7, "Angular Resolution\n = {0:.3f} deg".format(AngRes[0]), fontsize=SizeLabel)
-    n, bins, patches = ax1.hist(theta2, range=(0, 0.1), bins=60)
-
-    # ax1.vlines(theta2[i],0,n[0]/3)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-    plt.close('all')
-
+    return ax
 
 def plot_angles_map_distri(RecoAlt, RecoAz, AltSource, AzSource, E, Outfile="AnglesMapDistri"):
     """
