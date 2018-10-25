@@ -86,6 +86,8 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 html_theme = 'sphinx_ops_theme'
+# html_theme_path = ["_themes", ]
+pip install sphinx_ops_theme
 import sphinx_ops_theme
 html_theme_path = [sphinx_ops_theme.get_html_theme_path()]
 
