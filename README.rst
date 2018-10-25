@@ -11,6 +11,7 @@ Given a list of reconstructed and simulated quantities, compute and plot the Ins
 
 
 * Code : https://github.com/vuillaut/ctaplot
+* Documentation : https://ctaplot.readthedocs.io/en/latest/
 * Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 * License: MIT
 
