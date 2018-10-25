@@ -1,5 +1,5 @@
 ctaplot
-=======
+-------
 
 ctaplot is a collection of functions to make IRF and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
