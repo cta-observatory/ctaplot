@@ -9,6 +9,7 @@ Welcome to ctaplot's documentation!
    :caption: Contents:
 
    README
+   
 
 .. automodule:: ctaplot.plots
    :members:
