@@ -1,3 +1,6 @@
+ctaplot
+=======
+
 ctaplot is a collection of functions to make IRF and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
 Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions:
