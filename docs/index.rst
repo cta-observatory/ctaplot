@@ -5,16 +5,12 @@ Welcome to ctaplot's documentation!
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    README
-   
-
-.. automodule:: ctaplot.plots
-   :members:
-.. automodule:: ctaplot.ana
-  :members:
+   license
+   modules
 
 Indices and tables
 ==================

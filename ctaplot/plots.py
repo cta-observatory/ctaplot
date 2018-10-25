@@ -1,6 +1,6 @@
 """
-plot.py
-============
+plots.py
+========
 Functions to make IRF and other reconstruction quality-check plots
 """
 

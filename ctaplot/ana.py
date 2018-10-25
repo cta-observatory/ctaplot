@@ -1,6 +1,6 @@
 """
 ana.py
-=========
+======
 Contain mathematical functions to make results analysis (compute angular resolution, effective surface, energy resolution... )
 """
 
