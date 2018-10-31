@@ -175,7 +175,7 @@ def logspace_decades_nbin(Xmin, Xmax, n=5):
 
 
 
-def multiplicty_stat_per_energy(Multiplicity, Energies, p = 50):
+def multiplicity_stat_per_energy(Multiplicity, Energies, p = 50):
     """
     Return the mean, min, max, percentile telescope multiplicity per energy.
     Per default, percentile is 50 (= median)

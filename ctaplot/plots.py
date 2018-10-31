@@ -45,14 +45,1460 @@ BrewViolets = ['#f2f0f7', '#cbc9e2', '#9e9ac8', '#6a51a3']
 BrewOranges = ['#feedde', '#fdbe85', '#fd8d3c', '#d94701']
 
 
+
+
+def plot_energy_distribution(SimuE, RecoE, ax=None, outfile=None, maskSimuDetected=True):
+    """
+    Plot the energy distribution of the simulated particles, detected particles and reconstructed particles
+    The plot might be saved automatically if `outfile` is provided.
+
+    Parameters
+    ----------
+    SimuE: Numpy 1d array of simulated energies
+    RecoE: Numpy 1d array of reconstructed energies
+    ax: `matplotlib.pyplot.axes`
+    outfile: string - output file path
+    maskSimuDetected - Numpy 1d array - mask of detected particles for the SimuE array
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel('Count')
+
+    ax.set_xscale('log')
+    count_S, bin_S, o = ax.hist(SimuE, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
+    count_D, bin_D, o = ax.hist(SimuE[maskSimuDetected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
+    count_R, bin_R, o = ax.hist(RecoE, log=True, bins=np.logspace(-3, 3, 30), label="Reconstructed")
+    plt.legend(fontsize=SizeLabel)
+    if outfile is not None:
+        plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200);
+        plt.close()
+
+    return ax
+
+
+def plot_multiplicity_per_energy(Multiplicity, Energies, ax=None, outfile=None):
+    """
+    Plot the telescope multiplicity as a function of the energy
+    The plot might be saved automatically if `outfile` is provided.
+
+    Parameters
+    ----------
+    Multiplicity: `numpy.ndarray`
+    Energies: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    outfile: string
+    """
+
+    assert len(Multiplicity) == len(Energies), "arrays should have same length"
+    assert len(Multiplicity) > 0, "arrays are empty"
+
+    E, m_mean, m_min, m_max, m_per = ana.multiplicity_stat_per_energy(Multiplicity, Energies)
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel('Multiplicity')
+
+    ax.fill_between(E, m_min, m_max, alpha=0.5)
+    ax.plot(E, m_min, '--')
+    ax.plot(E, m_max, '--')
+    ax.plot(E, m_mean, color='red')
+
+    ax.set_xscale('log')
+    ax.set_title("Multiplicity")
+
+    if type(outfile) is str:
+        plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
+
+    return ax
+
+
+def plot_field_of_view_map(RecoAlt, RecoAz, AltSource, AzSource, E=None, ax=None, Outfile=None):
+    """
+    Plot a map in angles [in degrees] of the photons seen by the telescope (after reconstruction)
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float, source Altitude
+    AzSource: float, source Azimuth
+    E: `numpy.ndarray`
+    Outfile: string
+    """
+    dx = 0.05
+
+    ax = plt.gca() if ax is None else ax
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+
+    ax.set_xlim(AzSource - dx, AzSource + dx)
+    ax.set_ylim(AltSource - dx, AltSource + dx)
+
+    ax.set_xlabel("Az [deg]")
+    ax.set_ylabel("Alt [deg]")
+
+    ax.set_axis('equal')
+
+    if E is not None:
+        c = np.log10(E)
+        plt.colorbar()
+    else:
+        c = BrewBlues[-1]
+
+    ax.scatter(RecoAz, RecoAlt, c=c)
+    ax.scatter(AzSource, AltSource, marker='+', linewidths=3, s=200, c='orange', label="Source position")
+
+    plt.legend()
+    if type(Outfile) is str:
+        plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
+
+    return ax
+
+
+def plot_angles_distribution(RecoAlt, RecoAz, AltSource, AzSource, Outfile=None):
+    """
+    Plot the distribution of reconstructed angles. Save figure to Outfile in png format.
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: `float`
+    AzSource: `float`
+    Outfile: `string`
+    """
+
+    dx = 1
+
+    fig = plt.figure(figsize=(12, 9))
+
+    ax1 = plt.subplot(211)
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
+
+    ax1.get_xaxis().tick_bottom()
+    ax1.get_yaxis().tick_left()
+
+    ax1.set_xlabel('Az [deg]')
+    ax1.set_ylabel('Count')
+    ax1.set_xlim(AzSource - dx, AzSource + dx)
+
+    ax1.hist(RecoAz, bins=60, range=(AzSource - dx, AzSource + dx))
+
+    ax2 = plt.subplot(212)
+    ax2.spines["top"].set_visible(False)
+    ax2.spines["right"].set_visible(False)
+
+    ax2.get_xaxis().tick_bottom()
+    ax2.get_yaxis().tick_left()
+
+    ax2.set_xlabel('Alt [deg]', fontsize=SizeLabel)
+    ax2.set_ylabel('Count', fontsize=SizeLabel)
+    ax2.set_xlim(AltSource - dx, AltSource + dx)
+
+    ax2.hist(RecoAlt, bins=60, range=(AltSource - dx, AltSource + dx))
+
+    if type(Outfile) is str:
+        fig.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200)
+
+    return fig
+
+
+def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, ax=None, **kwargs):
+    """
+    Plot the theta2 distribution and save it under Outfile
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: `numpy.ndarray`
+    AzSource: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    **kwargs: options for `matplotlib.pyplot.hist`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    theta2 = ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)
+    AngRes = ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource)
+
+    ax.set_xlabel(r'$\theta^2 [deg^2]$')
+    ax.set_ylabel('Count')
+
+    ax.hist(theta2, **kwargs)
+    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f})'.format(AngRes[0], AngRes[2], AngRes[1]))
+
+    return ax
+
+
+def plot_angles_map_distri(RecoAlt, RecoAz, AltSource, AzSource, E, Outfile=None):
+    """
+    Plot the angles map distribution
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float
+    AzSource: float
+    E: `numpy.ndarray`
+    Outfile: str
+
+    Returns
+    -------
+    fig: `matplotlib.pyplot.figure`
+    """
+
+    dx = 0.5
+
+    fig = plt.figure(figsize=(12, 12))
+
+    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
+
+    plt.xticks(fontsize=SizeTick)
+    plt.yticks(fontsize=SizeTick)
+
+    ax1.set_xlim(AzSource - dx, AzSource + dx)
+    ax1.set_ylim(AltSource - dx, AltSource + dx)
+
+    plt.xlabel("Az [deg]")
+    plt.ylabel("Alt [deg]")
+
+    if len(RecoAlt) > 1000:
+        ax1.hist2d(a.RecoAlt, a.RecoAz, bins=60,
+                   range=([AltSource - dx, AltSource + dx], [AzSource - dx, AzSource + dx]))
+    else:
+        ax1.scatter(RecoAz, RecoAlt, c=np.log10(E))
+    ax1.scatter(AzSource, AltSource, marker='+', linewidths=3, s=200, c='black')
+
+    ax1.xaxis.set_label_position('top')
+    ax1.yaxis.set_tick_params(labelsize=SizeTick)
+    ax1.xaxis.set_ticks_position('top')
+    ax1.xaxis.set_tick_params(labelsize=SizeTick)
+    plt.legend('', 'Source position')
+
+    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
+    ax2.set_xlim(AzSource - dx, AzSource + dx)
+    ax2.yaxis.tick_right()
+    ax2.xaxis.set_tick_params(labelsize=SizeTick)
+    ax2.xaxis.set_ticklabels([])
+    ax2.xaxis.tick_bottom()
+    ax2.hist(RecoAz, bins=60, range=(AzSource - dx, AzSource + dx))
+    plt.locator_params(nbins=4)
+
+    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
+    ax3.set_ylim(AltSource - dx, AltSource + dx)
+    ax3.yaxis.set_ticklabels([])
+    ax3.yaxis.set_tick_params(labelsize=SizeTick)
+    plt.locator_params(nbins=4)
+
+    ax3.spines["left"].set_visible(False)
+    ax3.hist(RecoAlt, bins=60, range=(AltSource - dx, AltSource + dx), orientation=u'horizontal')
+
+    if type(Outfile) is str:
+        fig.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+
+    return fig
+
+
+def plot_impact_point_map_distri(RecoX, RecoY, telX, telY, **options):
+    """
+    Map and distributions of the reconstructed impact points.
+
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
+    options:
+        kde=True : make a gaussian fit of the point density
+        Outfile='string' : save a png image of the plot under 'string.png'
+
+    Returns
+    -------
+    fig: `matplotlib.pyplot.figure`
+    """
+    fig = plt.figure(figsize=(12, 12))
+
+    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
+
+    plt.xticks(fontsize=SizeTick)
+    plt.yticks(fontsize=SizeTick)
+
+    plt.xlabel("X [m]")
+    plt.ylabel("Y [m]")
+
+    if options.get("kde") == True:
+        kde = gaussian_kde([RecoX, RecoY])
+        density = kde([RecoX, RecoY])
+        ax1.scatter(RecoX, RecoY, c=density, s=2)
+    else:
+        ax1.hist2d(RecoX, RecoY, bins=80, norm=LogNorm())
+
+    ax1.xaxis.set_label_position('top')
+    ax1.yaxis.set_tick_params(labelsize=SizeTick)
+    ax1.xaxis.set_ticks_position('top')
+    ax1.xaxis.set_tick_params(labelsize=SizeTick)
+    plt.legend('', 'Source position')
+
+    ax1.scatter(telX, telY, c='tomato', marker='+', s=90, linewidths=10)
+
+    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
+    ax2.yaxis.tick_right()
+    ax2.xaxis.set_tick_params(labelsize=SizeTick)
+    ax2.xaxis.set_ticklabels([])
+    ax2.xaxis.tick_bottom()
+    ax2.hist(RecoX, bins=60)
+    plt.locator_params(nbins=4)
+
+    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
+    ax3.yaxis.set_ticklabels([])
+    ax3.yaxis.set_tick_params(labelsize=SizeTick)
+    plt.locator_params(nbins=4)
+
+    ax3.spines["left"].set_visible(False)
+    ax3.hist(RecoY, bins=60, orientation=u'horizontal')
+
+    if options.get("Outfile"):
+        Outfile = options.get("Outfile")
+        fig.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+
+    return fig
+
+
+def plot_impact_point_heatmap(RecoX, RecoY, ax=None, Outfile=None):
+    """
+    Plot the heatmap of the impact points on the site ground and save it under Outfile
+
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    Outfile: string
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=SizeTick)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=SizeTick)
+
+    ax.set_xlabel("X [m]")
+    ax.set_ylabel("Y [m]")
+    ax.axis('equal')
+
+    cm = plt.cm.get_cmap('OrRd')
+    h = ax.hist2d(RecoX, RecoY, bins=75, norm=LogNorm(), cmap=cm)
+    cb = plt.colorbar(h[3], ax=ax)
+    cb.set_label('Event count')
+
+    if type(Outfile) is str:
+        plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+
+    return ax
+
+
+def plot_multiplicity_hist(multiplicity, ax=None, Outfile=None, xmin=0, xmax=100):
+    """
+    Histogram of the telescopes multiplicity
+
+    Parameters
+    ----------
+    multiplicity: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    Outfile: string
+    xmin: float
+    xmax: float
+    """
+    m = np.sort(multiplicity)
+
+    ax = plt.gca() if ax is None else ax
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=SizeTick)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=SizeTick)
+
+    if xmax <= xmin:
+        xmax = floor(m.max()) + 1
+
+    if len(m) > 0:
+        ax.set_xlim(xmin, xmax + 1)
+        n, b, s = ax.hist(m, bins=(xmax - xmin), align='left', range=(xmin, xmax), label='Telescope multiplicity')
+        ax.xaxis.set_ticks(np.append(np.linspace(xmin, xmax, 10, dtype=int), [1, 2, 3, 4, 5]))
+        x50 = m[int(floor(0.5 * len(m)))] + 0.5
+        x90 = m[int(floor(0.9 * len(m)))] + 0.5
+        if xmin < x50 < xmax:
+            ax.vlines(x50, 0, n[int(m[int(floor(0.5 * len(m)))])], color=BrewOranges[-2], label='50%')
+        if xmin < x90 < xmax:
+            ax.vlines(x90, 0, n[int(m[int(floor(0.9 * len(m)))])], color=BrewOranges[-1], label='90%')
+
+    plt.legend(fontsize=SizeLabel)
+    ax.set_title("Telescope multiplicity")
+    if type(Outfile) is str:
+        plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+
+    return ax
+
+
+def plot_multiplicity_per_telescope_type(EventTup, Outfile=None):
+    """
+    Plot the multiplicity for each telescope type
+
+    Parameters
+    ----------
+    EventTup
+    Outfile
+
+    Returns
+    -------
+
+    """
+    LST = []
+    SST = []
+    MST = []
+    for tups in EventTup:
+        lst = 0
+        mst = 0
+        sst = 0
+        for t in tups:
+            if t[2] == 0:
+                lst += 1
+            elif 1 <= t[2] <= 3:
+                mst += 1
+            elif t[2] >= 4:
+                sst += 1
+        LST.append(lst)
+        MST.append(mst)
+        SST.append(sst)
+
+    fig = plt.figure(figsize=(12, 9))
+
+    ax1 = plt.subplot(311)
+    if max(LST) > 0:
+        ax1.spines["top"].set_visible(False)
+        ax1.spines["right"].set_visible(False)
+        ax1.get_xaxis().tick_bottom()
+        ax1.get_yaxis().tick_left()
+        ax1.set_ylabel('Count')
+        ax1.hist(LST, bins=max(LST), align='right')
+        ax1.text(.8, .8, 'LST', horizontalalignment='center', transform=ax1.transAxes, fontsize=SizeLabel)
+    else:
+        ax1.text(0.5, .5, "No LST triggered", horizontalalignment='center', fontsize=SizeLabel)
+
+    ax2 = plt.subplot(312)
+    if max(MST) > 0:
+        ax2.spines["top"].set_visible(False)
+        ax2.spines["right"].set_visible(False)
+        ax2.get_xaxis().tick_bottom()
+        ax2.get_yaxis().tick_left()
+        ax2.set_ylabel('Count')
+
+        ax2.hist(MST, bins=max(MST), align='right')
+        ax2.text(.8, .8, 'MST', horizontalalignment='center', transform=ax2.transAxes, fontsize=SizeLabel)
+    else:
+        ax2.text(0.5, .5, "No MST triggered", horizontalalignment='center', fontsize=SizeLabel)
+
+    ax3 = plt.subplot(313)
+    if max(SST) > 0:
+        ax3.spines["top"].set_visible(False)
+        ax3.spines["right"].set_visible(False)
+        ax3.get_xaxis().tick_bottom()
+        ax3.get_yaxis().tick_left()
+        ax3.set_xlabel('Number of Telescopes triggered')
+        ax3.set_ylabel('Count')
+        ax3.hist(SST, bins=max(SST), align='right')
+        ax3.text(.8, .8, 'SST', horizontalalignment='center', transform=ax3.transAxes, fontsize=SizeLabel)
+    else:
+        ax3.text(0.5, .5, "No SST triggered", horizontalalignment='center', fontsize=SizeLabel)
+
+    if type(Outfile) is str:
+        plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200)
+
+    return LST, MST, SST
+
+
+def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
+    """
+    Plot the effective area as a function of the energy
+
+    Parameters
+    ----------
+    SimuE: `numpy.ndarray` - all simulated event energies
+    RecoE: `numpy.ndarray` - all reconstructed event energies
+    simuArea: float
+    ax: `matplotlib.pyplot.axes`
+    kwargs: options for `maplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> import ctaplot
+    >>> irf = ctaplot.ana.irf()
+    >>> simue = 10**(-2 + 4*np.random.rand(1000))
+    >>> recoe = 10**(-2 + 4*np.random.rand(100))
+    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea)
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Effective Area $[m^2]$')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    E_bin, Seff = ana.effective_area_per_energy(SimuE, RecoE, simuArea)
+    E = ana.logbin_mean(E_bin)
+    ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., fmt='o', **kwargs)
+
+    return ax
+
+
+def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA requirement for the effective area
+
+    Parameters
+    ----------
+    cta_site: string - see `hipectaold.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_requirements()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_effective_area()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Effective Area $[m^2]$')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
+def plot_effective_area_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA performances for the effective area
+
+    Parameters
+    ----------
+    cta_site: string - see `hipectaold.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_effective_area()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Effective Area $[m^2]$')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
+def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile="AngRes", cta_site=None, **kwargs):
+    """
+    Plot the angular resolution as a function of the energy and save the plot in png format
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float
+    AzSource: float
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    Outfile: string
+    cta_site: string
+    kwargs: args for `ctaplot.plots.plot_angular_res_per_energy`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    ax = plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=ax, **kwargs)
+
+    if cta_site:
+        ax = plot_effective_area_requirement(cta_site, ax=ax, color='black')
+
+    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200)
+    plt.close()
+
+    return ax
+
+
+def plot_sensitivity_requirement(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA requirement for the sensitivity
+    Parameters
+    ----------
+    cta_site: string - see `ctaplot.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_requirements()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_sensitivity()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
+def plot_sensitivity_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA performances for the sensitivity
+    Parameters
+    ----------
+    cta_site: string - see `ctaplot.ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`, optional
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ef_cta = cta_req.get_sensitivity()
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ef_cta, **kwargs)
+
+    return ax
+
+
+def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
+    """
+    Plot the layout map of telescopes positions - depreciated
+
+    Parameters
+    ----------
+    TelX: `numpy.ndarray`
+    TelY: `numpy.ndarray`
+    TelId: `numpy.ndarray`
+    TelType: `numpy.ndarray`
+    LayoutId: `numpy.ndarray`
+    Outfile: string
+
+    Returns
+    -------
+
+    """
+
+    # 0 LST, (1,2,3) MST, (4,5,6) SST => 0 for LST, 1 for MST, 2 fot SST
+    type = numpy.floor((2 + TelType) / 3)
+    plt.figure(figsize=(12, 12))
+
+    ax = plt.subplot(111)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+
+    plt.xlabel("X [m]")
+    plt.ylabel("Y [m]")
+
+    mask_layout = numpy.in1d(TelId, LayoutId)
+    mask_lst = mask_layout & numpy.in1d(TelType, [0])
+    mask_mst = mask_layout & numpy.in1d(TelType, [1, 2, 3])
+    mask_sst = mask_layout & numpy.in1d(TelType, [4, 5, 6])
+
+    plt.axis('equal')
+    plt.xlim(-1000, 1000)
+    plt.ylim(-1000, 1000)
+    # ax.scatter(TelX[mask_layout],TelY[mask_layout], s=100/(1+type[mask_layout]), c=type[mask_layout], cmap='Paired',label="label this")#, c=TelType[mask_layout])
+    ax.scatter(TelX[mask_lst], TelY[mask_lst], s=100 / (1 + type[mask_lst]), c=BrewBlues[-1], cmap='Paired',
+               label="LST")
+    ax.scatter(TelX[mask_mst], TelY[mask_mst], s=100 / (1 + type[mask_mst]), c=BrewReds[-1], cmap='Paired', label="MST")
+    ax.scatter(TelX[mask_sst], TelY[mask_sst], s=100 / (1 + type[mask_sst]), c=BrewGreens[-1], cmap='Paired',
+               label="SST")
+
+    plt.title("CTA site with layout %s" % Outfile.split('.')[-1], fontsize=SizeTitleArticle)
+    plt.legend(fontsize=SizeLabel)
+    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
+    plt.close()
+
+
+def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, **kwargs):
+    """
+    Plot the angular resolution as a function of the energy
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float
+    AzSource: float
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel(r'$\theta [deg]$')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_xscale('log')
+
+    E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
+    # Angular resolution is traditionnaly presented in degrees
+    RES = numpy.degrees(RES)
+
+    E = ana.logbin_mean(E_bin)
+
+    ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
+                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
+
+    ax.set_title('Angular resolution')
+    return ax
+
+
+def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, Outfile="AngRes",
+        cta_site=None, **kwargs):
+    """
+    Plot the angular resolution as a function of the energy and save the plot in png format
+
+    Parameters
+    ----------
+    RecoAlt: `numpy.ndarray`
+    RecoAz: `numpy.ndarray`
+    AltSource: float
+    AzSource: float
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    Outfile: string
+    cta_site: string
+    kwargs: args for `hipectaold.plots.plot_angular_res_per_energy`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    ax = plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=ax, **kwargs)
+
+    if cta_site:
+        ax = plot_angular_res_requirement(cta_site, ax=ax)
+
+    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
+    plt.close()
+
+    return ax
+
+
+def plot_angular_res_requirement(cta_site, ax=None, **kwargs):
+    """
+    Plot the CTA requirement for the angular resolution
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_requirements()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_angular_resolution()
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
+
+    ax.set_ylabel(r'$\theta [deg]$')
+    ax.set_xlabel('Energy [TeV]')
+
+    ax.set_xscale('log')
+    ax.set_title('Angular resolution')
+    return ax
+
+
+def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
+    """
+    Plot the official CTA performances (June 2018) for the angular resolution
+
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_performances`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_angular_resolution()
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$\theta [deg]$')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_title('Angular resolution')
+    return ax
+
+
+def plot_impact_parameter_error(RecoX, RecoY, SimuX, SimuY, ax=None, **kwargs):
+    """
+    plot impact parameter error distribution and save it under Outfile
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
+    Outfile: string
+    """
+    d = np.sqrt((RecoX - SimuX) ** 2 + (RecoY - SimuY) ** 2)
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_xlabel('Error on impact parameter [m]')
+    ax.set_ylabel('Count')
+    ax.set_title('Impact parameter resolution')
+
+    kwargs['bins'] = 40 if 'bins' not in kwargs else kwargs['bins']
+
+    ax.hist(d, **kwargs)
+    return ax
+
+def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None, **kwargs):
+    """
+    plot the impact parameter error distance as a function of energy and save the plot as Outfile
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    E, err_mean : numpy arrays
+    """
+    irf = ana.irf_cta()
+    E_bin = irf.E_bin
+    E = []
+    err_mean = []
+    err_min = []
+    err_max = []
+    err_std = []
+    for i, eb in enumerate(E_bin[:-1]):
+        mask = (SimuE > E_bin[i]) & (SimuE < E_bin[i + 1])
+        E.append(numpy.mean([E_bin[i], E_bin[i + 1]]))
+        if True in mask:
+            d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
+            err_mean.append(d.mean())
+            err_min.append(d.min())
+            err_max.append(d.max())
+            err_std.append(numpy.std(d))
+        else:
+            err_mean.append(0)
+            err_min.append(0)
+            err_max.append(0)
+            err_std.append(0)
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel('Error on Impact Parameter [m]')
+    ax.set_xlabel('Energy [TeV]')
+
+    ax.set_xscale('log')
+
+    ax.fill_between(E, err_min, err_max)
+    ax.errorbar(E, err_mean, err_std, color="red", label="mean+std")
+
+    plt.legend(fontsize=SizeLabel)
+    ax.set_title('Impact parameter resolution')
+
+    return E, np.array(err_mean)
+
+
+def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Multiplicity,
+        max_mult=None, ax=None, **kwargs):
+    """
+    Plot the impact parameter error as a function of multiplicity
+    TODO: refactor and clean code
+
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: `numpy.ndarray`
+    SimuY: `numpy.ndarray`
+    Multiplicity: `numpy.ndarray`
+    max_mult: optional, max multiplicity - float
+    ax: `matplotlib.pyplot.axes`
+
+    Returns
+    -------
+
+    """
+    max_mult = Multiplicity.max() + 1 if max_mult is None else max_mult
+
+    M = np.arange(Multiplicity.min(), max_mult)
+    e_mean = []
+    e_min = []
+    e_max = []
+    e_std = []
+    for m in M:
+        mask = (Multiplicity == m)
+        if True in mask:
+            d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
+            e_mean.append(d.mean())
+            e_min.append(d.min())
+            e_max.append(d.max())
+            e_std.append(numpy.std(d))
+        else:
+            e_mean.append(0)
+            e_min.append(0)
+            e_max.append(0)
+            e_std.append(0)
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel('Error on Impact Parameter [m]')
+    ax.set_xlabel('Multiplicity')
+
+    ax.fill_between(M, e_min, e_max)
+    ax.errorbar(M, e_mean, e_std, color="red", label="mean+std")
+
+    plt.legend(fontsize=SizeLabel)
+
+    return M, numpy.array(e_mean)
+
+
+def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
+    """
+    Map of the site with telescopes positions
+
+    Parameters
+    ----------
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
+    telTypes: `numpy.ndarray`
+    Outfile: string - name of the output file
+    """
+    plt.figure(figsize=(12, 12))
+
+    assert (len(telX) == len(telY)), "telX and telY should have the same length"
+    if telTypes:
+        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
+        plt.scatter(telX, telY, color=telTypes, s=30)
+    else:
+        plt.scatter(telX, telY, color='black', s=30)
+
+    plt.axis('equal')
+    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+    plt.close()
+
+
+def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="ImpactMap.png"):
+    """
+    Map of the site with telescopes positions and impact points heatmap
+
+    Parameters
+    ----------
+    impactX: `numpy.ndarray`
+    impactY: `numpy.ndarray`
+    telX: `numpy.ndarray`
+    telY: `numpy.ndarray`
+    telTypes: `numpy.ndarray`
+    Outfile: string - name of the output file
+    """
+    plt.figure(figsize=(12, 12))
+
+    plt.hist2d(impactX, impactY, bins=40)
+    plt.colorbar()
+
+    assert (len(telX) == len(telY)), "telX and telY should have the same length"
+    if telTypes:
+        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
+        plt.scatter(telX, telY, color=telTypes, s=30)
+    else:
+        plt.scatter(telX, telY, color='black', s=30)
+
+    plt.axis('equal')
+    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+    plt.close()
+
+
+def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
+    """
+    Plot the energy bias
+
+    Parameters
+    ----------
+    SimuE: `numpy.ndarray`
+    RecoE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
+
+    ax = plt.gca() if ax is None else ax
+
+    E_bin, biasE = ana.energy_bias(SimuE, RecoE)
+    E = ana.logbin_mean(E_bin)
+
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
+    ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
+    ax.set_xlabel("log(E/TeV)")
+    ax.set_xscale('log')
+    plt.legend()
+    ax.set_title('Energy bias')
+
+    ax.errorbar(E, biasE, xerr=(E - E_bin[:-1], E_bin[1:] - E), **kwargs)
+
+    return ax
+
+
+def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwargs):
+    """
+    Plot the enregy resolution as a function of the energy
+
+    Parameters
+    ----------
+    SimuE: `numpy.ndarray`
+    RecoE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    bias_correction: `bool`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
+
+    ax = plt.gca() if ax is None else ax
+
+    E_bin, Eres = ana.energy_res_per_energy(SimuE, RecoE, bias_correction=bias_correction)
+    E = ana.logbin_mean(E_bin)
+
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
+    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+    ax.set_xlabel("Energy [TeV]")
+    ax.set_xscale('log')
+    ax.set_title('Energy resolution')
+
+    ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
+                yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
+
+    return ax
+
+
+def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
+    """
+    Plot the cta requirement for the energy resolution
+
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_requirements`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_requirements()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_energy_resolution()
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA requirements {}".format(cta_site)
+
+    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+    ax.set_xlabel("Energy [TeV]")
+    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xscale('log')
+    return ax
+
+
+def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
+    """
+    Plot the cta performances (June 2018) for the energy resolution
+
+    Parameters
+    ----------
+    cta_site: string, see `ana.cta_performances`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    cta_req = ana.cta_performances()
+    cta_req.site = cta_site
+    e_cta, ar_cta = cta_req.get_energy_resolution()
+
+    if not 'label' in kwargs:
+        kwargs['label'] = "CTA performances {}".format(cta_site)
+
+    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+    ax.set_xlabel("Energy [TeV]")
+    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xscale('log')
+    return ax
+
+
+def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta_site=None):
+    """
+    plot the energy resolution of the reconstruction
+    Parameters
+    ----------
+    SimuE: `numpy.ndarray`
+    RecoE: `numpy.ndarray`
+    cta_goal: boolean - If True CTA energy resolution requirement is plotted
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plot_energy_resolution(SimuE, RecoE)
+
+    if cta_site != None:
+        ax = plot_energy_resolution_requirements(cta_site, ax=ax)
+
+    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+    plt.close()
+    return ax
+
+
+def plot_reco_histo(y_true, y_reco):
+    """
+    plot the histogram of a reconstructed feature after prediction from a machine learning algorithm
+    plt.show() to display
+    Parameters
+    ----------
+    y_true: real values of the feature to predict
+    y_reco: predicted values by the ML algo
+    """
+    plt.figure(figsize=(7, 6))
+
+    plt.hist2d(y_true, y_reco, bins=50)
+    plt.colorbar()
+    plt.plot(y_true, y_true, color='black', label="perfect prediction line")
+    plt.axis('equal')
+    plt.xlabel("To predict")
+    plt.ylabel("Predicted")
+    plt.legend()
+
+    plt.title("Histogram of the predicted feature")
+
+
+def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile="ImpactParameterErrorSiteCenter"):
+    """
+    Plot the impact parameter error as a function of the distance to the site center.
+
+    Parameters
+    ----------
+    RecoX: 1d array
+    RecoY: 1d array
+    SimuX: 1d array
+    SimuY: 1d array
+    Outfile: string
+    """
+
+    import seaborn as sns
+    sns.set(style="white", color_codes=True)
+
+    imp_err = ana.impact_parameter_error(a.RecoX, a.RecoY, a.SimuX[a.maskSimuRecoed], a.SimuY[a.maskSimuRecoed])
+    dCenter = numpy.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
+
+    sns.jointplot(dCenter, imp_err, kind='reg')
+
+    plt.legend(fontsize=SizeLabel)
+
+    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
+    plt.close()
+
+
+def plot_site(telX, telY, ax=None, **kwargs):
+    """
+    Plot the telescopes positions
+    Parameters
+    ----------
+    telX: 1D numpy array
+    telY: 1D numpy array
+    ax: `~matplotlib.axes.Axes` or None
+    **kwargs : Extra keyword arguments are passed to `matplotlib.pyplot.scatter`
+
+    Returns
+    -------
+    ax : `~matplotlib.axes.Axes`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    ax.scatter(telX, telY, **kwargs)
+    ax.axis('equal')
+
+    return ax
+
+
+def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None, **kwargs):
+    """
+    Plot the angular resolution as a function of the energy
+
+    Parameters
+    ----------
+    RecoX: `numpy.ndarray`
+    RecoY: `numpy.ndarray`
+    SimuX: float
+    SimuY: float
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel('Impact Resolution [m]')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_xscale('log')
+
+    E_bin, RES = ana.impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE)
+    E = ana.logbin_mean(E_bin)
+
+    ax.errorbar(
+        E, RES[:, 0],
+        xerr=(E - E_bin[:-1], E_bin[1:] - E),
+        yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
+        fmt='o',
+        **kwargs,
+    )
+
+    return ax
+
+
+def saveplot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None,
+        Outfile="impact_resolution.png", **kwargs):
+    """
+
+    Parameters
+    ----------
+    RecoX
+    RecoY
+    SimuX
+    SimuY
+    SimuE
+    ax
+    Outfile
+    kwargs
+
+    Returns
+    -------
+
+    """
+    ax = plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=ax, **kwargs)
+    plt.savefig(Outfile, fmt='png', dpi=200)
+    plt.close()
+
+
+def plot_migration_matrix(X, Y, ax=None, **kwargs):
+    """
+    Make a simple plot of a migration matrix
+
+    Parameters
+    ----------
+    X: list or `numpy.ndarray`
+    Y: list or `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    **kwargs: args for `matplotlib.pyplot.hist2d`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axes`
+    """
+
+    if not 'bins' in kwargs:
+        kwargs['bins'] = 50
+
+    ax = plt.gca() if ax is None else ax
+    ax.hist2d(X, Y, **kwargs)
+    return ax
+
+
+def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
+    """
+    Plot the dispersion around an expected value X_true
+
+    Parameters
+    ----------
+    X_true: `numpy.ndarray`
+    X_exp: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.hist2d`
+
+    Returns
+    -------
+    `maptlotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    if not 'bins' in kwargs:
+        kwargs['bins'] = 50
+
+    x = numpy.log10(X_true) if x_log else X_true
+
+    ax.hist2d(x, X_true - X_exp, **kwargs)
+    return ax
+
+
+def plot_features_importance(learn_class, ax=None):
+    ax = plt.gca() if ax is None else ax
+
+    sns.barplot(learn_class.input_features_keys, learn_class.model.feature_importances_, ax=ax)
+    plt.xticks(rotation='vertical')
+    plt.title("Features importance".format(id))
+
+    return ax
+
+
+
 class plot_from_anadata:
+    """
+    Class to make plots from AnaData class object.
+    The AnaData class was created in the hipecta_old
+    I will keep this class here for now but it surely is depreciated.
+
+    Parameters
+    ----------
+    anadata: AnaData class object
+    """
+
     def __init__(self, anadata):
-        """
-        init class with a AnaData class object
-        Parameters
-        ----------
-        anadata: AnaData class object
-        """
+
         self.a = anadata
         self.SimuArea = 1
 
@@ -72,6 +1518,7 @@ class plot_from_anadata:
     def set_outdir(self, dir_name):
         """
         set new directory for plots and create it
+
         Parameters
         ----------
         dir_name: string
@@ -82,6 +1529,7 @@ class plot_from_anadata:
     def set_site(self, site):
         """
         set the observation site: 'south' or 'north'
+
         Parameters
         ----------
         site: string
@@ -133,6 +1581,7 @@ class plot_from_anadata:
         """
         historgram of the telescopes multiplicity.
         One can select an energy range.
+
         Parameters
         ----------
         ER: tuple of (energy_min, energy_max) to select an energy range. Use inf for no limit.
@@ -463,1444 +1912,3 @@ class plot_from_anadata:
         plt.savefig(self.outdir + '/' + "ImpactResolution.png", bbox_inches="tight", format='png', dpi=200)
         # plt.close('all')
         return ax
-
-
-def plot_recoQuality_hist(recoQ, Outfile="recoQuality"):
-    """
-    Plot an histogram of the reconstruction quality flags
-    Parameters
-    ----------
-    recoQ: 1D array
-    Outfile: string
-    mask
-    """
-    fig = plt.figure(figsize=(12, 9))
-
-    mi = int(recoQ.min())
-    ma = int(recoQ.max())
-
-    plt.hist(recoQ, align='left', bins=int(ma), range=(0, ma));
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def saveplot_energy_distribution(SimuE, RecoE, Outfile="EnergyDistribution", maskSimuDetected=True):
-    """
-    Plot the energy distribution of the simulated particles, detected particles and reconstructed particles
-
-    Parameters
-    ----------
-    SimuE: Numpy 1d array of simulated energies
-    RecoE: Numpy 1d array of reconstructed energies
-    Outfile: string - filename output
-    maskSimuDetected - Numpy 1d array - mask of detected particles for the SimuE array
-    """
-
-    fig = plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_xlabel('Energy [TeV]')
-    ax1.set_ylabel('Count')
-
-    ax1.set_xscale('log')
-    count_S, bin_S, o = ax1.hist(SimuE, log=True, bins=numpy.logspace(-3, 3, 30), label="Simulated")
-    count_D, bin_D, o = ax1.hist(SimuE[maskSimuDetected], log=True, bins=numpy.logspace(-3, 3, 30), label="Detected")
-    count_R, bin_R, o = ax1.hist(RecoE, log=True, bins=numpy.logspace(-3, 3, 30), label="Reconstructed")
-    plt.legend(fontsize=SizeLabel)
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_multiplicty_per_energy(Multiplicity, Energies, Outfile="MultiplicityE"):
-    """
-    Plot the telescope multiplicity as a function of the energy and save it under Outfile.png
-    Parameters
-    ----------
-    Multiplicity: 1d numpy array
-    Energies: 1d numpy array
-    Outfile: string
-    """
-
-    assert len(Multiplicity) == len(Energies), "arrays should have same length"
-    assert len(Multiplicity) > 0, "arrays are empty"
-
-    E, m_mean, m_min, m_max, m_per = multiplicty_stat_per_energy(Multiplicity, Energies)
-
-    fig = plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_xlabel('Energy [TeV]')
-    ax1.set_ylabel('Multiplicity')
-
-    ax1.fill_between(E, m_min, m_max, alpha=0.5)
-    ax1.plot(E, m_min, '--')
-    ax1.plot(E, m_max, '--')
-    ax1.plot(E, m_mean, color='red')
-
-    ax1.set_xscale('log')
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_field_of_view_map(RecoAlt, RecoAz, AltSource, AzSource, E=False, Outfile="FovMap"):
-    """
-    Plot a map in angles [in degrees] of the photons seen by the telescope (after reconstruction)
-    Parameters
-    ----------
-    RecoAlt: 1d numpy array
-    RecoAz: 1d numpy array
-    AltSource: float, source Altitude
-    AzSource: float, source Azimuth
-    E: 1d numpy array
-    Outfile: string
-    """
-    plt.figure(figsize=(12, 12))
-
-    dx = 0.05
-
-    ax = plt.subplot(111)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-
-    ax.set_xlim(AzSource - dx, AzSource + dx)
-    ax.set_ylim(AltSource - dx, AltSource + dx)
-
-    plt.xlabel("Az [deg]")
-    plt.ylabel("Alt [deg]")
-
-    plt.axis('equal')
-
-    c = BrewBlues[-1]
-    if E:
-        c = numpy.log10(E)
-        plt.colorbar()
-
-    plt.scatter(RecoAz, RecoAlt, c=c)
-    plt.scatter(AzSource, AltSource, marker='+', linewidths=3, s=200, c='orange', label="Source position")
-
-    plt.legend()
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_angles_distribution(RecoAlt, RecoAz, AltSource, AzSource, Outfile="AnglesDistribution"):
-    """
-    Plot the disitribution of reconstructed angles. Save figure to Outfile in png format.
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: `float`
-    AzSource: `float`
-    Outfile: `string`
-    """
-
-    dx = 1
-
-    plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(211)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-
-    ax1.set_xlabel('Az [deg]')
-    ax1.set_ylabel('Count')
-    ax1.set_xlim(AzSource - dx, AzSource + dx)
-
-    ax1.hist(RecoAz, bins=60, range=(AzSource - dx, AzSource + dx))
-
-    ax2 = plt.subplot(212)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-
-    ax2.get_xaxis().tick_bottom()
-    ax2.get_yaxis().tick_left()
-
-    ax2.set_xlabel('Alt [deg]', fontsize=SizeLabel)
-    ax2.set_ylabel('Count', fontsize=SizeLabel)
-    ax2.set_xlim(AltSource - dx, AltSource + dx)
-
-    ax2.hist(RecoAlt, bins=60, range=(AltSource - dx, AltSource + dx))
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, ax=None, **kwargs):
-    """
-    Plot the theta2 distribution and save it under Outfile
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: `numpy.ndarray`
-    AzSource: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    **kwargs: options for `matplotlib.pyplot.hist`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    theta2 = ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)
-    AngRes = ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource)
-
-    ax.set_xlabel(r'$\theta^2 [deg^2]$')
-    ax.set_ylabel('Count')
-
-    ax.hist(theta2, **kwargs)
-    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f})'.format(AngRes[0], AngRes[2], AngRes[1]))
-
-    return ax
-
-def plot_angles_map_distri(RecoAlt, RecoAz, AltSource, AzSource, E, Outfile="AnglesMapDistri"):
-    """
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: float
-    AzSource: float
-    E: `numpy.ndarray`
-    Outfile
-
-    Returns
-    -------
-
-    """
-
-    dx = 0.5
-
-    plt.figure(figsize=(12, 12))
-
-    # ax1 = plt.subplot(221)
-    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-    # ax1.spines["top"].set_visible(False)
-    # ax1.spines["right"].set_visible(False)
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
-
-    ax1.set_xlim(AzSource - dx, AzSource + dx)
-    ax1.set_ylim(AltSource - dx, AltSource + dx)
-
-    plt.xlabel("Az [deg]")
-    plt.ylabel("Alt [deg]")
-
-    if len(RecoAlt) > 1000:
-        ax1.hist2d(a.RecoAlt, a.RecoAz, bins=60,
-                   range=([AltSource - dx, AltSource + dx], [AzSource - dx, AzSource + dx]))
-    else:
-        ax1.scatter(RecoAz, RecoAlt, c=numpy.log10(E))
-    ax1.scatter(AzSource, AltSource, marker='+', linewidths=3, s=200, c='black')
-
-    ax1.xaxis.set_label_position('top')
-    # ax1.yaxis.tick_right()
-    ax1.yaxis.set_tick_params(labelsize=SizeTick)
-    ax1.xaxis.set_ticks_position('top')
-    ax1.xaxis.set_tick_params(labelsize=SizeTick)
-    plt.legend('', 'Source position')
-
-    # ax2 = plt.subplot(223, sharex=ax1)
-    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
-    ax2.set_xlim(AzSource - dx, AzSource + dx)
-    ax2.yaxis.tick_right()
-    ax2.xaxis.set_tick_params(labelsize=SizeTick)
-    ax2.xaxis.set_ticklabels([])
-    ax2.xaxis.tick_bottom()
-    ax2.hist(RecoAz, bins=60, range=(AzSource - dx, AzSource + dx))
-    plt.locator_params(nbins=4)
-
-    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
-    ax3.set_ylim(AltSource - dx, AltSource + dx)
-    ax3.yaxis.set_ticklabels([])
-    ax3.yaxis.set_tick_params(labelsize=SizeTick)
-    plt.locator_params(nbins=4)
-
-    ax3.spines["left"].set_visible(False)
-    ax3.hist(RecoAlt, bins=60, range=(AltSource - dx, AltSource + dx), orientation=u'horizontal')
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-    return 0
-
-
-def plot_impact_point_map_distri(RecoX, RecoY, telX, telY, **options):
-    """
-    Map and distributions of the reconstructed impact points.
-
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    telX: `numpy.ndarray`
-    telY: `numpy.ndarray`
-    options:
-        kde=True : make a gaussian fit of the point density
-        Outfile='string' : save a png image of the plot under 'string.png'
-    """
-    plt.figure(figsize=(12, 12))
-
-    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-    # ax1.spines["top"].set_visible(False)
-    # ax1.spines["right"].set_visible(False)
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
-
-    plt.xlabel("X [m]")
-    plt.ylabel("Y [m]")
-
-    if options.get("kde") == True:
-        kde = gaussian_kde([RecoX, RecoY])
-        density = kde([RecoX, RecoY])
-        ax1.scatter(RecoX, RecoY, c=density, s=2)
-    else:
-        ax1.hist2d(RecoX, RecoY, bins=80, norm=LogNorm())
-
-    ax1.xaxis.set_label_position('top')
-    # ax1.yaxis.tick_right()
-    ax1.yaxis.set_tick_params(labelsize=SizeTick)
-    ax1.xaxis.set_ticks_position('top')
-    ax1.xaxis.set_tick_params(labelsize=SizeTick)
-    plt.legend('', 'Source position')
-
-    ax1.scatter(telX, telY, c='tomato', marker='+', s=90, linewidths=10)
-
-    # ax2 = plt.subplot(223, sharex=ax1)
-    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
-    ax2.yaxis.tick_right()
-    ax2.xaxis.set_tick_params(labelsize=SizeTick)
-    ax2.xaxis.set_ticklabels([])
-    ax2.xaxis.tick_bottom()
-    ax2.hist(RecoX, bins=60)
-    plt.locator_params(nbins=4)
-
-    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
-    ax3.yaxis.set_ticklabels([])
-    ax3.yaxis.set_tick_params(labelsize=SizeTick)
-    plt.locator_params(nbins=4)
-
-    ax3.spines["left"].set_visible(False)
-    ax3.hist(RecoY, bins=60, orientation=u'horizontal')
-
-    if options.get("Outfile"):
-        Outfile = options.get("Outfile")
-        plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-        plt.close()
-
-
-def plot_impact_point_heatmap(RecoX, RecoY, Outfile="ImpactHeatmap"):
-    """
-    Plot the heatmap of the impact points on the site ground and save it under Outfile
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    Outfile: string
-    """
-
-    fig = plt.figure()  # figsize=(12, 12))
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
-
-    plt.xlabel("X [m]")
-    plt.ylabel("Y [m]")
-    plt.axis('equal')
-
-    cm = plt.cm.get_cmap('OrRd')
-    plt.hist2d(RecoX, RecoY, bins=75, norm=LogNorm(), cmap=cm)
-    cb = plt.colorbar()
-    cb.set_label('Event count')
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_multiplicity_hist(multiplicity, Outfile="Multiplicity", xmin=0, xmax=100):
-    """
-    Histogram of the telescopes multiplicity
-    Parameters
-    ----------
-    multiplicity: `numpy.ndarray`
-    Outfile: string
-    xmin: float
-    xmax: float
-    """
-    m = numpy.sort(multiplicity)
-    plt.figure(figsize=(12, 9))
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
-
-    if xmax <= xmin:
-        xmax = floor(m.max()) + 1
-
-    if len(m) > 0:
-        ax1.set_xlim(xmin, xmax + 1)
-        n, b, s = ax1.hist(m, bins=(xmax - xmin), align='left', range=(xmin, xmax), label='Telescope multiplicity')
-        ax1.xaxis.set_ticks(numpy.append(numpy.linspace(xmin, xmax, 10, dtype=int), [1, 2, 3, 4, 5]))
-        x50 = m[int(floor(0.5 * len(m)))] + 0.5
-        x90 = m[int(floor(0.9 * len(m)))] + 0.5
-        if (x50 > xmin and x50 < xmax):
-            ax1.vlines(x50, 0, n[int(m[int(floor(0.5 * len(m)))])], color=BrewOranges[-2], label='50%')
-        if (x90 > xmin and x90 < xmax):
-            ax1.vlines(x90, 0, n[int(m[int(floor(0.9 * len(m)))])], color=BrewOranges[-1], label='90%')
-
-    plt.legend(fontsize=SizeLabel)
-    plt.title("Telescope multiplicity")
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-    return 0
-
-
-def plot_multiplicity_per_telescope_type(EventTup, Outfile="MultiplicityPerTelescopeType"):
-    """
-    Plot the multiplicity for each telescope type
-    Parameters
-    ----------
-    EventTup
-    Outfile
-
-    Returns
-    -------
-
-    """
-    LST = []
-    SST = []
-    MST = []
-    for tups in EventTup:
-        lst = 0;
-        mst = 0;
-        sst = 0;
-        for t in tups:
-            if t[2] == 0:
-                lst += 1
-            elif t[2] >= 1 and t[2] <= 3:
-                mst += 1
-            elif t[2] >= 4:
-                sst += 1
-        LST.append(lst)
-        MST.append(mst)
-        SST.append(sst)
-
-    fig = plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(311)
-    if max(LST) > 0:
-        ax1.spines["top"].set_visible(False)
-        ax1.spines["right"].set_visible(False)
-        ax1.get_xaxis().tick_bottom()
-        ax1.get_yaxis().tick_left()
-        ax1.set_ylabel('Count')
-        ax1.hist(LST, bins=max(LST), align='right')
-        ax1.text(.8, .8, 'LST', horizontalalignment='center', transform=ax1.transAxes, fontsize=SizeLabel)
-    else:
-        ax1.text(0.5, .5, "No LST triggered", horizontalalignment='center', fontsize=SizeLabel)
-
-    ax2 = plt.subplot(312)
-    if max(MST) > 0:
-        ax2.spines["top"].set_visible(False)
-        ax2.spines["right"].set_visible(False)
-        ax2.get_xaxis().tick_bottom()
-        ax2.get_yaxis().tick_left()
-        ax2.set_ylabel('Count')
-
-        ax2.hist(MST, bins=max(MST), align='right')
-        ax2.text(.8, .8, 'MST', horizontalalignment='center', transform=ax2.transAxes, fontsize=SizeLabel)
-    else:
-        ax2.text(0.5, .5, "No MST triggered", horizontalalignment='center', fontsize=SizeLabel)
-
-    ax3 = plt.subplot(313)
-    if max(SST) > 0:
-        ax3.spines["top"].set_visible(False)
-        ax3.spines["right"].set_visible(False)
-        ax3.get_xaxis().tick_bottom()
-        ax3.get_yaxis().tick_left()
-        ax3.set_xlabel('Number of Telescopes triggered')
-        ax3.set_ylabel('Count')
-        ax3.hist(SST, bins=max(SST), align='right')
-        ax3.text(.8, .8, 'SST', horizontalalignment='center', transform=ax3.transAxes, fontsize=SizeLabel)
-    else:
-        ax3.text(0.5, .5, "No SST triggered", horizontalalignment='center', fontsize=SizeLabel)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-    return LST, MST, SST
-
-
-def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
-    """
-    Plot the effective area as a function of the energy
-
-    Parameters
-    ----------
-    SimuE: `numpy.ndarray` - all simulated event energies
-    RecoE: `numpy.ndarray` - all reconstructed event energies
-    simuArea: float
-    ax: `matplotlib.pyplot.axes`
-    kwargs: options for `maplotlib.pyplot.errorbar`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-
-    Example
-    -------
-    >>> import numpy as np
-    >>> import ctaplot
-    >>> irf = ctaplot.ana.irf()
-    >>> simue = 10**(-2 + 4*np.random.rand(1000))
-    >>> recoe = 10**(-2 + 4*np.random.rand(100))
-    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea)
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-
-    E_bin, Seff = ana.effective_area_per_energy(SimuE, RecoE, simuArea)
-    E = ana.logbin_mean(E_bin)
-    ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., fmt='o', **kwargs)
-
-    return ax
-
-
-def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
-    """
-    Plot the CTA requirement for the effective area
-
-    Parameters
-    ----------
-    cta_site: string - see `hipectaold.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
-    e_cta, ef_cta = cta_req.get_effective_area()
-
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
-
-    ax.plot(e_cta, ef_cta, **kwargs)
-
-    return ax
-
-
-def plot_effective_area_performances(cta_site, ax=None, **kwargs):
-    """
-    Plot the CTA performances for the effective area
-
-    Parameters
-    ----------
-    cta_site: string - see `hipectaold.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
-    e_cta, ef_cta = cta_req.get_effective_area()
-
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
-
-    ax.plot(e_cta, ef_cta, **kwargs)
-
-    return ax
-
-
-def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile="AngRes", cta_site=None, **kwargs):
-    """
-    Plot the angular resolution as a function of the energy and save the plot in png format
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: float
-    AzSource: float
-    SimuE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    Outfile: string
-    cta_site: string
-    kwargs: args for `ctaplot.plots.plot_angular_res_per_energy`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    ax = plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=ax, **kwargs)
-
-    if cta_site:
-        ax = plot_effective_area_requirement(cta_site, ax=ax, color='black')
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-
-    return ax
-
-
-def plot_sensitivity_requirement(cta_site, ax=None, **kwargs):
-    """
-    Plot the CTA requirement for the sensitivity
-    Parameters
-    ----------
-    cta_site: string - see `ctaplot.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
-    e_cta, ef_cta = cta_req.get_sensitivity()
-
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
-
-    ax.plot(e_cta, ef_cta, **kwargs)
-
-    return ax
-
-
-def plot_sensitivity_performances(cta_site, ax=None, **kwargs):
-    """
-    Plot the CTA performances for the sensitivity
-    Parameters
-    ----------
-    cta_site: string - see `ctaplot.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
-    e_cta, ef_cta = cta_req.get_sensitivity()
-
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
-
-    ax.plot(e_cta, ef_cta, **kwargs)
-
-    return ax
-
-
-def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
-    """
-    Plot the layout map of telescopes positions - depreciated
-
-    Parameters
-    ----------
-    TelX: `numpy.ndarray`
-    TelY: `numpy.ndarray`
-    TelId: `numpy.ndarray`
-    TelType: `numpy.ndarray`
-    LayoutId: `numpy.ndarray`
-    Outfile: string
-
-    Returns
-    -------
-
-    """
-
-    # 0 LST, (1,2,3) MST, (4,5,6) SST => 0 for LST, 1 for MST, 2 fot SST
-    type = numpy.floor((2 + TelType) / 3)
-    plt.figure(figsize=(12, 12))
-
-    ax = plt.subplot(111)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-
-    plt.xlabel("X [m]")
-    plt.ylabel("Y [m]")
-
-    mask_layout = numpy.in1d(TelId, LayoutId)
-    mask_lst = mask_layout & numpy.in1d(TelType, [0])
-    mask_mst = mask_layout & numpy.in1d(TelType, [1, 2, 3])
-    mask_sst = mask_layout & numpy.in1d(TelType, [4, 5, 6])
-
-    plt.axis('equal')
-    plt.xlim(-1000, 1000)
-    plt.ylim(-1000, 1000)
-    # ax.scatter(TelX[mask_layout],TelY[mask_layout], s=100/(1+type[mask_layout]), c=type[mask_layout], cmap='Paired',label="label this")#, c=TelType[mask_layout])
-    ax.scatter(TelX[mask_lst], TelY[mask_lst], s=100 / (1 + type[mask_lst]), c=BrewBlues[-1], cmap='Paired',
-               label="LST")
-    ax.scatter(TelX[mask_mst], TelY[mask_mst], s=100 / (1 + type[mask_mst]), c=BrewReds[-1], cmap='Paired', label="MST")
-    ax.scatter(TelX[mask_sst], TelY[mask_sst], s=100 / (1 + type[mask_sst]), c=BrewGreens[-1], cmap='Paired',
-               label="SST")
-
-    plt.title("CTA site with layout %s" % Outfile.split('.')[-1], fontsize=SizeTitleArticle)
-    plt.legend(fontsize=SizeLabel)
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, **kwargs):
-    """
-    Plot the angular resolution as a function of the energy
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: float
-    AzSource: float
-    SimuE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.errorbar`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_xscale('log')
-
-    E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
-    # Angular resolution is traditionnaly presented in degrees
-    RES = numpy.degrees(RES)
-
-    E = ana.logbin_mean(E_bin)
-
-    ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
-                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
-
-    return ax
-
-
-def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, Outfile="AngRes",
-        cta_site=None, **kwargs):
-    """
-    Plot the angular resolution as a function of the energy and save the plot in png format
-
-    Parameters
-    ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: float
-    AzSource: float
-    SimuE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    Outfile: string
-    cta_site: string
-    kwargs: args for `hipectaold.plots.plot_angular_res_per_energy`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    ax = plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=ax, **kwargs)
-
-    if cta_site:
-        ax = plot_angular_res_requirement(cta_site, ax=ax)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-    return ax
-
-
-def plot_angular_res_requirement(cta_site, ax=None, **kwargs):
-    """
-    Plot the CTA requirement for the angular resolution
-    Parameters
-    ----------
-    cta_site: string, see `ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
-    e_cta, ar_cta = cta_req.get_angular_resolution()
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
-
-    ax.plot(e_cta, ar_cta, **kwargs)
-
-    ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
-
-    ax.set_xscale('log')
-    return ax
-
-
-def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
-    """
-    Plot the official CTA performances (June 2018) for the angular resolution
-
-    Parameters
-    ----------
-    cta_site: string, see `ana.cta_performances`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
-    e_cta, ar_cta = cta_req.get_angular_resolution()
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
-
-    ax.plot(e_cta, ar_cta, **kwargs)
-    ax.set_xscale('log')
-    ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
-    return ax
-
-
-def plot_impact_parameter_error(RecoX, RecoY, SimuX, SimuY, Outfile="ImpactParamterError"):
-    """
-    plot impact parameter error distribution and save it under Outfile
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: `numpy.ndarray`
-    SimuY: `numpy.ndarray`
-    Outfile: string
-    """
-    d = numpy.sqrt((RecoX - SimuX) ** 2 + (RecoY - SimuY) ** 2)
-
-    plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_xlabel('Error on impact parameter [m]')
-    ax1.set_ylabel('Count')
-
-    ax1.hist(d, bins=40)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, Outfile="ImpactParameterErrorPerEnergy"):
-    """
-    plot the impact parameter error distance as a function of energy and save the plot as Outfile
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: `numpy.ndarray`
-    SimuY: `numpy.ndarray`
-    SimuE: `numpy.ndarray`
-    Outfile: string
-
-    Returns
-    -------
-    E, err_mean : numpy arrays
-    """
-    irf = ana.irf_cta()
-    E_bin = irf.E_bin
-    E = []
-    err_mean = []
-    err_min = []
-    err_max = []
-    err_std = []
-    for i, eb in enumerate(E_bin[:-1]):
-        mask = (SimuE > E_bin[i]) & (SimuE < E_bin[i + 1])
-        E.append(numpy.mean([E_bin[i], E_bin[i + 1]]))
-        if True in mask:
-            d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
-            err_mean.append(d.mean())
-            err_min.append(d.min())
-            err_max.append(d.max())
-            err_std.append(numpy.std(d))
-        else:
-            err_mean.append(0)
-            err_min.append(0)
-            err_max.append(0)
-            err_std.append(0)
-
-    plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_ylabel('Error on Impact Parameter [m]')
-    ax1.set_xlabel('Energy [TeV]')
-
-    ax1.set_xscale('log')
-
-    ax1.fill_between(E, err_min, err_max)
-    ax1.errorbar(E, err_mean, err_std, color="red", label="mean+std")
-
-    plt.legend(fontsize=SizeLabel)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-    return E, numpy.array(err_mean)
-
-
-def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Multiplicity, max=None,
-        Outfile="ImpactParameterErrorPerMultiplicity"):
-    """
-    Plot the impact parameter error as a function of multiplicity
-    TODO: refactor and clean code
-
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: `numpy.ndarray`
-    SimuY: `numpy.ndarray`
-    Multiplicity: `numpy.ndarray`
-    max: optional, max multiplicity - float
-    Outfile: string
-
-    Returns
-    -------
-
-    """
-    if max == None: max = Multiplicity.max() + 1
-    M = numpy.arange(Multiplicity.min(), max)
-    e_mean = []
-    e_min = []
-    e_max = []
-    e_std = []
-    for m in M:
-        mask = (Multiplicity == m)
-        if True in mask:
-            d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
-            e_mean.append(d.mean())
-            e_min.append(d.min())
-            e_max.append(d.max())
-            e_std.append(numpy.std(d))
-        else:
-            e_mean.append(0)
-            e_min.append(0)
-            e_max.append(0)
-            e_std.append(0)
-
-    plt.figure(figsize=(12, 9))
-
-    ax1 = plt.subplot(111)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    ax1.set_ylabel('Error on Impact Parameter [m]')
-    ax1.set_xlabel('Multiplicity')
-
-    ax1.fill_between(M, e_min, e_max)
-    ax1.errorbar(M, e_mean, e_std, color="red", label="mean+std")
-
-    plt.legend(fontsize=SizeLabel)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-    return M, numpy.array(e_mean)
-
-
-def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
-    """
-    Map of the site with telescopes positions
-
-    Parameters
-    ----------
-    telX: `numpy.ndarray`
-    telY: `numpy.ndarray`
-    telTypes: `numpy.ndarray`
-    Outfile: string - name of the output file
-    """
-    plt.figure(figsize=(12, 12))
-
-    assert (len(telX) == len(telY)), "telX and telY should have the same length"
-    if telTypes:
-        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
-        plt.scatter(telX, telY, color=telTypes, s=30)
-    else:
-        plt.scatter(telX, telY, color='black', s=30)
-
-    plt.axis('equal')
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-
-
-def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="ImpactMap.png"):
-    """
-    Map of the site with telescopes positions and impact points heatmap
-
-    Parameters
-    ----------
-    impactX: `numpy.ndarray`
-    impactY: `numpy.ndarray`
-    telX: `numpy.ndarray`
-    telY: `numpy.ndarray`
-    telTypes: `numpy.ndarray`
-    Outfile: string - name of the output file
-    """
-    plt.figure(figsize=(12, 12))
-
-    plt.hist2d(impactX, impactY, bins=40)
-    plt.colorbar()
-
-    assert (len(telX) == len(telY)), "telX and telY should have the same length"
-    if telTypes:
-        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
-        plt.scatter(telX, telY, color=telTypes, s=30)
-    else:
-        plt.scatter(telX, telY, color='black', s=30)
-
-    plt.axis('equal')
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-
-
-def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
-    """
-    Plot the energy bias
-
-    Parameters
-    ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
-
-    ax = plt.gca() if ax is None else ax
-
-    E_bin, biasE = ana.energy_bias(SimuE, RecoE)
-    E = ana.logbin_mean(E_bin)
-
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
-
-    ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
-    ax.set_xlabel("log(E/TeV)")
-    ax.set_xscale('log')
-    plt.legend()
-    plt.title('Energy bias')
-
-    ax.errorbar(E, biasE, xerr=(E - E_bin[:-1], E_bin[1:] - E), **kwargs)
-
-    return ax
-
-
-def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwargs):
-    """
-    Plot the enregy resolution as a function of the energy
-
-    Parameters
-    ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    bias_correction: `bool`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
-
-    ax = plt.gca() if ax is None else ax
-
-    E_bin, Eres = ana.energy_res_per_energy(SimuE, RecoE, bias_correction=bias_correction)
-    E = ana.logbin_mean(E_bin)
-
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
-
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel("Energy [TeV]")
-    ax.set_xscale('log')
-    plt.title('Energy resolution')
-
-    ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
-                yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
-
-    return ax
-
-
-def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
-    """
-    Plot the cta requirement for the energy resolution
-
-    Parameters
-    ----------
-    cta_site: string, see `ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
-    e_cta, ar_cta = cta_req.get_energy_resolution()
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
-
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel("Energy [TeV]")
-    ax.plot(e_cta, ar_cta, **kwargs)
-    ax.set_xscale('log')
-    return ax
-
-
-def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
-    """
-    Plot the cta performances (June 2018) for the energy resolution
-
-    Parameters
-    ----------
-    cta_site: string, see `ana.cta_performances`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.plot`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
-    e_cta, ar_cta = cta_req.get_energy_resolution()
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
-
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel("Energy [TeV]")
-    ax.plot(e_cta, ar_cta, **kwargs)
-    ax.set_xscale('log')
-    return ax
-
-
-def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta_site=None):
-    """
-    plot the energy resolution of the reconstruction
-    Parameters
-    ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
-    cta_goal: boolean - If True CTA energy resolution requirement is plotted
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plot_energy_resolution(SimuE, RecoE)
-
-    if cta_site != None:
-        ax = plot_energy_resolution_requirements(cta_site, ax=ax)
-
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-    return ax
-
-
-def plot_reco_histo(y_true, y_reco):
-    """
-    plot the histogram of a reconstructed feature after prediction from a machine learning algorithm
-    plt.show() to display
-    Parameters
-    ----------
-    y_true: real values of the feature to predict
-    y_reco: predicted values by the ML algo
-    """
-    plt.figure(figsize=(7, 6))
-
-    plt.hist2d(y_true, y_reco, bins=50)
-    plt.colorbar()
-    plt.plot(y_true, y_true, color='black', label="perfect prediction line")
-    plt.axis('equal')
-    plt.xlabel("To predict")
-    plt.ylabel("Predicted")
-    plt.legend()
-
-    plt.title("Histogram of the predicted feature")
-
-
-def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile="ImpactParameterErrorSiteCenter"):
-    """
-    Plot the impact parameter error as a function of the distance to the site center.
-
-    Parameters
-    ----------
-    RecoX: 1d array
-    RecoY: 1d array
-    SimuX: 1d array
-    SimuY: 1d array
-    Outfile: string
-    """
-
-    import seaborn as sns
-    sns.set(style="white", color_codes=True)
-
-    imp_err = ana.impact_parameter_error(a.RecoX, a.RecoY, a.SimuX[a.maskSimuRecoed], a.SimuY[a.maskSimuRecoed])
-    dCenter = numpy.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
-
-    sns.jointplot(dCenter, imp_err, kind='reg')
-
-    plt.legend(fontsize=SizeLabel)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
-
-
-def plot_site(telX, telY, ax=None, **kwargs):
-    """
-    Plot the telescopes positions
-    Parameters
-    ----------
-    telX: 1D numpy array
-    telY: 1D numpy array
-    ax: `~matplotlib.axes.Axes` or None
-    **kwargs : Extra keyword arguments are passed to `matplotlib.pyplot.scatter`
-
-    Returns
-    -------
-    ax : `~matplotlib.axes.Axes`
-    """
-    ax = plt.gca() if ax is None else ax
-
-    ax.scatter(telX, telY, **kwargs)
-    ax.axis('equal')
-
-    return ax
-
-
-def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None, **kwargs):
-    """
-    Plot the angular resolution as a function of the energy
-
-    Parameters
-    ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: float
-    SimuY: float
-    SimuE: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.errorbar`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel('Impact Resolution [m]')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_xscale('log')
-
-    E_bin, RES = ana.impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE)
-    E = ana.logbin_mean(E_bin)
-
-    ax.errorbar(
-        E, RES[:, 0],
-        xerr=(E - E_bin[:-1], E_bin[1:] - E),
-        yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
-        fmt='o',
-        **kwargs,
-    )
-
-    return ax
-
-
-def saveplot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None,
-        Outfile="impact_resolution.png", **kwargs):
-    """
-
-    Parameters
-    ----------
-    RecoX
-    RecoY
-    SimuX
-    SimuY
-    SimuE
-    ax
-    Outfile
-    kwargs
-
-    Returns
-    -------
-
-    """
-    ax = plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=ax, **kwargs)
-    plt.savefig(Outfile, fmt='png', dpi=200)
-    plt.close()
-
-
-def plot_migration_matrix(X, Y, ax=None, **kwargs):
-    """
-    Make a simple plot of a migration matrix
-
-    Parameters
-    ----------
-    X: list or `numpy.ndarray`
-    Y: list or `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    **kwargs: args for `matplotlib.pyplot.hist2d`
-
-    Returns
-    -------
-    `matplotlib.pyplot.axes`
-    """
-
-    if not 'bins' in kwargs:
-        kwargs['bins'] = 50
-
-    ax = plt.gca() if ax is None else ax
-    ax.hist2d(X, Y, **kwargs)
-    return ax
-
-
-def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
-    """
-    Plot the dispersion around an expected value X_true
-
-    Parameters
-    ----------
-    X_true: `numpy.ndarray`
-    X_exp: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.hist2d`
-
-    Returns
-    -------
-    `maptlotlib.pyplot.axes`
-    """
-
-    ax = plt.gca() if ax is None else ax
-
-    if not 'bins' in kwargs:
-        kwargs['bins'] = 50
-
-    x = numpy.log10(X_true) if x_log else X_true
-
-    ax.hist2d(x, X_true - X_exp, **kwargs)
-    return ax
-
-
-def plot_features_importance(learn_class, ax=None):
-    ax = plt.gca() if ax is None else ax
-
-    sns.barplot(learn_class.input_features_keys, learn_class.model.feature_importances_, ax=ax)
-    plt.xticks(rotation='vertical')
-    plt.title("Features importance".format(id))
-
-    return ax
