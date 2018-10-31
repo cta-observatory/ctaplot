@@ -18,7 +18,17 @@ Given a list of reconstructed and simulated quantities, compute and plot the Ins
 * Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 * License: MIT
 
+
+.. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
+    :target: https://travis-ci.org/vuillaut/ctaplot
+
+.. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
+   :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 ----
+
+
 
 Install
 -------
