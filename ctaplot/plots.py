@@ -757,7 +757,7 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     """
 
     # 0 LST, (1,2,3) MST, (4,5,6) SST => 0 for LST, 1 for MST, 2 fot SST
-    type = numpy.floor((2 + TelType) / 3)
+    type = np.floor((2 + TelType) / 3)
     plt.figure(figsize=(12, 12))
 
     ax = plt.subplot(111)
@@ -769,10 +769,10 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.xlabel("X [m]")
     plt.ylabel("Y [m]")
 
-    mask_layout = numpy.in1d(TelId, LayoutId)
-    mask_lst = mask_layout & numpy.in1d(TelType, [0])
-    mask_mst = mask_layout & numpy.in1d(TelType, [1, 2, 3])
-    mask_sst = mask_layout & numpy.in1d(TelType, [4, 5, 6])
+    mask_layout = np.in1d(TelId, LayoutId)
+    mask_lst = mask_layout & np.in1d(TelType, [0])
+    mask_mst = mask_layout & np.in1d(TelType, [1, 2, 3])
+    mask_sst = mask_layout & np.in1d(TelType, [4, 5, 6])
 
     plt.axis('equal')
     plt.xlim(-1000, 1000)
@@ -821,7 +821,7 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
 
     E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
     # Angular resolution is traditionnaly presented in degrees
-    RES = numpy.degrees(RES)
+    RES = np.degrees(RES)
 
     E = ana.logbin_mean(E_bin)
 
@@ -983,13 +983,13 @@ def plot_impact_parameter_error_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax
     err_std = []
     for i, eb in enumerate(E_bin[:-1]):
         mask = (SimuE > E_bin[i]) & (SimuE < E_bin[i + 1])
-        E.append(numpy.mean([E_bin[i], E_bin[i + 1]]))
+        E.append(np.mean([E_bin[i], E_bin[i + 1]]))
         if True in mask:
             d = ana.impact_parameter_error(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask])
             err_mean.append(d.mean())
             err_min.append(d.min())
             err_max.append(d.max())
-            err_std.append(numpy.std(d))
+            err_std.append(np.std(d))
         else:
             err_mean.append(0)
             err_min.append(0)
@@ -1050,7 +1050,7 @@ def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Mul
             e_mean.append(d.mean())
             e_min.append(d.min())
             e_max.append(d.max())
-            e_std.append(numpy.std(d))
+            e_std.append(np.std(d))
         else:
             e_mean.append(0)
             e_min.append(0)
@@ -1071,7 +1071,7 @@ def plot_impact_parameter_error_per_multiplicity(RecoX, RecoY, SimuX, SimuY, Mul
 
     plt.legend(fontsize=SizeLabel)
 
-    return M, numpy.array(e_mean)
+    return M, np.array(e_mean)
 
 
 def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
@@ -1325,7 +1325,7 @@ def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile=
     sns.set(style="white", color_codes=True)
 
     imp_err = ana.impact_parameter_error(a.RecoX, a.RecoY, a.SimuX[a.maskSimuRecoed], a.SimuY[a.maskSimuRecoed])
-    dCenter = numpy.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
+    dCenter = np.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
 
     sns.jointplot(dCenter, imp_err, kind='reg')
 
@@ -1469,7 +1469,7 @@ def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
     if not 'bins' in kwargs:
         kwargs['bins'] = 50
 
-    x = numpy.log10(X_true) if x_log else X_true
+    x = np.log10(X_true) if x_log else X_true
 
     ax.hist2d(x, X_true - X_exp, **kwargs)
     return ax
@@ -1508,7 +1508,7 @@ class plot_from_anadata:
         if not os.path.isdir(self.outdir): os.mkdir(self.outdir)
 
         if len(anadata.TelTypes) > 0:
-            if len(set(numpy.concatenate(anadata.TelTypes))) > 2:
+            if len(set(np.concatenate(anadata.TelTypes))) > 2:
                 self.set_site('south')
             else:
                 self.set_site('north')
@@ -1789,10 +1789,10 @@ class plot_from_anadata:
         for k in self.a.__dict__:
             fig = plt.figure()
             value = getattr(self.a, k)
-            mask = numpy.concatenate(self.a.ImageQuality) == 0
-            if type(value) == numpy.ndarray and len(value) > 0:
-                if type(value[0]) == numpy.ndarray:
-                    ar = numpy.nan_to_num(numpy.concatenate(value))[mask]
+            mask = np.concatenate(self.a.ImageQuality) == 0
+            if type(value) == np.ndarray and len(value) > 0:
+                if type(value[0]) == np.ndarray:
+                    ar = np.nan_to_num(np.concatenate(value))[mask]
                 else:
                     ar = value
                 plt.hist(ar, label=str(k), bins=40);
