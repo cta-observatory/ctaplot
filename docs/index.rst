@@ -9,9 +9,5 @@ Contents
    README
    license
    modules
+   examples
 
-Indices and tables
-==================
-
-* :ref:`modindex`
-* :ref:`search`

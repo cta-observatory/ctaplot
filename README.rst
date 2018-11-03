@@ -10,6 +10,9 @@ Given a list of reconstructed and simulated quantities, compute and plot the Ins
 * effective surface
 * impact point resolution
 
+
+You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_.
+
 ----
 
 
@@ -47,66 +50,4 @@ To install, get in ctaplot main directory and type:
 .. code-block:: bash
 
    python setup.py install
-
-----
-
-Examples
---------
-
-.. code-block:: python
-
-    fig, ax = plt.subplots(figsize=(12,8))
-    ax = ctaplot.plot_angular_res_requirement('north', ax=ax, linewidth=3)
-    ax = ctaplot.plot_angular_res_cta_performance('north', ax=ax, marker='o')
-    ax = ctaplot.plot_angular_res_requirement('south', ax=ax,  linewidth=3)
-    ax = ctaplot.plot_angular_res_cta_performance('south', ax=ax, marker='o')
-    ax.grid()
-    plt.legend(prop = font)
-
-.. image:: share/images/CTA_angular_resolution.png
-   :target: share/images/CTA_angular_resolution.png
-   :alt: CTA angular resolution
-
-.. code-block:: python
-
-    fig, ax = plt.subplots(figsize=(12,8))
-    ax = ctaplot.plot_energy_resolution_requirements('north', ax=ax, linewidth=3)
-    ax = ctaplot.plot_energy_resolution_cta_performances('north', ax=ax, marker='o')
-    ax = ctaplot.plot_energy_resolution_requirements('south', ax=ax,  linewidth=3)
-    ax = ctaplot.plot_energy_resolution_cta_performances('south', ax=ax, marker='o')
-    ax.grid()
-    plt.legend(prop = font)
-
-.. image:: share/images/CTA_effective_area.png
-   :target: share/images/CTA_effective_area.png
-   :alt: CTA effective area
-
-.. code-block:: python
-
-    fig, ax = plt.subplots(figsize=(12,8))
-    ax = ctaplot.plot_effective_area_requirement('north', ax=ax, linewidth=3)
-    ax = ctaplot.plot_effective_area_performances('north', ax=ax, marker='o')
-    ax = ctaplot.plot_effective_area_requirement('south', ax=ax,  linewidth=3)
-    ax = ctaplot.plot_effective_area_performances('south', ax=ax, marker='o')
-    ax.grid()
-    plt.legend(prop = font)
-
-.. image:: share/images/CTA_energy_resolution.png
-   :target: share/images/CTA_energy_resolution.png
-   :alt: CTA energy resolution
-
-.. code-block:: python
-
-    fig, ax = plt.subplots(figsize=(12,8))
-    ax = ctaplot.plot_sensitivity_requirement('north', ax=ax, linewidth=3)
-    ax = ctaplot.plot_sensitivity_performances('north', ax=ax, marker='o')
-    ax = ctaplot.plot_sensitivity_requirement('south', ax=ax,  linewidth=3)
-    ax = ctaplot.plot_sensitivity_performances('south', ax=ax, marker='o')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
-    ax.grid()
-    plt.legend(prop = font)
-
-.. image:: share/images/CTA_sensitivity.png
-   :target: share/images/CTA_sensitivity.png
-   :alt: CTA sensitivity
 

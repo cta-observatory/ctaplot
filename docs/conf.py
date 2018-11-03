@@ -14,8 +14,14 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+import shutil
 
+sys.path.insert(0, os.path.abspath('..'))
+notebooks_dir = '../examples/notebooks/'
+if not os.path.exists('notebooks'):
+    os.mkdir('notebooks')
+[shutil.copy(notebooks_dir + file, 'notebooks')
+ for file in os.listdir(notebooks_dir) if file.endswith('.ipynb')]
 
 # -- Project information -----------------------------------------------------
 
@@ -45,6 +51,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
