@@ -34,3 +34,20 @@ def test_impact_resolution_per_energy():
     E, R = ana.impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy)
     assert (np.isclose(R, np.sqrt(2))).all()
 
+
+def test_resolution():
+    import numpy as np
+    x = np.random.rand(100)
+    assert (ana.resolution(x, x) == np.zeros(3)).all()
+    x = np.random.normal(size=100000, scale=1, loc=10)
+    y = 10 * np.ones(x.shape[0])
+    assert np.isclose(ana.resolution(y, x), 0.099 * np.ones(3), rtol=1e-2).all()
+
+
+def test_resolution_per_energy():
+    import numpy as np
+    x = np.random.normal(size=100000, scale=1, loc=10)
+    y = 10 * np.ones(x.shape[0])
+    E = 10 ** (-3 + 6 * np.random.rand(x.shape[0]))
+    e_bin, res_e = ana.resolution_per_energy(y, x, E)
+    assert np.isclose(res_e, 0.099 * np.ones(res_e.shape[1]), rtol=1e-1).all()

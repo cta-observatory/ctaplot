@@ -213,6 +213,7 @@ def multiplicity_stat_per_energy(Multiplicity, Energies, p = 50):
     return irf.E, m_mean, m_min, m_max, m_per
 
 
+
 def bias(simu, reco):
     """
     Compute the bias of a reconstructed variable.
@@ -230,6 +231,49 @@ def bias(simu, reco):
     res = (reco - simu) / reco
     return np.median(res)
 
+
+def resolution(simu, reco, Q=68, bias_correction=False):
+    """
+    Compute the resolution of reco as the Qth (68 as standard) containment radius of delta_reco/reco
+    with the lower and upper confidence limits
+
+    Parameters
+    ----------
+    simu: 1d `numpy.ndarray` of simulated energies
+    reco: 1d `numpy.ndarray` of reconstructed energies
+
+    Returns
+    -------
+    `numpy.array` - [energy_resolution, lower_confidence_limit, upper_confidence_limit]
+    """
+    assert len(simu) == len(reco), "both arrays should have the same size"
+
+    bias = 0
+    if bias_correction:
+        bias = bias(simu, reco)
+
+    res = np.abs((reco - simu) / reco - bias)
+    return np.append(RQ(res, Q), percentile_confidence_interval(res, Q=Q))
+
+
+def resolution_per_energy(simu, reco, SimuE, bias_correction=False):
+    """
+    Parameters
+    ----------
+    simu: 1d `numpy.ndarray` of simulated energies
+    reco: 1d `numpy.ndarray` of reconstructed energies
+
+    Returns
+    -------
+    (e, res) : tuple of 1d numpy arrays - energy, resolution
+    """
+    res = []
+    irf = irf_cta()
+    for i, e in enumerate(irf.E):
+        mask = (SimuE > irf.E_bin[i]) & (SimuE < irf.E_bin[i+1])
+        res.append(resolution(simu[mask], reco[mask], bias_correction=bias_correction))
+
+    return irf.E_bin, np.array(res)
 
 
 def energy_res(SimuE, RecoE, Q=68, bias_correction=False):
