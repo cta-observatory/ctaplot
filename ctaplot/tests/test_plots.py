@@ -77,7 +77,6 @@ def test_plot_angles_map_distri():
     SimuAlt = 1
     SimuAz = 1.5
     E = 10**(np.random.rand(n)*6 - 3)
-
     plots.plot_angles_map_distri(RecoAlt, RecoAz, SimuAlt, SimuAz, E)
 
 
@@ -88,7 +87,6 @@ def test_plot_impact_point_map_distri():
     RecoY = 1000 * np.random.rand(n) - 500
     telX = np.array([10, 100])
     telY = np.array([100, -10])
-
     plots.plot_impact_point_map_distri(RecoX, RecoY, telX, telY)
 
 
@@ -97,7 +95,6 @@ def test_plot_impact_point_heatmap():
     n = 10
     RecoX = np.random.rand(n)
     RecoY = np.random.rand(n)
-
     plots.plot_impact_point_heatmap(RecoX, RecoY)
 
 def test_plot_multiplicity_hist():
@@ -111,5 +108,12 @@ def test_plot_effective_area_per_energy():
     SimuE = 10**(6 * np.random.rand(100) - 3)
     RecoE = 10 ** (6 * np.random.rand(10) - 3)
     simuArea = 1000
-
     plots.plot_effective_area_per_energy(SimuE, RecoE, simuArea)
+
+
+def test_plot_resolution_per_energy():
+    import numpy as np
+    simu = np.ones(100)
+    reco = np.random.normal(loc=1, scale=1, size=100)
+    energy = 10**(-3 + 6 * np.random.rand(100))
+    plots.plot_resolution_per_energy(reco, simu, energy)

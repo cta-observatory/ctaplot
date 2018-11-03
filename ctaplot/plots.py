@@ -790,6 +790,44 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.close()
 
 
+def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
+    """
+    Plot a variable resolution as a function of the energy
+
+    Parameters
+    ----------
+    reco: `numpy.ndarray`
+    simu: `numpy.ndarray`
+    SimuE: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel(r'res')
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_xscale('log')
+
+    E_bin, RES = ana.resolution_per_energy(simu, reco, SimuE)
+
+    E = ana.logbin_mean(E_bin)
+
+    ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
+                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
+
+    ax.set_title('Resolution')
+    return ax
+
+
 def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
