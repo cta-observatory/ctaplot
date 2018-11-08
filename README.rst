@@ -26,6 +26,8 @@ The CTA instrument response functions data used in ctaplot come from the CTA Con
 In cases for which the CTA instrument response functions are used in a research project, we ask to add the following acknowledgement in any resulting publication:    
 “This research has made use of the CTA instrument response functions provided by the CTA Consortium and Observatory, see http://www.cta-observatory.org/science/cta-performance/ (version prod3b-v1) for more details.”
 
+----
+
 
 .. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
     :target: https://travis-ci.org/vuillaut/ctaplot
@@ -33,9 +35,6 @@ In cases for which the CTA instrument response functions are used in a research 
 .. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
    :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
-
-----
-
 
 
 Install
