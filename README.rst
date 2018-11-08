@@ -28,7 +28,6 @@ In cases for which the CTA instrument response functions are used in a research 
 
 ----
 
-
 .. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
     :target: https://travis-ci.org/vuillaut/ctaplot
 
