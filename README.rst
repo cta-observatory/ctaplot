@@ -1,7 +1,7 @@
 ctaplot
 -------
 
-ctaplot is a collection of functions to make IRF and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
+ctaplot is a collection of functions to make instrument response functions (IRF) and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
 Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions:
 
@@ -20,6 +20,11 @@ You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/l
 * Documentation : https://ctaplot.readthedocs.io/en/latest/
 * Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 * License: MIT
+
+The CTA instrument response functions data used in ctaplot come from the CTA Consortium and Observatory and may be found on the `cta-observatory website <http://www.cta-observatory.org/science/cta-performance/>`_ .
+
+In cases for which the CTA instrument response functions are used in a research project, we ask to add the following acknowledgement in any resulting publication:    
+“This research has made use of the CTA instrument response functions provided by the CTA Consortium and Observatory, see http://www.cta-observatory.org/science/cta-performance/ (version prod3b-v1) for more details.”
 
 
 .. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
