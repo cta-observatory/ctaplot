@@ -28,12 +28,17 @@ In cases for which the CTA instrument response functions are used in a research 
 
 ----
 
-.. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
-    :target: https://travis-ci.org/vuillaut/ctaplot
 
 .. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
    :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
+    
+.. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
+    :target: https://travis-ci.org/vuillaut/ctaplot
+    
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :target: https://opensource.org/licenses/MIT
+   :alt: License: MIT
 
 
 Install
