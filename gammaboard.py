@@ -49,7 +49,7 @@ def load_info(experiment, experiments_directory):
         info = json.load(open(experiments_directory + '/' + experiment + '/' + experiment + '_settings.json'),
                          object_pairs_hook=OrderedDict)
     except:
-        print("The json file for the experiment {} does not exist".format(experiment))
+        # info = "The json file for the experiment {} does not exist".format(experiment)
         return None
 
     return info
@@ -521,7 +521,8 @@ class GammaBoard(object):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, ax_imp_res)
                                  for exp_name in os.listdir(experiments_directory)
-                                 if exp_name.startswith('R_')}
+                                 if os.path.isdir(experiments_directory + '/' + exp_name) and
+                                 exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
         colors = np.arange(0, 1, 1/len(self.experiments_dict.keys()), dtype=np.float32)
         np.random.shuffle(colors)
         cmap = plt.cm.tab20
