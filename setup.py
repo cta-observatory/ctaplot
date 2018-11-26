@@ -18,7 +18,7 @@ dataset = package_files('share')
 print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
-      version=1.0,
+      version=0.1,
       description="DESCRIPTION",
       # these should be minimum list of what is needed to run (note
       # don't need to list the sub-dependencies like numpy, since
