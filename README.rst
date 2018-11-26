@@ -21,6 +21,8 @@ You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/l
 * Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 * License: MIT
 
+----
+
 The CTA instrument response functions data used in ctaplot come from the CTA Consortium and Observatory and may be found on the `cta-observatory website <http://www.cta-observatory.org/science/cta-performance/>`_ .
 
 In cases for which the CTA instrument response functions are used in a research project, we ask to add the following acknowledgement in any resulting publication:    
