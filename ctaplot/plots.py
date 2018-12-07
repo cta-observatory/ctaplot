@@ -1462,7 +1462,7 @@ def saveplot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=
     plt.close()
 
 
-def plot_migration_matrix(X, Y, ax=None, **kwargs):
+def plot_migration_matrix(X, Y, ax=None, colorbar=False, **kwargs):
     """
     Make a simple plot of a migration matrix
 
@@ -1471,6 +1471,7 @@ def plot_migration_matrix(X, Y, ax=None, **kwargs):
     X: list or `numpy.ndarray`
     Y: list or `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
+    colorbar: `matplotlib.colorbar`
     **kwargs: args for `matplotlib.pyplot.hist2d`
 
     Returns
@@ -1482,7 +1483,9 @@ def plot_migration_matrix(X, Y, ax=None, **kwargs):
         kwargs['bins'] = 50
 
     ax = plt.gca() if ax is None else ax
-    ax.hist2d(X, Y, **kwargs)
+    h = ax.hist2d(X, Y, **kwargs)
+    if colorbar:
+        plt.colorbar(h[3], ax=ax)
     return ax
 
 
