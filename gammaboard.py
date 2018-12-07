@@ -215,7 +215,7 @@ class Experiment(object):
             self.visibility_impact_resolution_plot(visible)
         self.visibility_effective_area_plot(visible)
 
-    def plot_energy_matrix(self, ax=None):
+    def plot_energy_matrix(self, ax=None, colorbar=True):
         """
         Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
         Args
@@ -231,7 +231,8 @@ class Experiment(object):
             reco = np.log10(self.data.reco_energy)
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
-                                               bins=50,
+                                               colorbar=colorbar,
+                                               bins=100,
                                                cmap=self.cm, cmin=1)
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
@@ -242,7 +243,7 @@ class Experiment(object):
             ax.set_title(self.name)
         return ax
 
-    def plot_altitude_matrix(self, ax=None):
+    def plot_altitude_matrix(self, ax=None, colorbar=True):
         """
         Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
         Args
@@ -258,7 +259,8 @@ class Experiment(object):
             reco = self.data.reco_altitude
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
-                                               bins=50,
+                                               colorbar=colorbar,
+                                               bins=100,
                                                cmap=self.cm, cmin=1)
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
@@ -269,7 +271,7 @@ class Experiment(object):
             ax.set_title(self.name)
         return ax
 
-    def plot_azimuth_matrix(self, ax=None):
+    def plot_azimuth_matrix(self, ax=None, colorbar=True):
         """
         Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
        Args
@@ -285,7 +287,8 @@ class Experiment(object):
             reco = self.data.reco_azimuth
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
-                                               bins=50,
+                                               colorbar=colorbar,
+                                               bins=100,
                                                cmap=self.cm, cmin=1)
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
@@ -296,7 +299,7 @@ class Experiment(object):
             ax.set_title(self.name)
         return ax
 
-    def plot_impact_x_matrix(self, ax=None):
+    def plot_impact_x_matrix(self, ax=None, colorbar=True):
         """
         Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
         Args
@@ -312,7 +315,8 @@ class Experiment(object):
             reco = self.data.reco_impact_x
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
-                                               bins=50,
+                                               colorbar=colorbar,
+                                               bins=100,
                                                cmap=self.cm, cmin=1)
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
@@ -323,7 +327,7 @@ class Experiment(object):
             ax.set_title(self.name)
         return ax
 
-    def plot_impact_y_matrix(self, ax=None):
+    def plot_impact_y_matrix(self, ax=None, colorbar=True):
         """
         Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
         Args
@@ -339,7 +343,8 @@ class Experiment(object):
             reco = self.data.reco_impact_y
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
-                                               bins=50,
+                                               colorbar=colorbar,
+                                               bins=100,
                                                cmap=self.cm, cmin=1)
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
@@ -351,22 +356,21 @@ class Experiment(object):
         return ax
 
 
-def plot_migration_matrices(exp, **kwargs):
+def plot_migration_matrices(exp, colorbar=True, **kwargs):
 
     if 'figsize' not in kwargs:
         kwargs['figsize'] = (25, 5)
     fig, axes = plt.subplots(1, 5, **kwargs)
     if 'reco_energy' in exp.data:
-        axes[0] = exp.plot_energy_matrix(ax=axes[0])
+        axes[0] = exp.plot_energy_matrix(ax=axes[0], colorbar=colorbar)
     if 'reco_altitude' in exp.data:
-        axes[1] = exp.plot_altitude_matrix(ax=axes[1])
+        axes[1] = exp.plot_altitude_matrix(ax=axes[1], colorbar=colorbar)
     if 'reco_azimuth' in exp.data:
-        axes[2] = exp.plot_azimuth_matrix(ax=axes[2])
+        axes[2] = exp.plot_azimuth_matrix(ax=axes[2], colorbar=colorbar)
     if 'reco_impact_x' in exp.data:
-        axes[3] = exp.plot_impact_x_matrix(ax=axes[3])
+        axes[3] = exp.plot_impact_x_matrix(ax=axes[3], colorbar=colorbar)
     if 'reco_impact_y' in exp.data:
-        axes[4] = exp.plot_impact_y_matrix(ax=axes[4])
-
+        axes[4] = exp.plot_impact_y_matrix(ax=axes[4], colorbar=colorbar)
     fig.tight_layout()
     return fig
 
