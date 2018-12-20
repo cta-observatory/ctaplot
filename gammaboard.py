@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
-from ipywidgets import HBox
+from ipywidgets import HBox, Tab, Output
 
 
 def load_data(experiment, experiments_directory):
@@ -427,7 +427,7 @@ def update_legend(visible_experiments, ax_imp_res):
     ax_imp_res.legend(handles=legend_elements, loc='best', bbox_to_anchor=(1, -0.3), ncol=4)
 
 
-def create_plot_on_click(experiments_dict, experiment_info_box,
+def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                          fig_resolution, visible_experiments, ax_imp_res):
 
     def plot_on_click(sender):
@@ -448,8 +448,10 @@ def create_plot_on_click(experiments_dict, experiment_info_box,
             visible = True
             if not exp.get_loaded():
                 exp.load_data()
+            if exp_name not in tabs.keys():
+                tabs[exp_name] = Output()
+                experiment_info_box.children += (tabs[exp_name])
 
-            experiment_info_box.clear_output()
             with experiment_info_box:
                 try:
                     # exp_info = experiments_info[experiments_info.experiment == exp_name]
@@ -473,13 +475,18 @@ def create_plot_on_click(experiments_dict, experiment_info_box,
     return plot_on_click
 
 
-def make_experiments_carousel(experiments_dic, experiment_info_box, fig_resolution,
+def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
                               visible_experiments, ax_imp_res):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
     Args
         experiments_dic (dict): dictionary of experiment class
+        experiment_info_box (Tab): the tab container
+        tabs (dict): dictionary of active tabs
+        fig_resolution
+        visible_experiments
+        ax_imp_res
 
     Returns
         `ipywidgets.VBox()`
@@ -491,26 +498,17 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, fig_resoluti
              for exp_name in np.sort(list(experiments_dic))[::-1]]
 
     for b in items:
-        b.on_click(create_plot_on_click(experiments_dic, experiment_info_box,
+        b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
                                         fig_resolution, visible_experiments, ax_imp_res))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
                         width='300px',
-                        height='300px',
+                        height='600px',
                         flex_flow='columns',
                         display='flex')
 
     return VBox(children=items, layout=box_layout)
-
-
-def make_exp_info_box():
-    from ipywidgets import Layout, Output
-    layout = Layout(border='1px solid black')
-
-    out = Output(layout=layout, description="Experiment info")
-
-    return out
 
 
 class GammaBoard(object):
@@ -542,10 +540,11 @@ class GammaBoard(object):
         #     experiments_info = None
         #     print("The file 'experiments.csv' cannot be found in the experiments directory")
 
-        experiment_info_box = make_exp_info_box()
+        experiment_info_box = Tab()
+        tabs = {}
         # carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box,
         #                                      experiments_info, fig_resolution, visible_experiments, ax_imp_res)
-        carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box,
+        carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              fig_resolution, visible_experiments, ax_imp_res)
 
         self.exp_box = HBox([carousel, experiment_info_box])
