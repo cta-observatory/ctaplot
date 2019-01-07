@@ -450,13 +450,15 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                 exp.load_data()
             if exp_name not in tabs.keys():
                 tabs[exp_name] = Output()
-                experiment_info_box.children += (tabs[exp_name])
 
-            with experiment_info_box:
+            experiment_info_box.children = [value for _, value in tabs.items()]
+            for i, key, in enumerate(tabs.keys()):
+                experiment_info_box.set_title(i, key)
+                if key == exp_name:
+                    experiment_info_box.selected_index = i
+
+            with tabs[exp_name]:
                 try:
-                    # exp_info = experiments_info[experiments_info.experiment == exp_name]
-                    # for col in exp_info:
-                    #     print(col, exp_info[col].values)
                     print_dict(exp.info)
                 except:
                     print("Sorry, I have no info on the experiment {}".format(exp_name))
@@ -464,6 +466,8 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
         else:
             sender.button_style = 'warning'
             visible = False
+            tabs[exp_name].close()
+            tabs.pop(exp_name)
             visible_experiments.remove(exp)
 
         if not exp.get_plotted() and visible:
@@ -534,16 +538,9 @@ class GammaBoard(object):
 
         visible_experiments = set()
 
-        # try:
-        #     experiments_info = pd.read_csv(experiments_directory + '/experiments.csv')
-        # except:
-        #     experiments_info = None
-        #     print("The file 'experiments.csv' cannot be found in the experiments directory")
-
         experiment_info_box = Tab()
         tabs = {}
-        # carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box,
-        #                                      experiments_info, fig_resolution, visible_experiments, ax_imp_res)
+
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              fig_resolution, visible_experiments, ax_imp_res)
 
