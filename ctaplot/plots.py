@@ -234,7 +234,7 @@ def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, ax=None, **kwargs):
     theta2 = ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)
     AngRes = ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource)
 
-    ax.set_xlabel(r'$\theta^2 [deg^2]$')
+    ax.set_xlabel(r'$\theta^2 [rad^2]$')
     ax.set_ylabel('Count')
 
     ax.hist(theta2, **kwargs)
@@ -858,7 +858,8 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
     ax.set_xscale('log')
 
     E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
-    # Angular resolution is traditionnaly presented in degrees
+
+    # Angular resolution is traditionally presented in degrees
     RES = np.degrees(RES)
 
     E = ana.logbin_mean(E_bin)
