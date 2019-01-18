@@ -41,7 +41,7 @@ def test_resolution():
     assert (ana.resolution(x, x) == np.zeros(3)).all()
     x = np.random.normal(size=100000, scale=1, loc=10)
     y = 10 * np.ones(x.shape[0])
-    assert np.isclose(ana.resolution(y, x), 0.099 * np.ones(3), rtol=1e-2).all()
+    assert np.isclose(ana.resolution(y, x), 0.099 * np.ones(3), rtol=1e-1).all()
 
 
 def test_resolution_per_energy():
