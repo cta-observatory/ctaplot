@@ -559,12 +559,12 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 class GammaBoard(object):
 
     def __init__(self, experiments_directory):
-        self.__fig_resolution, self.__axes_resolution = create_resolution_fig()
-        ax_imp_res = self.__axes_resolution[1][0]
-        ax_eff_area = self.__axes_resolution[1][1]
+        self._fig_resolution, self._axes_resolution = create_resolution_fig()
+        ax_imp_res = self._axes_resolution[1][0]
+        ax_eff_area = self._axes_resolution[1][1]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        self.__fig_resolution.subplots_adjust(bottom=0.2)
+        self._fig_resolution.subplots_adjust(bottom=0.2)
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, ax_imp_res)
                                  for exp_name in os.listdir(experiments_directory)
@@ -583,7 +583,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self.__fig_resolution, visible_experiments, ax_imp_res)
+                                             self._fig_resolution, visible_experiments, ax_imp_res)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
