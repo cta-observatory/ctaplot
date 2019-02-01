@@ -24,13 +24,41 @@ def load_data(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
 
     try:
-        data = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5')
+        data = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
+                           key='data',
+                           )
     except:
         print("The hdf5 file for the experiment {} does not exist".format(experiment))
         return None
-
     return data
 
+def load_number_run(experiment, experiments_directory):
+    assert experiment in os.listdir(experiments_directory)
+
+    try:
+        num_run = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
+                           key='runs',
+                           )['num'][0]
+    except:
+        print("Cannot load the number of run for experiment {} file".format(experiment))
+        return 0
+    return num_run
+
+def dummy_number_of_simulated_events(experiment, experiments_directory, prod=3, particle='gamma'):
+    assert experiment in os.listdir(experiments_directory)
+
+    num_run = load_number_run(experiment, experiments_directory)
+    if prod == 3:
+        if particle == 'proton':
+            number_event_per_run = 2000000
+        elif particle == 'gamma':
+            number_event_per_run = 500000
+        else:
+            number_event_per_run = 0
+    else:
+        number_event_per_run = 0
+
+    return num_run * number_event_per_run
 
 def load_info(experiment, experiments_directory):
     """
@@ -107,7 +135,7 @@ class Experiment(object):
 
     def load_data(self):
         self.data = load_data(self.name, self.experiments_directory)
-        if not self.data is None:
+        if self.data is not None:
             self.set_loaded(True)
 
     def get_data(self):
@@ -164,23 +192,36 @@ class Experiment(object):
             self.ax_imp_res.set_ylabel('Impact resolution [km]')
             self.set_plotted(True)
 
-    def plot_effective_area(self, ax=None, number_simu_file=32, site='north'):
+    def dummy_plot_effective_area(self, ax=None, site='north', prod=3):
         if self.get_loaded():
+            # number_simu_file = dummy_number_of_simulated_events(self.name,
+            #                                                     self.experiments_directory,
+            #                                                     prod=prod,
+            #                                                     )
+            number_simu_file = load_number_run(self.name, self.experiments_directory)
+
             try:
                 e = np.load('energy_gamma_diffuse_psimu.npy')
-                simuE = np.concatenate([e for i in range(number_simu_file)])
-            except:
+            except IOError:
                 print("No simu energy file")
-                pass
 
-            irf = ctaplot.irf_cta()
-            site_area = irf.LaPalmaArea if site == 'north' else irf.ParanalArea
-            self.ax_eff_area = ctaplot.plot_effective_area_per_energy(simuE,
-                                                                      self.data.mc_energy,
-                                                                      site_area,
-                                                                      ax=ax,
-                                                                      label=self.name,
-                                                                      color=self.color)
+            if number_simu_file > 0:
+                simuE = np.concatenate([e for i in range(number_simu_file)])
+                irf = ctaplot.irf_cta()
+                site_area = irf.LaPalmaArea if site == 'north' else irf.ParanalArea
+                self.ax_eff_area = ctaplot.plot_effective_area_per_energy(simuE,
+                                                                          self.data.mc_energy,
+                                                                          site_area,
+                                                                          ax=ax,
+                                                                          label=self.name,
+                                                                          color=self.color)
+            else:
+                print("Cannot evaluate the effective area for this experiment")
+                self.ax_eff_area = ctaplot.plot_effective_area_per_energy(np.ones(10),
+                                                                          np.empty(0),
+                                                                          1,
+                                                                          )
+
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
@@ -416,7 +457,7 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
-    exp.plot_effective_area(ax=ax_eff_area)
+    exp.dummy_plot_effective_area(ax=ax_eff_area)
 
 
 def update_legend(visible_experiments, ax_imp_res):
@@ -518,12 +559,12 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 class GammaBoard(object):
 
     def __init__(self, experiments_directory):
-        fig_resolution, axes_resolution = create_resolution_fig()
-        ax_imp_res = axes_resolution[1][0]
-        ax_eff_area = axes_resolution[1][1]
+        self._fig_resolution, self._axes_resolution = create_resolution_fig()
+        ax_imp_res = self._axes_resolution[1][0]
+        ax_eff_area = self._axes_resolution[1][1]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        fig_resolution.subplots_adjust(bottom=0.2)
+        self._fig_resolution.subplots_adjust(bottom=0.2)
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, ax_imp_res)
                                  for exp_name in os.listdir(experiments_directory)
@@ -542,7 +583,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             fig_resolution, visible_experiments, ax_imp_res)
+                                             self._fig_resolution, visible_experiments, ax_imp_res)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
