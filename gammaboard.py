@@ -225,7 +225,6 @@ class Experiment(object):
                                                                           1,
                                                                           )
 
-
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
@@ -514,7 +513,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             tabs.pop(exp_name)
             visible_experiments.remove(exp)
 
-        if not exp.get_plotted() and visible:
+        if not exp.get_plotted() and visible and exp.data is not None:
             plot_exp_on_fig(exp, fig_resolution)
 
         exp.visibility_all_plot(visible)
