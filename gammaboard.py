@@ -32,17 +32,19 @@ def load_data(experiment, experiments_directory):
         return None
     return data
 
+
 def load_number_run(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
 
     try:
-        num_run = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
+        num_run = int(pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
                            key='runs',
-                           )['num'][0]
+                           )['num'][0])
     except:
         print("Cannot load the number of run for experiment {} file".format(experiment))
         return 0
     return num_run
+
 
 def dummy_number_of_simulated_events(experiment, experiments_directory, prod=3, particle='gamma'):
     assert experiment in os.listdir(experiments_directory)
@@ -59,6 +61,7 @@ def dummy_number_of_simulated_events(experiment, experiments_directory, prod=3, 
         number_event_per_run = 0
 
     return num_run * number_event_per_run
+
 
 def load_info(experiment, experiments_directory):
     """
