@@ -27,8 +27,9 @@ def load_data(experiment, experiments_directory):
         data = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
                            key='data',
                            )
-    except:
-        print("The hdf5 file for the experiment {} does not exist".format(experiment))
+    except Exception as e:
+        print(e)
+        # print("The hdf5 file for the experiment {} does not exist".format(experiment))
         return None
     return data
 
