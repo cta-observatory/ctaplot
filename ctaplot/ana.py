@@ -169,8 +169,8 @@ def logspace_decades_nbin(Xmin, Xmax, n=5):
     -------
     1D Numpy array
     """
-    ei = np.floor(np.log10(Xmin))
-    ea = np.floor(np.log10(Xmax)) + 1*(np.log10(Xmax) > np.floor(np.log10(Xmax)))
+    ei = np.int(np.log10(Xmin))
+    ea = np.int(np.floor(np.log10(Xmax)) + 1*(np.log10(Xmax) > np.floor(np.log10(Xmax))))
     return np.logspace(ei, ea, n * (ea-ei)+1)
 
 

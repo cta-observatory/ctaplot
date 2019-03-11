@@ -10,7 +10,7 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, binned_statistic
 from numpy import floor
 from math import inf
 
@@ -1954,3 +1954,51 @@ class plot_from_anadata:
         plt.savefig(self.outdir + '/' + "ImpactResolution.png", bbox_inches="tight", format='png', dpi=200)
         # plt.close('all')
         return ax
+
+
+def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, **kwargs):
+    """
+    Plot binned mean with errorbars corresponding to a 68 percentile
+
+    Parameters
+    ----------
+    x: `numpy.ndarray`
+    y: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    errorbar: bool
+    bins: bins for `scipy.stats.binned_statistic`
+    kwargs: kwargs for `matplotlib.pyplot.scatter`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axes`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    bin_stat, bin_edges, binnumber = binned_statistic(x, y, statistic=statistic, bins=bins)
+    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_centers = bin_edges[1:] - bin_width / 2
+
+    bin_with_data = np.unique(binnumber) - 1
+    bin_r68 = np.array([np.percentile(np.abs(y[binnumber == i] - bin_stat[i - 1]), 68)
+                        for i in set(binnumber)])
+
+    if errorbar:
+        ax.hlines(bin_stat, bin_edges[:-1], bin_edges[1:], **kwargs)
+
+        # poping label from kwargs so it does not appear twice
+        if 'label' in kwargs:
+            kwargs.pop('label')
+
+        ax.vlines(bin_centers[bin_with_data],
+                  bin_stat[bin_with_data] - bin_r68,
+                  bin_stat[bin_with_data] + bin_r68,
+                  **kwargs,
+                  )
+    else:
+        ax.scatter(bin_centers[bin_with_data],
+                   bin_stat[bin_with_data],
+                   **kwargs,
+                   )
+    return ax

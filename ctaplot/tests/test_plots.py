@@ -1,9 +1,9 @@
 from ctaplot import plots
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_energy_distribution():
-    import numpy as np
     SimuE = np.random.rand(100)
     RecoE = np.random.rand(10)
     maskSimuDetected = np.ones(100, dtype=bool)
@@ -13,7 +13,6 @@ def plot_energy_distribution():
 
 def test_plot_energy_resolution():
     plt.close('all')
-    import numpy as np
     E = np.logspace(-2, 2, 10)
     plots.plot_energy_resolution(E, E**2, color='red')
 
@@ -24,7 +23,6 @@ def test_plot_energy_resolution_requirements():
 
 
 def test_saveplot_energy_resolution():
-    import numpy as np
     import os
     plt.close('all')
     E = np.logspace(-2, 2, 10)
@@ -61,7 +59,6 @@ def test_plot_sensitivity_requirement():
     plots.plot_sensitivity_requirement('north', color='green')
 
 def test_plot_theta2():
-    import numpy as np
     n = 10
     RecoAlt = 1 + np.random.rand(n)
     RecoAz = 1.5 + np.random.rand(n)
@@ -70,7 +67,6 @@ def test_plot_theta2():
     plots.plot_theta2(RecoAlt, RecoAz, SimuAlt, SimuAz)
 
 def test_plot_angles_map_distri():
-    import numpy as np
     n = 10
     RecoAlt = 1 + np.random.rand(n)
     RecoAz = 1.5 + np.random.rand(n)
@@ -81,7 +77,6 @@ def test_plot_angles_map_distri():
 
 
 def test_plot_impact_point_map_distri():
-    import numpy as np
     n = 10
     RecoX = 1000 * np.random.rand(n) - 500
     RecoY = 1000 * np.random.rand(n) - 500
@@ -91,20 +86,17 @@ def test_plot_impact_point_map_distri():
 
 
 def test_plot_impact_point_heatmap():
-    import numpy as np
     n = 10
     RecoX = np.random.rand(n)
     RecoY = np.random.rand(n)
     plots.plot_impact_point_heatmap(RecoX, RecoY)
 
 def test_plot_multiplicity_hist():
-    import numpy as np
     multiplicity = np.random.randint(low=2, high=30, size=100)
     plots.plot_multiplicity_hist(multiplicity)
 
 
 def test_plot_effective_area_per_energy():
-    import numpy as np
     SimuE = 10**(6 * np.random.rand(100) - 3)
     RecoE = 10 ** (6 * np.random.rand(10) - 3)
     simuArea = 1000
@@ -112,8 +104,14 @@ def test_plot_effective_area_per_energy():
 
 
 def test_plot_resolution_per_energy():
-    import numpy as np
     simu = np.ones(100)
     reco = np.random.normal(loc=1, scale=1, size=100)
     energy = 10**(-3 + 6 * np.random.rand(100))
     plots.plot_resolution_per_energy(reco, simu, energy)
+
+
+def test_plot_binned_stat():
+    x = np.random.rand(100)
+    y = np.random.rand(100)
+    for stat in ['min', 'max', 'mean']:
+        plots.plot_binned_stat(x, y, statistic=stat)
