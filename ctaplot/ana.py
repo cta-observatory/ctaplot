@@ -448,34 +448,6 @@ def effective_area(SimuE, RecoE, simuArea):
     return simuArea * len(RecoE)/len(SimuE)
 
 
-def power_law_integrated_distribution(emin, emax, tot_num_events, spectral_index, bin_number=30):
-    """
-    For each bin, return the expected number of events for a power-law distribution.
-    bins: `numpy.ndarray`, e.g. `np.logspace(np.log10(emin), np.logspace(emax))`
-    Parameters
-    ----------
-    emin: `float`
-    emax: `float`
-    tot_num_events: `int`
-    spectral_index: `float`
-
-    Returns
-    -------
-    (bins, y):
-    bins: `np.logspace(np.log10(emin), np.log10(emax), bin_number)`
-    tuple of `numpy.ndarray`, len(y) = len(bins) - 1
-    """
-    bins = np.logspace(np.log10(emin), np.log10(emax), bin_number)
-
-    if spectral_index == -1:
-        y0 = tot_num_events / np.log(emax / emin)
-        y = y0 * np.log(bins[1:] / bins[:-1])
-    else:
-        y0 = tot_num_events / (emax ** (spectral_index + 1) - emin ** (spectral_index + 1)) / (spectral_index + 1)
-        y = y0 * (bins[1:] ** (spectral_index + 1) - bins[:-1] ** (spectral_index + 1)) / (spectral_index + 1)
-    return bins, y
-
-
 def effective_area_per_energy(SimuE, RecoE, simuArea):
     """
     Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
@@ -498,32 +470,6 @@ def effective_area_per_energy(SimuE, RecoE, simuArea):
 
     np.seterr(divide='ignore', invalid='ignore')
     return irf.E_bin, np.nan_to_num(simuArea * count_R/count_S)
-
-
-def effective_area_per_energy_power_law(emin, emax, tot_number_events, spectral_index, RecoE, simuArea):
-    """
-    Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
-
-    Parameters
-    ----------
-    SimuE: 1d numpy array
-    RecoE: 1d numpy array
-    simuArea: float - area on which events are simulated
-
-    Returns
-    -------
-    (E, Seff) : (1d numpy array, 1d numpy array)
-    """
-
-    irf = irf_cta()
-
-    count_R, bin_R = np.histogram(RecoE, bins=irf.E_bin)
-    # count_S, bin_S = np.histogram(SimuE, bins=irf.E_bin)
-
-    eff_area = power_law_integrated_distribution(irf.E_bin, tot_number_events, spectral_index)
-
-    np.seterr(divide='ignore', invalid='ignore')
-    return irf.E_bin, np.nan_to_num(simuArea * count_R/eff_area)
 
 
 def mask_range(X, Xmin=0, Xmax=np.inf):
