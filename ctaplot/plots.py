@@ -551,7 +551,7 @@ def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     -------
     >>> import numpy as np
     >>> import ctaplot
-    >>> irf = ctaplot.ana.irf()
+    >>> irf = ctaplot.ana.irf_cta()
     >>> simue = 10**(-2 + 4*np.random.rand(1000))
     >>> recoe = 10**(-2 + 4*np.random.rand(100))
     >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea)
