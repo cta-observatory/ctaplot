@@ -217,28 +217,29 @@ def plot_angles_distribution(RecoAlt, RecoAz, AltSource, AzSource, Outfile=None)
 
 def plot_theta2(RecoAlt, RecoAz, AltSource, AzSource, ax=None, **kwargs):
     """
-    Plot the theta2 distribution and save it under Outfile
+    Plot the theta2 distribution and display the corresponding angular resolution in degrees.
+    The input must be given in radians.
 
     Parameters
     ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    AltSource: `numpy.ndarray`
-    AzSource: `numpy.ndarray`
+    RecoAlt: `numpy.ndarray` - reconstructed altitude angle in radians
+    RecoAz: `numpy.ndarray` - reconstructed azimuth angle in radians
+    AltSource: `numpy.ndarray` - true altitude angle in radians
+    AzSource: `numpy.ndarray` - true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
     **kwargs: options for `matplotlib.pyplot.hist`
     """
 
     ax = plt.gca() if ax is None else ax
 
-    theta2 = ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)
-    AngRes = ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource)
+    theta2 = np.rad2deg(np.sqrt(ana.theta2(RecoAlt, RecoAz, AltSource, AzSource)))**2
+    AngRes = np.rad2deg(ana.angular_resolution(RecoAlt, RecoAz, AltSource, AzSource))
 
-    ax.set_xlabel(r'$\theta^2 [rad^2]$')
+    ax.set_xlabel(r'$\theta^2 [deg^2]$')
     ax.set_ylabel('Count')
 
     ax.hist(theta2, **kwargs)
-    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f})'.format(AngRes[0], AngRes[2], AngRes[1]))
+    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f}) deg'.format(AngRes[0], AngRes[2], AngRes[1]))
 
     return ax
 

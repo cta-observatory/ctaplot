@@ -383,12 +383,12 @@ def angular_resolution(RecoAlt, RecoAz, SimuAlt, SimuAz, Q = 68, conf=1.645):
 
     Parameters
     ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    SimuAlt: `numpy.ndarray`
-    SimuAz: `numpy.ndarray`
-    Q: percentile - 68 corresponds to one sigma
-    conf:
+    RecoAlt: `numpy.ndarray` - reconstructed altitude angle in radians
+    RecoAz: `numpy.ndarray` - reconstructed azimuth angle in radians
+    SimuAlt: `numpy.ndarray` - true altitude angle in radians
+    SimuAz: `numpy.ndarray` - true azimuth angle in radians
+    Q: float - percentile, 68 corresponds to one sigma
+    conf: float
 
     Returns
     -------
