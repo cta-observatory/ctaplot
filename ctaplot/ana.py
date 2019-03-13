@@ -1,7 +1,8 @@
 """
 ana.py
 ======
-Contain mathematical functions to make results analysis (compute angular resolution, effective surface, energy resolution... )
+Contain mathematical functions to make results analysis
+(compute angular resolution, effective surface, energy resolution... )
 """
 
 
@@ -51,28 +52,34 @@ class cta_performances:
         """
         if self.site == 'south':
             if observation_time == 50:
-                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-EffArea.txt'),
-                                                     skiprows=11, unpack=True)
+                self.E, self.effective_area = np.loadtxt(
+                    ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-EffArea.txt'),
+                    skiprows=11, unpack=True)
             if observation_time == 0.5:
-                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
-                                                     skiprows=11, unpack=True)
+                self.E, self.effective_area = np.loadtxt(
+                    ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
+                    skiprows=11, unpack=True)
 
         if self.site == 'north':
             if observation_time == 50:
-                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
-                                                     skiprows=11, unpack=True)
+                self.E, self.effective_area = np.loadtxt(
+                    ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
+                    skiprows=11, unpack=True)
             if observation_time == 0.5:
-                self.E, self.effective_area = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
-                                                     skiprows=11, unpack=True)
+                self.E, self.effective_area = np.loadtxt(
+                    ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
+                    skiprows=11, unpack=True)
         return self.E, self.effective_area
 
     def get_angular_resolution(self):
         if self.site == 'south':
-            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
-                                                         skiprows=11, unpack=True)
+            self.E, self.angular_resolution = np.loadtxt(
+                ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
+                skiprows=11, unpack=True)
         if self.site == 'north':
-            self.E, self.angular_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Angres.txt'),
-                                                         skiprows=11, unpack=True)
+            self.E, self.angular_resolution = np.loadtxt(
+                ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Angres.txt'),
+                skiprows=11, unpack=True)
 
         return self.E, self.angular_resolution
 
@@ -124,9 +131,11 @@ class cta_requirements:
         `numpy.ndarray`, `numpy.ndarray`
         """
         if self.site == 'south':
-            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'), unpack=True)
+            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
+                                                     unpack=True)
         if self.site == 'north':
-            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'), unpack=True)
+            self.E, self.effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
+                                                     unpack=True)
 
         return self.E, self.effective_area
 
@@ -187,7 +196,8 @@ def multiplicity_stat_per_energy(Multiplicity, Energies, p = 50):
 
     Returns
     -------
-    (E, mean, min, max, percentile): tuple of 1D Numpy arrays, Energy, Mean Multiplicity, Min Multiplicity, Max Multplicity, Percentile Multiplicity
+    (E, mean, min, max, percentile): tuple of 1D Numpy arrays, Energy, Mean Multiplicity, Min Multiplicity,
+    Max Multplicity, Percentile Multiplicity
     """
 
     m_mean = []
@@ -584,8 +594,7 @@ def logbin_mean(E_bin):
 def impact_resolution(RecoX, RecoY, SimuX, SimuY, Q=68, conf=1.645):
     """
     Compute the shower impact parameter resolution as the Qth (68 as standard) containment radius of the square distance
-    to the simulated one
-    with the lower and upper limits corresponding to the required confidence level (1.645 for 95%)
+    to the simulated one with the lower and upper limits corresponding to the required confidence level (1.645 for 95%)
 
     Parameters
     ----------
@@ -661,3 +670,54 @@ def percentile_confidence_interval(X, Q=68, conf=1.645):
     j = np.max([0, np.int(len(X) * q - conf * np.sqrt(len(X) * q * (1 - q)))])
     k = np.min([np.int(len(X) * q + conf * np.sqrt(len(X) * q * (1 - q))), len(X) - 1])
     return sort_X[j], sort_X[k]
+
+
+def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_index, bins):
+    """
+    For each bin, return the expected number of events for a power-law distribution.
+    bins: `numpy.ndarray`, e.g. `np.logspace(np.log10(emin), np.logspace(xmax))`
+    
+    Parameters
+    ----------
+    xmin: `float`, min of the simulated power-law
+    xmax: `float`, max of the simulated power-law
+    total_number_events: `int`
+    spectral_index: `float`
+    bins: `numpy.ndarray`
+    
+    Returns
+    -------
+    y: `numpy.ndarray`, len(y) = len(bins) - 1
+    """
+    if spectral_index == -1:
+        y0 = total_number_events / np.log(xmax / xmin)
+        y = y0 * np.log(bins[1:] / bins[:-1])
+    else:
+        y0 = total_number_events / (xmax ** (spectral_index + 1) - xmin ** (spectral_index + 1)) / (spectral_index + 1)
+        y = y0 * (bins[1:] ** (spectral_index + 1) - bins[:-1] ** (spectral_index + 1)) / (spectral_index + 1)
+    return y
+
+
+def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, RecoE, simuArea):
+    """
+    Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
+
+    Parameters
+    ----------
+    SimuE: 1d numpy array
+    RecoE: 1d numpy array
+    simuArea: float - area on which events are simulated
+
+    Returns
+    -------
+    (E, Seff) : (1d numpy array, 1d numpy array)
+    """
+
+    irf = irf_cta()
+    bins = irf.E_bin
+    simu_per_bin = power_law_integrated_distribution(emin, emax, total_number_events, spectral_index, bins)
+    count_R, bin_R = np.histogram(RecoE, bins=bins)
+
+    np.seterr(divide='ignore', invalid='ignore')
+    return bins, np.nan_to_num(simuArea * count_R / simu_per_bin)
+
