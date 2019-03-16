@@ -49,7 +49,7 @@ def test_resolution_per_energy():
     e_bin, res_e = ana.resolution_per_energy(y, x, E)
     assert np.isclose(res_e, 0.099 * np.ones(res_e.shape[1]), rtol=1e-1).all()
 
-def test_integrated_distribution():
+def test_power_law_integrated_distribution():
     from ctaplot.ana import power_law_integrated_distribution
     emin = 50.  # u.GeV
     emax = 500.e3  # u.GeV
