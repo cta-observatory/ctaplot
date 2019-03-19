@@ -1476,11 +1476,21 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     y: list or `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     colorbar: `matplotlib.colorbar`
-    **kwargs: args for `matplotlib.pyplot.hist2d`
+    hist2d_args: dict, args for `matplotlib.pyplot.hist2d`
+    line_args: dict, args for `matplotlib.pyplot.plot`
 
     Returns
     -------
     `matplotlib.pyplot.axes`
+
+    Examples
+    --------
+    >>> from ctaplot.plots import plot_migration_matrix
+    >>> import matplotlib
+    >>> x = np.random.rand(10000)
+    >>> y = x**2
+    >>> plot_migration_matrix(x, y, colorbar=True, hist2d_args=dict(norm=matplotlib.colors.LogNorm()))
+    In this example, the colorbar will be log normed 
     """
 
     if 'bins' not in hist2d_args:
