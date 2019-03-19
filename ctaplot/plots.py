@@ -1966,9 +1966,9 @@ class plot_from_anadata:
         return ax
 
 
-def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, **kwargs):
+def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, percentile=68, **kwargs):
     """
-    Plot binned mean with errorbars corresponding to a 68 percentile
+    Plot binned statistic with errorbars corresponding to the given percentile
 
     Parameters
     ----------
@@ -1976,12 +1976,21 @@ def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, **
     y: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     errorbar: bool
+    statistic: string or callable - see `scipy.stats.binned_statistic`
     bins: bins for `scipy.stats.binned_statistic`
-    kwargs: kwargs for `matplotlib.pyplot.scatter`
+    kwargs: if errorbar: kwargs for `matplotlib.pyplot.hlines` else: kwargs for `matplotlib.pyplot.plot`
 
     Returns
     -------
     `matplotlib.pyplot.axes`
+
+    Examples
+    --------
+    >>> from ctaplot.plots import plot_binned_stat
+    >>> import numpy as np
+    >>> x = np.random.rand(1000)
+    >>> y = x**2
+    >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -1991,7 +2000,7 @@ def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, **
     bin_centers = bin_edges[1:] - bin_width / 2
 
     bin_with_data = np.unique(binnumber) - 1
-    bin_r68 = np.array([np.percentile(np.abs(y[binnumber == i] - bin_stat[i - 1]), 68)
+    bin_r68 = np.array([np.percentile(np.abs(y[binnumber == i] - bin_stat[i - 1]), percentile)
                         for i in set(binnumber)])
 
     if errorbar:
@@ -2007,7 +2016,7 @@ def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, **
                   **kwargs,
                   )
     else:
-        ax.scatter(bin_centers[bin_with_data],
+        ax.plot(bin_centers[bin_with_data],
                    bin_stat[bin_with_data],
                    **kwargs,
                    )
