@@ -115,3 +115,13 @@ def test_plot_binned_stat():
     y = np.random.rand(100)
     for stat in ['min', 'max', 'mean']:
         plots.plot_binned_stat(x, y, statistic=stat)
+
+
+def test_plot_migration_matrix():
+    x = np.random.rand(100)
+    y = np.random.rand(100)
+    plt.clf()
+    plots.plot_migration_matrix(x, y, colorbar=True, xy_line=True,
+                                hist2d_args=dict(range=[[0, 1], [0, 0.5]], normed=True),
+                                line_args=dict(color='red', lw=0.4)
+                                )
