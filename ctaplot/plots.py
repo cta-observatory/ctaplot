@@ -778,11 +778,13 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.axis('equal')
     plt.xlim(-1000, 1000)
     plt.ylim(-1000, 1000)
-    # ax.scatter(TelX[mask_layout],TelY[mask_layout], s=100/(1+type[mask_layout]), c=type[mask_layout], cmap='Paired',label="label this")#, c=TelType[mask_layout])
-    ax.scatter(TelX[mask_lst], TelY[mask_lst], s=100 / (1 + type[mask_lst]), c=BrewBlues[-1], cmap='Paired',
-               label="LST")
-    ax.scatter(TelX[mask_mst], TelY[mask_mst], s=100 / (1 + type[mask_mst]), c=BrewReds[-1], cmap='Paired', label="MST")
-    ax.scatter(TelX[mask_sst], TelY[mask_sst], s=100 / (1 + type[mask_sst]), c=BrewGreens[-1], cmap='Paired',
+
+    ax.scatter(TelX[mask_lst], TelY[mask_lst],
+               s=100 / (1 + type[mask_lst]), c=BrewBlues[-1], cmap='Paired', label="LST")
+    ax.scatter(TelX[mask_mst], TelY[mask_mst],
+               s=100 / (1 + type[mask_mst]), c=BrewReds[-1], cmap='Paired', label="MST")
+    ax.scatter(TelX[mask_sst], TelY[mask_sst],
+               s=100 / (1 + type[mask_sst]), c=BrewGreens[-1], cmap='Paired',
                label="SST")
 
     plt.title("CTA site with layout %s" % Outfile.split('.')[-1], fontsize=SizeTitleArticle)
@@ -1464,14 +1466,14 @@ def saveplot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=
     plt.close()
 
 
-def plot_migration_matrix(X, Y, ax=None, colorbar=False, **kwargs):
+def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_args={}, line_args={}):
     """
     Make a simple plot of a migration matrix
 
     Parameters
     ----------
-    X: list or `numpy.ndarray`
-    Y: list or `numpy.ndarray`
+    x: list or `numpy.ndarray`
+    y: list or `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     colorbar: `matplotlib.colorbar`
     **kwargs: args for `matplotlib.pyplot.hist2d`
@@ -1481,13 +1483,20 @@ def plot_migration_matrix(X, Y, ax=None, colorbar=False, **kwargs):
     `matplotlib.pyplot.axes`
     """
 
-    if not 'bins' in kwargs:
-        kwargs['bins'] = 50
+    if 'bins' not in hist2d_args:
+        hist2d_args['bins'] = 50
+    if 'color' not in line_args:
+        line_args['color'] = 'black'
+    if 'lw' not in line_args:
+        line_args['lw'] = 0.4
 
     ax = plt.gca() if ax is None else ax
-    h = ax.hist2d(X, Y, **kwargs)
+    h = ax.hist2d(x, y, **hist2d_args)
     if colorbar:
         plt.colorbar(h[3], ax=ax)
+
+    if xy_line:
+        ax.plot(x, x, **line_args)
     return ax
 
 
