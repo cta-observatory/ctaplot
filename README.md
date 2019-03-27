@@ -21,4 +21,4 @@ When an experiment is deselected, it simply is removed from the plots.
 
 
 
-![gammaboard_demo](../wiki/images/gammaboard.gif)
+![gammaboard_demo](../../wiki/images/gammaboard.gif)
