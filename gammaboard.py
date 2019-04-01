@@ -276,8 +276,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                               'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -304,8 +304,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -332,8 +332,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -360,8 +360,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -388,8 +388,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -423,6 +423,8 @@ def create_resolution_fig(site='south'):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
+    Args
+        site (string)
 
     Returns
         fig, axes
@@ -433,9 +435,9 @@ def create_resolution_fig(site='south'):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
 
-    ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black', label=site)
-    ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black', label=site)
-    ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black', label=site)
+    ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
+    ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
+    ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black')
 
     ax_ang_res.legend()
     ax_ene_res.legend()
@@ -452,6 +454,7 @@ def plot_exp_on_fig(exp, fig, site='south'):
     Args
         exp (experiment class)
         fig (`matplotlib.pyplot.fig`)
+        site (string)
     """
     axes = fig.get_axes()
     ax_ang_res = axes[0]
