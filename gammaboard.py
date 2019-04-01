@@ -276,8 +276,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                               'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -304,8 +304,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -332,8 +332,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -360,8 +360,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -388,8 +388,8 @@ class Experiment(object):
             ax = ctaplot.plot_migration_matrix(mc, reco,
                                                ax=ax,
                                                colorbar=colorbar,
-                                               bins=100,
-                                               cmap=self.cm, cmin=1)
+                                               hist2d_args={'bins': 100,
+                                                            'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -419,10 +419,12 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig():
+def create_resolution_fig(site='south'):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
+    Args
+        site (string)
 
     Returns
         fig, axes
@@ -433,21 +435,26 @@ def create_resolution_fig():
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
 
-    ctaplot.plot_angular_res_cta_performance('north', ax=ax_ang_res, color='black')
-    ctaplot.plot_energy_resolution_cta_performances('north', ax=ax_ene_res, color='black')
-    ctaplot.plot_effective_area_performances('north', ax=ax_eff_area, color='black')
+    ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
+    ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
+    ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black')
+
+    ax_ang_res.legend()
+    ax_ene_res.legend()
+    ax_eff_area.legend()
 
     fig.tight_layout()
 
     return fig, axes
 
 
-def plot_exp_on_fig(exp, fig):
+def plot_exp_on_fig(exp, fig, site='south'):
     """
     Plot an experiment results on a figure create with `create_fig`
     Args
         exp (experiment class)
         fig (`matplotlib.pyplot.fig`)
+        site (string)
     """
     axes = fig.get_axes()
     ax_ang_res = axes[0]
@@ -460,7 +467,7 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
-    exp.dummy_plot_effective_area(ax=ax_eff_area)
+    exp.dummy_plot_effective_area(ax=ax_eff_area, site=site)
 
 
 def update_legend(visible_experiments, ax_imp_res):
@@ -472,7 +479,7 @@ def update_legend(visible_experiments, ax_imp_res):
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_imp_res):
+                         fig_resolution, visible_experiments, ax_imp_res, site='south'):
 
     def plot_on_click(sender):
         """
@@ -515,7 +522,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             visible_experiments.remove(exp)
 
         if not exp.get_plotted() and visible and exp.data is not None:
-            plot_exp_on_fig(exp, fig_resolution)
+            plot_exp_on_fig(exp, fig_resolution, site)
 
         exp.visibility_all_plot(visible)
         update_legend(visible_experiments, ax_imp_res)
@@ -524,7 +531,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_imp_res):
+                              visible_experiments, ax_imp_res, site):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -547,7 +554,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_imp_res))
+                                        fig_resolution, visible_experiments, ax_imp_res, site))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -561,8 +568,8 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
 class GammaBoard(object):
 
-    def __init__(self, experiments_directory):
-        self._fig_resolution, self._axes_resolution = create_resolution_fig()
+    def __init__(self, experiments_directory, site='south'):
+        self._fig_resolution, self._axes_resolution = create_resolution_fig(site)
         ax_imp_res = self._axes_resolution[1][0]
         ax_eff_area = self._axes_resolution[1][1]
 
@@ -586,7 +593,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_imp_res)
+                                             self._fig_resolution, visible_experiments, ax_imp_res, site)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
