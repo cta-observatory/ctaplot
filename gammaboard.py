@@ -257,7 +257,7 @@ class Experiment(object):
             self.visibility_energy_resolution_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
-        self.visibility_effective_area_plot(visible)
+        # self.visibility_effective_area_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
         """
@@ -419,7 +419,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(site='south'):
+def create_resolution_fig(site='south', ref=None):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
@@ -435,13 +435,18 @@ def create_resolution_fig(site='south'):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
 
-    ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
-    ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
-    ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black')
-
-    ax_ang_res.legend()
-    ax_ene_res.legend()
-    ax_eff_area.legend()
+    if ref == 'performances':
+        ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
+        ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
+        ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black')
+    elif ref == 'requirements':
+        ctaplot.plot_angular_res_requirement(site, ax=ax_ang_res, color='black')
+        ctaplot.plot_energy_resolution_requirements(site, ax=ax_ene_res, color='black')
+        ctaplot.plot_effective_area_requirement(site, ax=ax_eff_area, color='black')
+    if ref is not None:
+        ax_ang_res.legend()
+        ax_ene_res.legend()
+        ax_eff_area.legend()
 
     fig.tight_layout()
 
@@ -467,7 +472,7 @@ def plot_exp_on_fig(exp, fig, site='south'):
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
-    exp.dummy_plot_effective_area(ax=ax_eff_area, site=site)
+    # exp.dummy_plot_effective_area(ax=ax_eff_area, site=site)
 
 
 def update_legend(visible_experiments, ax_imp_res):
@@ -567,9 +572,15 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
 
 class GammaBoard(object):
+    '''
+    Args
+        experiments_directory (string)
+        site (string): 'south' for Paranal and 'north' for LaPalma
+        ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
+    '''
+    def __init__(self, experiments_directory, site='south', ref=None):
 
-    def __init__(self, experiments_directory, site='south'):
-        self._fig_resolution, self._axes_resolution = create_resolution_fig(site)
+        self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_imp_res = self._axes_resolution[1][0]
         ax_eff_area = self._axes_resolution[1][1]
 
