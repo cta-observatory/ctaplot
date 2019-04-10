@@ -4,10 +4,12 @@ from collections import OrderedDict
 
 import ctaplot
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 from ipywidgets import HBox, Tab, Output
+from sklearn.metrics import roc_curve, roc_auc_score
 
 
 def load_data(experiment, experiments_directory):
@@ -123,11 +125,10 @@ class Experiment(object):
 
     """
 
-    def __init__(self, experiment_name, experiments_directory, ax_imp_res):
+    def __init__(self, experiment_name, experiments_directory):
 
         self.name = experiment_name
         self.experiments_directory = experiments_directory
-        self.ax_imp_res = ax_imp_res
         self.info = load_info(self.name, self.experiments_directory)
         self.data = None
         self.loaded = False
@@ -226,6 +227,16 @@ class Experiment(object):
                                                                           1,
                                                                           )
 
+    def plot_roc_curve(self, ax=None):
+        if self.get_loaded():
+            self.ax_roc = plt.gca() if ax is None else ax
+            fpr, tpr, _ = roc_curve(self.data.mc_particle,
+                                    self.data.reco_particle, pos_label=1)
+            auc = roc_auc_score(self.data.mc_particle,
+                                self.data.reco_particle)
+            self.ax_roc.plot(fpr, tpr, label='{} (AUC = {:.4f})'.format(self.name, auc), color=self.color)
+            self.set_plotted(True)
+
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
@@ -250,6 +261,12 @@ class Experiment(object):
                 if c.get_label() == self.name:
                     change_errorbar_visibility(c, visible)
 
+    def visibility_roc_curve_plot(self, visible: bool):
+        if self.get_plotted():
+            for l in self.ax_roc.lines:
+                if l.get_label().split(' ')[0] == self.name:
+                    l.set_visible(visible)
+
     def visibility_all_plot(self, visible: bool):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
@@ -257,6 +274,8 @@ class Experiment(object):
             self.visibility_energy_resolution_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
+        if 'reco_particle' in self.data:
+            self.visibility_roc_curve_plot(visible)
         # self.visibility_effective_area_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
@@ -429,11 +448,12 @@ def create_resolution_fig(site='south', ref=None):
     Returns
         fig, axes
     """
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig, axes = plt.subplots(3, 2, figsize=(12, 12))
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
+    ax_roc = axes[2][0]
 
     if ref == 'performances':
         ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
@@ -448,7 +468,21 @@ def create_resolution_fig(site='south', ref=None):
         ax_ene_res.legend()
         ax_eff_area.legend()
 
+    ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', label='Chance', alpha=.8)
+    ax_roc.set_xlim([-0.05, 1.05])
+    ax_roc.set_ylim([-0.05, 1.05])
+    ax_roc.set_xlabel('False Positive Rate')
+    ax_roc.set_ylabel('True Positive Rate')
+    ax_roc.set_title('Receiver Operating Characteristic')
+
+    ax_roc.legend()
+
     fig.tight_layout()
+
+    for ax in fig.get_axes():
+        for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                     ax.get_xticklabels() + ax.get_yticklabels()):
+            item.set_fontsize(10)
 
     return fig, axes
 
@@ -466,25 +500,28 @@ def plot_exp_on_fig(exp, fig, site='south'):
     ax_ene_res = axes[1]
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
+    ax_roc = axes[4]
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
     if 'reco_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
+    if 'reco_particle' in exp.data:
+        exp.plot_roc_curve(ax=ax_roc)
     # exp.dummy_plot_effective_area(ax=ax_eff_area, site=site)
 
 
-def update_legend(visible_experiments, ax_imp_res):
+def update_legend(visible_experiments, ax):
 
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    ax_imp_res.legend(handles=legend_elements, loc='best', bbox_to_anchor=(1, -0.3), ncol=4)
+    ax.legend(handles=legend_elements, loc='best', bbox_to_anchor=(1, -0.3), ncol=4)
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_imp_res, site='south'):
+                         fig_resolution, visible_experiments, ax, site='south'):
 
     def plot_on_click(sender):
         """
@@ -530,13 +567,13 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             plot_exp_on_fig(exp, fig_resolution, site)
 
         exp.visibility_all_plot(visible)
-        update_legend(visible_experiments, ax_imp_res)
+        update_legend(visible_experiments, ax)
 
     return plot_on_click
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_imp_res, site):
+                              visible_experiments, ax, site):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -546,7 +583,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
         tabs (dict): dictionary of active tabs
         fig_resolution
         visible_experiments
-        ax_imp_res
+        ax
 
     Returns
         `ipywidgets.VBox()`
@@ -559,7 +596,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_imp_res, site))
+                                        fig_resolution, visible_experiments, ax, site))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -581,13 +618,13 @@ class GammaBoard(object):
     def __init__(self, experiments_directory, site='south', ref=None):
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
-        ax_imp_res = self._axes_resolution[1][0]
         ax_eff_area = self._axes_resolution[1][1]
+        ax_roc = self._axes_resolution[2][0]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
-        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, ax_imp_res)
+        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
@@ -604,7 +641,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_imp_res, site)
+                                             self._fig_resolution, visible_experiments, ax_roc, site)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
