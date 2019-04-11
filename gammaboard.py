@@ -454,7 +454,7 @@ def create_resolution_fig(site='south', ref=None):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    # ax_auc = axes[2][1]
+    ax_legend = axes[2][1]
 
     if ref == 'performances':
         ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
@@ -476,7 +476,7 @@ def create_resolution_fig(site='south', ref=None):
     ax_roc.set_ylabel('True Positive Rate')
     ax_roc.set_title('Receiver Operating Characteristic')
 
-    # ax_auc.set_axis_off()
+    ax_legend.set_axis_off()
 
     fig.tight_layout()
 
@@ -519,7 +519,7 @@ def update_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    ax.legend(handles=legend_elements, loc='best', bbox_to_anchor=(1, -0.3), ncol=4)
+    ax.legend(handles=legend_elements, loc='best', ncol=4)
 
 
 def update_auc_legend(visible_experiments, ax):
