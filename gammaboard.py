@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 import ctaplot
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
