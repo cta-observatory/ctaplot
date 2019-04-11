@@ -231,10 +231,10 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_roc = plt.gca() if ax is None else ax
             fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                    self.data.reco_particle, pos_label=1)
-            auc = roc_auc_score(self.data.mc_particle,
-                                self.data.reco_particle)
-            self.ax_roc.plot(fpr, tpr, label='{} (AUC = {:.4f})'.format(self.name, auc), color=self.color)
+                                    self.data.reco_hadroness, pos_label=1)
+            self.auc = roc_auc_score(self.data.mc_particle,
+                                     self.data.reco_hadroness)
+            self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
     def visibility_angular_resolution_plot(self, visible: bool):
@@ -264,7 +264,7 @@ class Experiment(object):
     def visibility_roc_curve_plot(self, visible: bool):
         if self.get_plotted():
             for l in self.ax_roc.lines:
-                if l.get_label().split(' ')[0] == self.name:
+                if l.get_label() == self.name:
                     l.set_visible(visible)
 
     def visibility_all_plot(self, visible: bool):
@@ -274,7 +274,7 @@ class Experiment(object):
             self.visibility_energy_resolution_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
-        if 'reco_particle' in self.data:
+        if 'reco_hadroness' in self.data:
             self.visibility_roc_curve_plot(visible)
         # self.visibility_effective_area_plot(visible)
 
@@ -454,6 +454,7 @@ def create_resolution_fig(site='south', ref=None):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
+    # ax_auc = axes[2][1]
 
     if ref == 'performances':
         ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
@@ -468,14 +469,14 @@ def create_resolution_fig(site='south', ref=None):
         ax_ene_res.legend()
         ax_eff_area.legend()
 
-    ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', label='Chance', alpha=.8)
+    ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
     ax_roc.set_ylim([-0.05, 1.05])
     ax_roc.set_xlabel('False Positive Rate')
     ax_roc.set_ylabel('True Positive Rate')
     ax_roc.set_title('Receiver Operating Characteristic')
 
-    ax_roc.legend()
+    # ax_auc.set_axis_off()
 
     fig.tight_layout()
 
@@ -501,13 +502,14 @@ def plot_exp_on_fig(exp, fig, site='south'):
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
     ax_roc = axes[4]
+
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
     if 'reco_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
-    if 'reco_particle' in exp.data:
+    if 'reco_hadroness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
     # exp.dummy_plot_effective_area(ax=ax_eff_area, site=site)
 
@@ -520,8 +522,15 @@ def update_legend(visible_experiments, ax):
     ax.legend(handles=legend_elements, loc='best', bbox_to_anchor=(1, -0.3), ncol=4)
 
 
+def update_auc_legend(visible_experiments, ax):
+    experiments = {exp.name: exp for exp in visible_experiments}
+    legend_elements = [Line2D([0], [0], color=exp.color, label='AUC = {:.4f}'.format(exp.auc))
+                       for (name, exp) in sorted(experiments.items()) if hasattr(exp, 'auc')]
+    ax.legend(handles=legend_elements, loc='best')
+
+
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax, site='south'):
+                         fig_resolution, visible_experiments, ax_exp, ax_auc, site='south'):
 
     def plot_on_click(sender):
         """
@@ -567,13 +576,14 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             plot_exp_on_fig(exp, fig_resolution, site)
 
         exp.visibility_all_plot(visible)
-        update_legend(visible_experiments, ax)
+        update_legend(visible_experiments, ax_exp)
+        update_auc_legend(visible_experiments, ax_auc)
 
     return plot_on_click
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax, site):
+                              visible_experiments, ax_legend, ax_auc, site):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -583,7 +593,8 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
         tabs (dict): dictionary of active tabs
         fig_resolution
         visible_experiments
-        ax
+        ax_legend
+        ax_auc
 
     Returns
         `ipywidgets.VBox()`
@@ -596,7 +607,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax, site))
+                                        fig_resolution, visible_experiments, ax_legend, ax_auc, site))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -619,6 +630,7 @@ class GammaBoard(object):
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
+        ax_legend = self._axes_resolution[2][1]
         ax_roc = self._axes_resolution[2][0]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
@@ -631,7 +643,6 @@ class GammaBoard(object):
         colors = np.arange(0, 1, 1/len(self.experiments_dict.keys()), dtype=np.float32)
         np.random.shuffle(colors)
         cmap = plt.cm.tab20
-
         for (key, color) in zip(self.experiments_dict.keys(), colors):
             self.experiments_dict[key].color = cmap(color)
 
@@ -641,7 +652,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_roc, site)
+                                             self._fig_resolution, visible_experiments, ax_legend, ax_roc, site)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
