@@ -268,10 +268,14 @@ class Experiment(object):
                     change_errorbar_visibility(c, visible)
 
     def visibility_effective_area_plot(self, visible: bool):
+        # if self.get_plotted():
+        #     for c in self.ax_eff_area.containers:
+        #         if c.get_label() == self.name:
+        #             change_errorbar_visibility(c, visible)
         if self.get_plotted():
-            for c in self.ax_eff_area.containers:
-                if c.get_label() == self.name:
-                    change_errorbar_visibility(c, visible)
+            for l in self.ax_eff_area.lines:
+                if l.get_label() == self.name:
+                    l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
         if self.get_plotted():
