@@ -555,7 +555,7 @@ def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     >>> irf = ctaplot.ana.irf_cta()
     >>> simue = 10**(-2 + 4*np.random.rand(1000))
     >>> recoe = 10**(-2 + 4*np.random.rand(100))
-    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea)
+    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea_prod3)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -576,7 +576,7 @@ def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     return ax
 
 
-def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
+def plot_effective_area_cta_requirements(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the effective area
 
@@ -609,7 +609,7 @@ def plot_effective_area_requirement(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_effective_area_performances(cta_site, ax=None, **kwargs):
+def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
     """
     Plot the CTA performances for the effective area
 
@@ -667,7 +667,7 @@ def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile=
     ax = plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=ax, **kwargs)
 
     if cta_site:
-        ax = plot_effective_area_requirement(cta_site, ax=ax, color='black')
+        ax = plot_effective_area_cta_requirements(cta_site, ax=ax, color='black')
 
     plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200)
     plt.close()
@@ -675,7 +675,7 @@ def saveplot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, Outfile=
     return ax
 
 
-def plot_sensitivity_requirement(cta_site, ax=None, **kwargs):
+def plot_sensitivity_cta_requirements(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the sensitivity
     Parameters
@@ -707,7 +707,7 @@ def plot_sensitivity_requirement(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_sensitivity_performances(cta_site, ax=None, **kwargs):
+def plot_sensitivity_cta_performances(cta_site, ax=None, **kwargs):
     """
     Plot the CTA performances for the sensitivity
     Parameters
@@ -900,7 +900,7 @@ def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
     ax = plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=ax, **kwargs)
 
     if cta_site:
-        ax = plot_angular_res_requirement(cta_site, ax=ax)
+        ax = plot_angular_res_requirements(cta_site, ax=ax)
 
     plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
     plt.close()
@@ -908,7 +908,7 @@ def saveplot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
     return ax
 
 
-def plot_angular_res_requirement(cta_site, ax=None, **kwargs):
+def plot_angular_res_cta_requirements(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the angular resolution
     Parameters
@@ -1244,7 +1244,7 @@ def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwarg
     return ax
 
 
-def plot_energy_resolution_requirements(cta_site, ax=None, **kwargs):
+def plot_energy_resolution_cta_requirements(cta_site, ax=None, **kwargs):
     """
     Plot the cta requirement for the energy resolution
 
@@ -1321,7 +1321,7 @@ def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta
     ax = plot_energy_resolution(SimuE, RecoE)
 
     if cta_site != None:
-        ax = plot_energy_resolution_requirements(cta_site, ax=ax)
+        ax = plot_energy_resolution_cta_requirements(cta_site, ax=ax)
 
     plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
     plt.close()
@@ -1600,11 +1600,11 @@ class plot_from_anadata:
         if site == 'north' or site == 'lapalma':
             self.site = site
             irf = ana.irf_cta()
-            self.SimuArea = irf.LaPalmaArea
+            self.SimuArea = irf.LaPalmaArea_prod3
         if site == 'south' or site == 'paranal':
             self.site = site
             irf = ana.irf_cta()
-            self.SimuArea = irf.ParanalArea
+            self.SimuArea = irf.ParanalArea_prod3
 
     def plot_all(self, MultiplicityMin=[2, 4]):
         self.multiplicity_hist()
@@ -1700,7 +1700,7 @@ class plot_from_anadata:
         ax = plt.gca() if ax is None else ax
 
         if cta_goal:
-            ax = plot_angular_res_requirement(self.site, ax=ax, color='black')
+            ax = plot_angular_res_cta_requirements(self.site, ax=ax, color='black')
 
         if len(MultiplicityMin) > 1 and not 'alpha' in kwargs:
             kwargs['alpha'] = 0.8
@@ -1767,7 +1767,7 @@ class plot_from_anadata:
         ax = plt.gca() if ax is None else ax
 
         if cta_goal:
-            ax = plot_effective_area_requirement(self.site, ax=ax, color='black')
+            ax = plot_effective_area_cta_requirements(self.site, ax=ax, color='black')
 
         if len(MultiplicityMin) > 1 and not 'alpha' in kwargs:
             kwargs['alpha'] = 0.8
@@ -1868,7 +1868,7 @@ class plot_from_anadata:
         ax = plt.gca()
 
         if cta_goal:
-            ax = plot_energy_resolution_requirements(self.site, ax=ax, color='black')
+            ax = plot_energy_resolution_cta_requirements(self.site, ax=ax, color='black')
 
         alpha = 1.0
         if len(MultiplicityMin) > 1:
