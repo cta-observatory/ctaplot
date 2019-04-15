@@ -20,8 +20,8 @@ class irf_cta:
         self.E = logbin_mean(self.E_bin)
 
         # Area of CTA sites in meters
-        self.ParanalArea = 19.63e6
-        self.LaPalmaArea = 6.61e6
+        self.ParanalArea_prod3 = 19.63e6
+        self.LaPalmaArea_prod3 = 11341149 #6.61e6
 
     def set_E_bin(self, E_bin):
         self.E_bin = E_bin
@@ -355,11 +355,11 @@ def energy_bias(SimuE, RecoE):
 
 
 def get_angles_pipi(angles):
-    return np.mod(angles+pi, 2*pi) - pi
+    return np.mod(angles + np.pi, 2 * np.pi) - np.pi
 
 
 def get_angles_0pi(angles):
-    return np.mod(angles, pi)
+    return np.mod(angles, np.pi)
 
 
 def theta2(RecoAlt, RecoAz, AltSource, AzSource):
