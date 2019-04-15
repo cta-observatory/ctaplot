@@ -136,3 +136,15 @@ def test_plot_impact_parameter_error_site_center():
     reco_y = 2 * simu_y
     fig, ax = plt.subplots()
     plots.plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=ax, bins=30)
+
+
+def test_plot_effective_area_per_energy_power_law():
+    emin = 1e-3
+    emax = 1e3
+    total_number_events = 100000
+    spectral_index = 2.4
+    reco_energy = 10**(6 * np.random.rand(1000) - 3)
+    simu_area = 1e7
+
+    plots.plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
+                                             reco_energy, simu_area, color='black')
