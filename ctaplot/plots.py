@@ -1535,9 +1535,6 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     return ax
 
 
-
-
-
 def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, percentile=68, **kwargs):
     """
     Plot binned statistic with errorbars corresponding to the given percentile
@@ -1592,4 +1589,53 @@ def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, pe
                    bin_stat[bin_with_data],
                    **kwargs,
                    )
+    return ax
+
+
+def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
+                                             reco_energy, simu_area, ax=None, **kwargs):
+    """
+    Plot the effective area as a function of the energy.
+    The effective area is computed using the `ctaplot.ana.effective_area_per_energy_power_law`.
+
+    Parameters
+    ----------
+    emin: float
+        min simulated energy
+    emax: float
+        max simulated energy
+    total_number_events: int
+        total number of simulated events
+    spectral_index: float
+        spectral index of the simulated power-law
+    reco_energy: `numpy.ndarray`
+        reconstructed energies
+    simu_area: float
+        simulated core area
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+
+
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_xlabel('Energy [TeV]')
+    ax.set_ylabel(r'Effective Area $[m^2]$')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ebin, seff = ana.effective_area_per_energy_power_law(emin, emax, total_number_events,
+                                                         spectral_index, reco_energy, simu_area)
+
+    energy_nodes = ana.logbin_mean(ebin)
+    ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., fmt='o', **kwargs)
+
     return ax
