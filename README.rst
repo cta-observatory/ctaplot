@@ -47,18 +47,27 @@ In cases for which the CTA instrument response functions are used in a research 
 Install
 -------
 
-Required packages:
+The release 0.2 is available in pip:
+
+.. code-block:: bash
+
+   pip install ctaplot
 
 
+Requirements packages:
+
+* python > 3.6
 * numpy  
 * scipy>=0.19    
 * matplotlib>=2.0   
 
 We recommend the use of `anaconda <https://www.anaconda.com>`_
 
-To install, get in ctaplot main directory and type:
+One can also clone the package and install locally:
 
 .. code-block:: bash
 
+   git clone https://github.com/vuillaut/ctaplot.git
+   cd ctaplot
    python setup.py install
 
