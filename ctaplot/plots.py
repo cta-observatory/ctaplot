@@ -10,7 +10,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
-import seaborn as sns
 import ctaplot.ana as ana
 
 # plt.style.use('seaborn-colorblind')
@@ -1528,7 +1527,7 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     """
     ax = plt.gca() if ax is None else ax
 
-    sns.barplot(feature_keys, feature_importances, ax=ax)
+    ax.bar(feature_keys, feature_importances, ax=ax)
     ax.set_xticks(rotation='vertical')
     ax.title("Feature importances")
 
