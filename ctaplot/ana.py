@@ -8,7 +8,7 @@ Contain mathematical functions to make results analysis
 
 import numpy as np
 import ctaplot.dataset as ds
-
+from scipy.stats import binned_statistic
 
 class irf_cta:
     """
@@ -184,43 +184,30 @@ def logspace_decades_nbin(Xmin, Xmax, n=5):
 
 
 
-def multiplicity_stat_per_energy(Multiplicity, Energies, p = 50):
+def stat_per_energy(energy, y, statistic='mean'):
     """
-    Return the mean, min, max, percentile telescope multiplicity per energy.
-    Per default, percentile is 50 (= median)
+    Return statistic for the given quantity per energy bins.
+    The binning is given by irf_cta
 
     Parameters
     ----------
-    Multiplicity: 1D Numpy array of integers
-    Energy: 1D Numpy array of floats, event energies corresponding to the multiplicities
+    energy: `numpy.ndarray` (1d)
+        event energies
+    y: `numpy.ndarray` (1d)
+    statistic: string
+        see `scipy.stat.binned_statistic`
 
     Returns
     -------
-    (E, mean, min, max, percentile): tuple of 1D Numpy arrays, Energy, Mean Multiplicity, Min Multiplicity,
-    Max Multplicity, Percentile Multiplicity
+    `numpy.ndarray, numpy.ndarray, numpy.ndarray`
+        bin_stat, bin_edges, binnumber
     """
-
-    m_mean = []
-    m_min = []
-    m_max = []
-    m_per = []
 
     irf = irf_cta()
 
-    for i, e in enumerate(irf.E):
-        mask = (Energies > irf.E_bin[i]) & (Energies < irf.E_bin[i+1])
-        if len(Multiplicity[mask]) > 0:
-            m_mean.append(Multiplicity[mask].mean())
-            m_min.append(Multiplicity[mask].min())
-            m_max.append(Multiplicity[mask].max())
-            m_per.append(np.percentile[mask])
-        else:
-            m_mean.append(0)
-            m_max.append(0)
-            m_min.append(0)
-            m_per.append(0)
+    bin_stat, bin_edges, binnumber = binned_statistic(energy, y, statistic=statistic, bins=irf.E)
 
-    return irf.E, m_mean, m_min, m_max, m_per
+    return bin_stat, bin_edges, binnumber
 
 
 
@@ -249,12 +236,14 @@ def resolution(simu, reco, Q=68, bias_correction=False):
 
     Parameters
     ----------
-    simu: 1d `numpy.ndarray` of simulated energies
-    reco: 1d `numpy.ndarray` of reconstructed energies
+    simu: `numpy.ndarray` (1d)
+     simulated quantity
+    reco: `numpy.ndarray` (1d)
+     reconstructed quantity
 
     Returns
     -------
-    `numpy.array` - [energy_resolution, lower_confidence_limit, upper_confidence_limit]
+    `numpy.array` - [resolution, lower_confidence_limit, upper_confidence_limit]
     """
     assert len(simu) == len(reco), "both arrays should have the same size"
 
@@ -355,10 +344,32 @@ def energy_bias(SimuE, RecoE):
 
 
 def get_angles_pipi(angles):
+    """
+    return angles modulo between -pi and +pi
+
+    Parameters
+    ----------
+    angles: `numpy.ndarray`
+
+    Returns
+    -------
+    `numpy.ndarray`
+    """
     return np.mod(angles + np.pi, 2 * np.pi) - np.pi
 
 
 def get_angles_0pi(angles):
+    """
+    return angles modulo between 0 and +pi
+
+    Parameters
+    ----------
+    angles: `numpy.ndarray`
+
+    Returns
+    -------
+    `numpy.ndarray`
+    """
     return np.mod(angles, np.pi)
 
 
@@ -609,7 +620,7 @@ def impact_resolution(RecoX, RecoY, SimuX, SimuY, Q=68, conf=1.645):
     `numpy.array` - [impact_resolution, lower_limit, upper_limit]
     """
     d2 = impact_parameter_error(RecoX, RecoY, SimuX, SimuY)**2
-    return np.sqrt(np.append(RQ(d2, 68), percentile_confidence_interval(d2, Q=68, conf=conf)))
+    return np.sqrt(np.append(RQ(d2, Q), percentile_confidence_interval(d2, Q=Q, conf=conf)))
 
 
 def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=1.645):

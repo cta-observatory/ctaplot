@@ -6,14 +6,10 @@ Functions to make IRF and other reconstruction quality-check plots
 
 
 import numpy as np
-import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
-from numpy import floor
-from math import inf
-
 import ctaplot.ana as ana
 
 # plt.style.use('seaborn-colorblind')
@@ -434,18 +430,18 @@ def plot_multiplicity_hist(multiplicity, ax=None, Outfile=None, xmin=0, xmax=100
     ax.set_yticklabels(ax.get_yticklabels(), fontsize=SizeTick)
 
     if xmax <= xmin:
-        xmax = floor(m.max()) + 1
+        xmax = np.floor(m.max()) + 1
 
     if len(m) > 0:
         ax.set_xlim(xmin, xmax + 1)
         n, b, s = ax.hist(m, bins=(xmax - xmin), align='left', range=(xmin, xmax), label='Telescope multiplicity')
         ax.xaxis.set_ticks(np.append(np.linspace(xmin, xmax, 10, dtype=int), [1, 2, 3, 4, 5]))
-        x50 = m[int(floor(0.5 * len(m)))] + 0.5
-        x90 = m[int(floor(0.9 * len(m)))] + 0.5
+        x50 = m[int(np.floor(0.5 * len(m)))] + 0.5
+        x90 = m[int(np.floor(0.9 * len(m)))] + 0.5
         if xmin < x50 < xmax:
-            ax.vlines(x50, 0, n[int(m[int(floor(0.5 * len(m)))])], color=BrewOranges[-2], label='50%')
+            ax.vlines(x50, 0, n[int(m[int(np.floor(0.5 * len(m)))])], color=BrewOranges[-2], label='50%')
         if xmin < x90 < xmax:
-            ax.vlines(x90, 0, n[int(m[int(floor(0.9 * len(m)))])], color=BrewOranges[-1], label='90%')
+            ax.vlines(x90, 0, n[int(m[int(np.floor(0.9 * len(m)))])], color=BrewOranges[-1], label='90%')
 
     plt.legend(fontsize=SizeLabel)
     ax.set_title("Telescope multiplicity")
@@ -1350,40 +1346,41 @@ def plot_reco_histo(y_true, y_reco):
     plt.title("Histogram of the predicted feature")
 
 
-def plot_impact_parameter_error_site_center(RecoX, RecoY, SimuX, SimuY, Outfile="ImpactParameterErrorSiteCenter"):
+def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
     """
     Plot the impact parameter error as a function of the distance to the site center.
-
     Parameters
     ----------
-    RecoX: 1d array
-    RecoY: 1d array
-    SimuX: 1d array
-    SimuY: 1d array
-    Outfile: string
+    reco_x: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
+    simu_x: `numpy.ndarray`
+    simu_y: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.hist2d`
+
+    Returns
+    -------
+    ax
     """
 
-    import seaborn as sns
-    sns.set(style="white", color_codes=True)
+    ax = plt.gca() if ax is None else ax
 
-    imp_err = ana.impact_parameter_error(a.RecoX, a.RecoY, a.SimuX[a.maskSimuRecoed], a.SimuY[a.maskSimuRecoed])
-    dCenter = np.sqrt(a.SimuX[a.maskSimuRecoed] ** 2 + a.SimuY[a.maskSimuRecoed] ** 2)
+    imp_err = ana.impact_parameter_error(reco_x, reco_y, simu_x, simu_y)
+    distance_center = np.sqrt(simu_x ** 2 + simu_y ** 2)
 
-    sns.jointplot(dCenter, imp_err, kind='reg')
-
-    plt.legend(fontsize=SizeLabel)
-
-    plt.savefig(Outfile + ".png", bbox_inches="tight", format='png', dpi=200);
-    plt.close()
+    ax.hist2d(distance_center, imp_err, **kwargs)
+    ax.set_xlabel("Distance to site center")
+    ax.set_ylabel("Impact point error")
+    return ax
 
 
-def plot_site(telX, telY, ax=None, **kwargs):
+def plot_site(tel_x, tel_y, ax=None, **kwargs):
     """
     Plot the telescopes positions
     Parameters
     ----------
-    telX: 1D numpy array
-    telY: 1D numpy array
+    tel_x: 1D numpy array
+    tel_y: 1D numpy array
     ax: `~matplotlib.axes.Axes` or None
     **kwargs : Extra keyword arguments are passed to `matplotlib.pyplot.scatter`
 
@@ -1393,23 +1390,23 @@ def plot_site(telX, telY, ax=None, **kwargs):
     """
     ax = plt.gca() if ax is None else ax
 
-    ax.scatter(telX, telY, **kwargs)
+    ax.scatter(tel_x, tel_y, **kwargs)
     ax.axis('equal')
 
     return ax
 
 
-def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None, **kwargs):
+def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy, ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
 
     Parameters
     ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: float
-    SimuY: float
-    SimuE: `numpy.ndarray`
+    reco_x: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
+    simu_x: float
+    simu_y: float
+    simu_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -1428,7 +1425,7 @@ def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    E_bin, RES = ana.impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE)
+    E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy)
     E = ana.logbin_mean(E_bin)
 
     ax.errorbar(
@@ -1441,29 +1438,6 @@ def plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None
 
     return ax
 
-
-def saveplot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=None,
-        Outfile="impact_resolution.png", **kwargs):
-    """
-
-    Parameters
-    ----------
-    RecoX
-    RecoY
-    SimuX
-    SimuY
-    SimuE
-    ax
-    Outfile
-    kwargs
-
-    Returns
-    -------
-
-    """
-    ax = plot_impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, SimuE, ax=ax, **kwargs)
-    plt.savefig(Outfile, fmt='png', dpi=200)
-    plt.close()
 
 
 def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_args={}, line_args={}):
@@ -1490,7 +1464,7 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     >>> x = np.random.rand(10000)
     >>> y = x**2
     >>> plot_migration_matrix(x, y, colorbar=True, hist2d_args=dict(norm=matplotlib.colors.LogNorm()))
-    In this example, the colorbar will be log normed 
+    In this example, the colorbar will be log normed
     """
 
     if 'bins' not in hist2d_args:
@@ -1537,443 +1511,30 @@ def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
     return ax
 
 
-def plot_features_importance(learn_class, ax=None):
+def plot_feature_importance(feature_keys, feature_importances, ax=None):
+    """
+    Plot features importance after model training (typically from scikit-learn)
+
+    Parameters
+    ----------
+    feature_keys: list of string
+    feature_importances: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+
+    Returns
+    -------
+    ax
+    """
     ax = plt.gca() if ax is None else ax
 
-    sns.barplot(learn_class.input_features_keys, learn_class.model.feature_importances_, ax=ax)
-    plt.xticks(rotation='vertical')
-    plt.title("Features importance".format(id))
+    ax.bar(feature_keys, feature_importances, ax=ax)
+    ax.set_xticks(rotation='vertical')
+    ax.title("Feature importances")
 
     return ax
 
 
 
-class plot_from_anadata:
-    """
-    Class to make plots from AnaData class object.
-    The AnaData class was created in the hipecta_old
-    I will keep this class here for now but it surely is depreciated.
-
-    Parameters
-    ----------
-    anadata: AnaData class object
-    """
-
-    def __init__(self, anadata):
-
-        self.a = anadata
-        self.SimuArea = 1
-
-        self.outdir = 'anaplots/'
-        self.format = 'png'
-        self.dpi = 200
-        if not os.path.isdir(self.outdir): os.mkdir(self.outdir)
-
-        if len(anadata.TelTypes) > 0:
-            if len(set(np.concatenate(anadata.TelTypes))) > 2:
-                self.set_site('south')
-            else:
-                self.set_site('north')
-        else:
-            print("Can't guess the site from its layout, please precise with p.set_site()")
-
-    def set_outdir(self, dir_name):
-        """
-        set new directory for plots and create it
-
-        Parameters
-        ----------
-        dir_name: string
-        """
-        self.outdir = dir_name + '/'
-        if not os.path.isdir(dir_name): os.mkdir(dir_name)
-
-    def set_site(self, site):
-        """
-        set the observation site: 'south' or 'north'
-
-        Parameters
-        ----------
-        site: string
-        """
-        self.site = site
-        if site == 'north' or site == 'lapalma':
-            self.site = site
-            irf = ana.irf_cta()
-            self.SimuArea = irf.LaPalmaArea_prod3
-        if site == 'south' or site == 'paranal':
-            self.site = site
-            irf = ana.irf_cta()
-            self.SimuArea = irf.ParanalArea_prod3
-
-    def plot_all(self, MultiplicityMin=[2, 4]):
-        self.multiplicity_hist()
-        self.impact_heatmap()
-        self.energy_hist()
-        self.fov_map()
-        self.theta2()
-        plt.close('all')
-        self.angular_res_per_energy(MultiplicityMin=MultiplicityMin)
-        plt.close('all')
-        self.impact_point_map_distri()
-        self.impact_parameter_error()
-        self.impact_parameter_error_per_energy()
-        self.impact_parameter_error_per_multiplicity()
-        self.effective_area_per_energy(MultiplicityMin=MultiplicityMin)
-        self.distributions_parameters()
-        plt.close('all')
-        self.energy_resolution(MultiplicityMin=MultiplicityMin)
-        plt.close('all')
-        self.impact_resolution_per_energy(MultiplicityMin=MultiplicityMin)
-        plt.close('all')
-
-    def plot_results(self):
-        self.effective_area_per_energy()
-
-        plt.close('all')
-        self.angular_res_per_energy()
-        plt.close('all')
-        self.energy_resolution()
-        self.energy_resolution(bias_correction=True)
-        plt.close('all')
-        self.energy_bias()
-        plt.close('all')
-
-    def multiplicity_hist(self, ER=(-inf, inf), xmin=0, xmax=100):
-        """
-        historgram of the telescopes multiplicity.
-        One can select an energy range.
-
-        Parameters
-        ----------
-        ER: tuple of (energy_min, energy_max) to select an energy range. Use inf for no limit.
-        OutFolder:
-
-        Returns
-        -------
-
-        """
-
-        OutFolder = self.outdir
-        if not os.path.isdir(OutFolder): os.mkdir(OutFolder)
-        # mask = (self.a.RecoE > ER[0]) & (self.a.RecoE < ER[1])
-        # multiplicity_hist(self.a.MultiplicityReco[mask], OutFolder + "Multiplicity-[%s-%s]" % (ER[0], ER[1]),
-        #                         xmax=50)
-        plot_multiplicity_hist(self.a.MultiplicityReco, Outfile=self.outdir + '/' + "Multplicity")
-
-    def impact_heatmap(self):
-        """
-        plot_impact_point_heatmap
-        """
-        assert (len(self.a.RecoX) > 0) & (len(self.a.RecoX) > 0), "empty arrays"
-
-        plot_impact_point_heatmap(self.a.RecoX, self.a.RecoY, Outfile=self.outdir + "ImpactHeatmap")
-
-    def energy_hist(self):
-        saveplot_energy_distribution(self.a.SimuE, self.a.SimuE[self.a.maskSimuRecoed],
-                                     Outfile=self.outdir + "EnergyDistribution",
-                                     maskSimuDetected=self.a.maskSimuDetected)
-
-    def fov_map(self):
-        plot_field_of_view_map(self.a.RecoAlt, self.a.RecoAz, self.a.AltSource, self.a.AzSource, E=False,
-                               Outfile=self.outdir + "FovMap")
-
-    def theta2(self):
-        plot_theta2(self.a.RecoAlt, self.a.RecoAz, self.a.AltSource, self.a.AzSource, Outfile=self.outdir + "theta2")
-
-    def angular_res_per_energy(self, MultiplicityMin=[2], cta_goal=True, ax=None, **kwargs):
-        """
-        Plot the angular resolution as a function of the energy
-
-        Parameters
-        ----------
-        MultiplicityMin: list of `int`
-        cta_goal: `bool`
-        ax: `matplotlib.pyplot.axes`
-        kwargs: args for `hipecta.plots.plot_angular_res_per_energy`
-
-        Returns
-        -------
-        `matplotlib.pyplot.axes`
-        """
-
-        ax = plt.gca() if ax is None else ax
-
-        if cta_goal:
-            ax = plot_angular_res_cta_requirements(self.site, ax=ax, color='black')
-
-        if len(MultiplicityMin) > 1 and not 'alpha' in kwargs:
-            kwargs['alpha'] = 0.8
-        elif not 'alpha' in kwargs:
-            kwargs['alpha'] = 1.0
-
-        if len(self.a.MultiplicityReco) > 0:
-            for mult in MultiplicityMin:
-
-                mask = self.a.MultiplicityReco >= mult
-
-                if not 'label' in kwargs:
-                    kwargs['label'] = "Minimal multiplicity = {0}".format(mult)
-
-                ax = plot_angular_res_per_energy(
-                    self.a.RecoAlt[mask], self.a.RecoAz[mask],
-                    self.a.SimuAlt[self.a.maskSimuRecoed][mask], self.a.SimuAz[self.a.maskSimuRecoed][mask],
-                    self.a.SimuE[self.a.maskSimuRecoed][mask],
-                    ax=ax,
-                    **kwargs,
-                )
-        else:
-
-            if not 'label' in kwargs:
-                kwargs['label'] = "No cut on multiplicity"
-
-            ax = plot_angular_res_per_energy(self.a.RecoAlt, self.a.RecoAz,
-                                             self.a.AltSource, self.a.AzSource,
-                                             self.a.SimuE[self.a.maskSimuRecoed],
-                                             ax=ax,
-                                             **kwargs)
-
-        ax.legend()
-        plt.savefig(self.outdir + '/' + "AngRes.png", bbox_inches="tight", format='png', dpi=200)
-        # plt.close('all')
-
-        return ax
-
-    def impact_point_map_distri(self):
-        plot_impact_point_map_distri(self.a.RecoX, self.a.RecoY, self.a.telX, self.a.telY, kde=True,
-                                     Outfile=self.outdir + "ImpactMapDistri")
-
-    def impact_parameter_error(self):
-        plot_impact_parameter_error(self.a.RecoX, self.a.RecoY,
-                                    self.a.SimuX[self.a.maskSimuRecoed], self.a.SimuY[self.a.maskSimuRecoed],
-                                    Outfile=self.outdir + "ImpactParamterError")
-
-    def effective_area_per_energy(self, MultiplicityMin=[2], cta_goal=True, ax=None, **kwargs):
-        """
-        Plot the effective area as a function of the energy
-
-        Parameters
-        ----------
-        MultiplicityMin: list of `int` - minimal multiplicity
-        cta_goal: `bool` - True to plot cta goal
-        ax: `matplotlib.pyplot.axes`
-        **kwargs: args for `hipecta.plots.plot_effective_area_per_energy`
-
-        Returns
-        -------
-        `matplotlib.pyplot.axes`
-        """
-
-        ax = plt.gca() if ax is None else ax
-
-        if cta_goal:
-            ax = plot_effective_area_cta_requirements(self.site, ax=ax, color='black')
-
-        if len(MultiplicityMin) > 1 and not 'alpha' in kwargs:
-            kwargs['alpha'] = 0.8
-        elif not 'alpha' in kwargs:
-            kwargs['alpha'] = 1.0
-
-        if len(self.a.MultiplicityReco) >= 0:
-            for i, mult in enumerate(MultiplicityMin):
-
-                mask = self.a.MultiplicityReco > mult
-
-                if not 'label' in kwargs:
-                    kwargs['label'] = "Minimal multiplicity = {0}".format(mult)
-
-                ax = plot_effective_area_per_energy(
-                    self.a.SimuE,
-                    self.a.SimuE[self.a.maskSimuRecoed][mask],
-                    self.SimuArea,
-                    ax=ax,
-                    **kwargs,
-                )
-        else:
-            if not 'label' in kwargs:
-                kwargs['label'] = "No cut on multiplicity"
-
-            ax = plot_effective_area_per_energy(self.a.SimuE,
-                                                self.a.SimuE[self.a.maskSimuRecoed],
-                                                self.SimuArea,
-                                                ax=ax,
-                                                **kwargs,
-                                                )
-
-        ax.legend()
-        plt.savefig(self.outdir + '/' + "EffectiveArea.png", bbox_inches="tight", format='png', dpi=200)
-        # plt.close('all')
-
-        return ax
-
-    def impact_parameter_error_per_energy(self):
-        plot_impact_parameter_error_per_energy(self.a.RecoX, self.a.RecoY,
-                                               self.a.SimuX[self.a.maskSimuRecoed], self.a.SimuY[self.a.maskSimuRecoed],
-                                               self.a.SimuE[self.a.maskSimuRecoed],
-                                               Outfile=self.outdir + "ImpactParameterErrorPerEnergy")
-
-    def impact_parameter_error_per_multiplicity(self):
-        plot_impact_parameter_error_per_multiplicity(self.a.RecoX, self.a.RecoY,
-                                                     self.a.SimuX[self.a.maskSimuRecoed],
-                                                     self.a.SimuY[self.a.maskSimuRecoed],
-                                                     self.a.MultiplicityReco, max=None,
-                                                     Outfile=self.outdir + "ImpactParameterErrorPerMultiplicity")
-
-    def impact_parameter_error_site_center(self):
-        plot_impact_parameter_error_site_center(self.a.RecoX, self.a.RecoY,
-                                                self.a.SimuX[self.a.maskSimuRecoed],
-                                                self.a.SimuY[self.a.maskSimuRecoed],
-                                                Outfile=self.outdir + "ImpactParameterErrorSiteCenter")
-
-    def recoQuality_hist(self):
-        plot_recoQuality_hist(self.recoQuality, Outfile=self.outdir + "recoQuality")
-
-    def distributions_parameters(self, pdfname="distributions_check.pdf"):
-        """
-        Plot some dirty parameters distributions for fast check.
-        Save them into a multipage pdf.
-        Returns
-        -------
-
-        """
-        from matplotlib.backends.backend_pdf import PdfPages
-        import datetime
-        pp = PdfPages(self.outdir + '/' + pdfname)
-        now = datetime.datetime.now()
-        txt = "Some distributions of the reconstructed parameters \n " \
-              "Only the events with a good reconstruction quality are kept \n {0}".format(
-            now.strftime("%Y-%m-%d %H:%M"))
-        fig = plt.figure()
-        fig.text(.1, .5, txt)
-        pp.savefig(fig)
-        plt.close()
-
-        for k in self.a.__dict__:
-            fig = plt.figure()
-            value = getattr(self.a, k)
-            mask = np.concatenate(self.a.ImageQuality) == 0
-            if type(value) == np.ndarray and len(value) > 0:
-                if type(value[0]) == np.ndarray:
-                    ar = np.nan_to_num(np.concatenate(value))[mask]
-                else:
-                    ar = value
-                plt.hist(ar, label=str(k), bins=40);
-                plt.legend()
-                pp.savefig(fig)
-            plt.close()
-        pp.close()
-
-    def energy_resolution(self, cta_goal=True, MultiplicityMin=[2], bias_correction=False):
-
-        ax = plt.gca()
-
-        if cta_goal:
-            ax = plot_energy_resolution_cta_requirements(self.site, ax=ax, color='black')
-
-        alpha = 1.0
-        if len(MultiplicityMin) > 1:
-            alpha = 0.8
-
-        if len(self.a.MultiplicityReco) > 0:
-            for mult in MultiplicityMin:
-                mask = self.a.MultiplicityReco >= mult
-                ax = plot_energy_resolution(
-                    self.a.SimuE[self.a.maskSimuRecoed][mask],
-                    self.a.RecoE[mask],
-                    bias_correction=bias_correction,
-                    ax=ax,
-                    label="Minimal multiplicity = {0}".format(mult),
-                    alpha=alpha
-                )
-        else:
-            ax = plot_energy_resolution(self.a.SimuE[self.a.maskSimuRecoed],
-                                        self.a.RecoE,
-                                        bias_correction=bias_correction,
-                                        ax=ax,
-                                        label="No cut on multiplicity")
-        ax.legend()
-        plt.savefig(self.outdir + '/' + 'EnergyResolution.png', bbox_inches="tight", format='png', dpi=200)
-        # plt.close('all')
-
-    def energy_bias(self, cta_goal=True, MultiplicityMin=[2]):
-
-        ax = plt.gca()
-
-        alpha = 1.0
-        if len(MultiplicityMin) > 1:
-            alpha = 0.8
-
-        if len(self.a.MultiplicityReco) > 0:
-            for mult in MultiplicityMin:
-                mask = self.a.MultiplicityReco >= mult
-                ax = plot_energy_bias(
-                    self.a.SimuE[self.a.maskSimuRecoed][mask],
-                    self.a.RecoE[mask],
-                    ax=ax,
-                    label="Minimal multiplicity = {0}".format(mult),
-                    alpha=alpha
-                )
-        else:
-            ax = plot_energy_bias(self.a.SimuE[self.a.maskSimuRecoed],
-                                  self.a.RecoE,
-                                  ax=ax,
-                                  label="No cut on multiplicity")
-        ax.legend()
-        plt.savefig(self.outdir + '/' + 'EnergyBias.png', bbox_inches="tight", format='png', dpi=200)
-        plt.close('all')
-
-    def impact_resolution_per_energy(self, MultiplicityMin=[2], ax=None, **kwargs):
-        """
-        Plot the impact resolution as a function of the energy
-
-        Parameters
-        ----------
-        MultiplicityMin: list of `int`
-        ax: `matplotlib.pyplot.axes`
-        kwargs: args for `hipecta.plots.plot_impact_resolution_per_energy`
-
-        Returns
-        -------
-        `matplotlib.pyplot.axes`
-        """
-
-        ax = plt.gca() if ax is None else ax
-
-        if len(MultiplicityMin) > 1:
-            if 'alpha' not in kwargs:
-                kwargs['alpha'] = 0.8
-
-        if len(self.a.MultiplicityReco) >= 0:
-            for mult in MultiplicityMin:
-
-                if 'label' not in kwargs:
-                    kwargs['label'] = "Minimal multiplicity = {0}".format(mult)
-
-                mask = self.a.MultiplicityReco > mult
-                ax = plot_impact_resolution_per_energy(
-                    self.a.RecoX[mask],
-                    self.a.RecoY[mask],
-                    self.a.SimuX[self.a.maskSimuRecoed][mask],
-                    self.a.SimuY[self.a.maskSimuRecoed][mask],
-                    self.a.SimuE[self.a.maskSimuRecoed][mask],
-                    ax=ax
-                )
-
-        else:
-            if 'label' not in kwargs:
-                kwargs['label'] = "No cut on multiplicity"
-
-            ax = plot_impact_resolution_per_energy(self.a.RecoX, self.a.RecoY,
-                                                   self.a.SimuX[self.a.maskSimuRecoed],
-                                                   self.a.SimuY[self.a.maskSimuRecoed],
-                                                   self.a.SimuE[self.a.maskSimuRecoed],
-                                                   ax=ax,
-                                                   label="No cut on multiplicity")
-
-        ax.legend()
-        plt.savefig(self.outdir + '/' + "ImpactResolution.png", bbox_inches="tight", format='png', dpi=200)
-        # plt.close('all')
-        return ax
 
 
 def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, percentile=68, **kwargs):

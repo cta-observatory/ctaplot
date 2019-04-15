@@ -127,3 +127,12 @@ def test_plot_migration_matrix():
                                 hist2d_args=dict(range=[[0, 1], [0, 0.5]], normed=True),
                                 line_args=dict(color='red', lw=0.4)
                                 )
+
+
+def test_plot_impact_parameter_error_site_center():
+    simu_x = np.random.rand(100)
+    simu_y = np.random.rand(100)
+    reco_x = 2 * simu_x
+    reco_y = 2 * simu_y
+    fig, ax = plt.subplots()
+    plots.plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=ax, bins=30)
