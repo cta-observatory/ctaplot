@@ -475,11 +475,11 @@ def create_resolution_fig(site='south', ref=None):
     if ref == 'performances':
         ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
         ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_performances(site, ax=ax_eff_area, color='black')
+        ctaplot.plot_effective_area_cta_performances(site, ax=ax_eff_area, color='black')
     elif ref == 'requirements':
-        ctaplot.plot_angular_res_requirement(site, ax=ax_ang_res, color='black')
-        ctaplot.plot_energy_resolution_requirements(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_requirement(site, ax=ax_eff_area, color='black')
+        ctaplot.plot_angular_res_cta_requirements(site, ax=ax_ang_res, color='black')
+        ctaplot.plot_energy_resolution_cta_requirements(site, ax=ax_ene_res, color='black')
+        ctaplot.plot_effective_area_cta_requirements(site, ax=ax_eff_area, color='black')
     if ref is not None:
         ax_ang_res.legend()
         ax_ene_res.legend()
