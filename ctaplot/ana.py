@@ -229,30 +229,34 @@ def bias(simu, reco):
     return np.median(res)
 
 
-def resolution(simu, reco, Q=68, bias_correction=False):
+def resolution(simu, reco, percentile=68.27, error_percentile=68.27, bias_correction=False):
     """
-    Compute the resolution of reco as the Qth (68 as standard) containment radius of delta_reco/reco
-    with the lower and upper confidence limits
+    Compute the resolution of reco as the Qth (68.27 as standard = 1 sigma) containment radius of (simu-reco)/reco
+    with the lower and upper confidence limits defined the values inside the error_percentile
 
     Parameters
     ----------
     simu: `numpy.ndarray` (1d)
-     simulated quantity
+        simulated quantity
     reco: `numpy.ndarray` (1d)
-     reconstructed quantity
+        reconstructed quantity
+    percentile: float
+        percentile for the resolution containment radius
+    error_percentile: float
+        percentile for the confidence limits
+    bias_correction: bool
+        if True, the resolution is corrected with the bias computed on simu and reco
 
     Returns
     -------
-    `numpy.array` - [resolution, lower_confidence_limit, upper_confidence_limit]
+    `numpy.ndarray` - [resolution, lower_confidence_limit, upper_confidence_limit]
     """
     assert len(simu) == len(reco), "both arrays should have the same size"
 
-    bias = 0
-    if bias_correction:
-        bias = bias(simu, reco)
+    b = bias(simu, reco) if bias_correction else 0
 
-    res = np.abs((reco - simu) / reco - bias)
-    return np.append(RQ(res, Q), percentile_confidence_interval(res, Q=Q))
+    res = np.abs((reco - simu) / reco - b)
+    return np.append(RQ(res, percentile), percentile_confidence_interval(res, percentile=error_percentile))
 
 
 def resolution_per_energy(simu, reco, SimuE, bias_correction=False):
@@ -275,28 +279,24 @@ def resolution_per_energy(simu, reco, SimuE, bias_correction=False):
     return irf.E_bin, np.array(res)
 
 
-def energy_res(SimuE, RecoE, Q=68, bias_correction=False):
+def energy_resolution(true_energy, reco_energy, percentile=68.27, error_percentile=68.27, bias_correction=False):
     """
     Compute the energy resolution of RecoE as the Qth (68 as standard) containment radius of DeltaE/E
     with the lower and upper confidence limits
 
     Parameters
     ----------
-    SimuE: 1d numpy array of simulated energies
-    RecoE: 1d numpy array of reconstructed energies
+    true_energy: 1d numpy array of simulated energies
+    reco_energy: 1d numpy array of reconstructed energies
+    percentile: float
+        <= 100
 
     Returns
     -------
     `numpy.array` - [energy_resolution, lower_confidence_limit, upper_confidence_limit]
     """
-    assert len(SimuE) == len(RecoE), "both arrays should have the same size"
-
-    biasE = 0
-    if bias_correction:
-        biasE = bias(SimuE, RecoE)
-
-    resE = np.abs((RecoE - SimuE) / RecoE - biasE)
-    return np.append(RQ(resE, Q), percentile_confidence_interval(resE, Q=Q))
+    return resolution(true_energy, reco_energy, percentile=percentile,
+                      error_percentile=error_percentile, bias_correction=bias_correction)
 
 
 def energy_res_per_energy(SimuE, RecoE, bias_correction=False):
@@ -315,7 +315,7 @@ def energy_res_per_energy(SimuE, RecoE, bias_correction=False):
     irf = irf_cta()
     for i, e in enumerate(irf.E):
         mask = (SimuE > irf.E_bin[i]) & (SimuE < irf.E_bin[i+1])
-        resE.append(energy_res(SimuE[mask], RecoE[mask], bias_correction=bias_correction))
+        resE.append(energy_resolution(SimuE[mask], RecoE[mask], bias_correction=bias_correction))
 
 
     return irf.E_bin, np.array(resE)
@@ -620,7 +620,7 @@ def impact_resolution(RecoX, RecoY, SimuX, SimuY, Q=68, conf=1.645):
     `numpy.array` - [impact_resolution, lower_limit, upper_limit]
     """
     d2 = impact_parameter_error(RecoX, RecoY, SimuX, SimuY)**2
-    return np.sqrt(np.append(RQ(d2, Q), percentile_confidence_interval(d2, Q=Q, conf=conf)))
+    return np.sqrt(np.append(RQ(d2, Q), percentile_confidence_interval(d2, percentile=Q, conf=conf)))
 
 
 def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=1.645):
@@ -654,7 +654,7 @@ def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=
     return E_bin, np.array(RES)
 
 
-def percentile_confidence_interval(X, Q=68, conf=1.645):
+def percentile_confidence_interval(x, percentile=68, conf=1.645):
     """
     Return the confidence interval for the qth percentile of X
     conf=1.96 corresponds to a 95% confidence interval for a normal distribution
@@ -666,20 +666,20 @@ def percentile_confidence_interval(X, Q=68, conf=1.645):
 
     Parameters
     ----------
-    X: `numpy.array`
-    Q: `float` - percentile (between 0 and 100)
+    x: `numpy.ndarray`
+    percentile: `float` - percentile (between 0 and 100)
     conf: `float` - confidence
 
     Returns
     -------
 
     """
-    sort_X = np.sort(X)
-    if len(X)==0:
+    sort_X = np.sort(x)
+    if len(x)==0:
         return (0, 0)
-    q = Q / 100.
-    j = np.max([0, np.int(len(X) * q - conf * np.sqrt(len(X) * q * (1 - q)))])
-    k = np.min([np.int(len(X) * q + conf * np.sqrt(len(X) * q * (1 - q))), len(X) - 1])
+    q = percentile / 100.
+    j = np.max([0, np.int(len(x) * q - conf * np.sqrt(len(x) * q * (1 - q)))])
+    k = np.min([np.int(len(x) * q + conf * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
     return sort_X[j], sort_X[k]
 
 
