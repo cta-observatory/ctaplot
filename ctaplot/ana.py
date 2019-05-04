@@ -674,13 +674,13 @@ def percentile_confidence_interval(x, percentile=68, conf=1.645):
     -------
 
     """
-    sort_X = np.sort(x)
+    sorted_x = np.sort(x)
     if len(x)==0:
         return (0, 0)
     q = percentile / 100.
     j = np.max([0, np.int(len(x) * q - conf * np.sqrt(len(x) * q * (1 - q)))])
     k = np.min([np.int(len(x) * q + conf * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
-    return sort_X[j], sort_X[k]
+    return sorted_x[j], sorted_x[k]
 
 
 def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_index, bins):
