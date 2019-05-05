@@ -8,7 +8,7 @@ Contain mathematical functions to make results analysis
 
 import numpy as np
 import ctaplot.dataset as ds
-from scipy.stats import binned_statistic
+from scipy.stats import binned_statistic, norm
 
 class irf_cta:
     """
@@ -620,7 +620,7 @@ def impact_resolution(RecoX, RecoY, SimuX, SimuY, Q=68, conf=1.645):
     `numpy.array` - [impact_resolution, lower_limit, upper_limit]
     """
     d2 = impact_parameter_error(RecoX, RecoY, SimuX, SimuY)**2
-    return np.sqrt(np.append(RQ(d2, Q), percentile_confidence_interval(d2, percentile=Q, conf=conf)))
+    return np.sqrt(np.append(RQ(d2, Q), percentile_confidence_interval(d2, percentile=Q, confidence_level=conf)))
 
 
 def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=1.645):
@@ -654,11 +654,9 @@ def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=
     return E_bin, np.array(RES)
 
 
-def percentile_confidence_interval(x, percentile=68, conf=1.645):
+def percentile_confidence_interval(x, percentile=68, confidence_level=0.95):
     """
-    Return the confidence interval for the qth percentile of X
-    conf=1.96 corresponds to a 95% confidence interval for a normal distribution
-    One can obtain another confidence coefficient thanks to `scipy.stats.norm.ppf`
+    Return the confidence interval for the qth percentile of x for a given confidence level
 
     REF:
     http://people.stat.sfu.ca/~cschwarz/Stat-650/Notes/PDF/ChapterPercentiles.pdf
@@ -667,19 +665,22 @@ def percentile_confidence_interval(x, percentile=68, conf=1.645):
     Parameters
     ----------
     x: `numpy.ndarray`
-    percentile: `float` - percentile (between 0 and 100)
-    conf: `float` - confidence
+    percentile: `float`
+        0 < percentile < 100
+    confidence_level: `float`
+        0 < confidence level (by default 95%) < 1
 
     Returns
     -------
 
     """
     sorted_x = np.sort(x)
-    if len(x)==0:
-        return (0, 0)
+    z = norm.ppf(confidence_level)
+    if len(x) == 0:
+        return 0, 0
     q = percentile / 100.
-    j = np.max([0, np.int(len(x) * q - conf * np.sqrt(len(x) * q * (1 - q)))])
-    k = np.min([np.int(len(x) * q + conf * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
+    j = np.max([0, np.int(len(x) * q - z * np.sqrt(len(x) * q * (1 - q)))])
+    k = np.min([np.int(len(x) * q + z * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
     return sorted_x[j], sorted_x[k]
 
 
