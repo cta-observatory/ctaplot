@@ -261,7 +261,7 @@ def resolution(simu, reco, percentile=68.27, confidence_level=0.95, bias_correct
                                                                          confidence_level=confidence_level))
 
 
-def resolution_per_energy(simu, reco, SimuE, bias_correction=False):
+def resolution_per_energy(simu, reco, simu_energy, bias_correction=False):
     """
     Parameters
     ----------
@@ -275,16 +275,19 @@ def resolution_per_energy(simu, reco, SimuE, bias_correction=False):
     res = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
-        mask = (SimuE > irf.E_bin[i]) & (SimuE < irf.E_bin[i+1])
-        res.append(resolution(simu[mask], reco[mask], bias_correction=bias_correction))
+        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
+        res.append(resolution(simu[mask], reco[mask],
+                              percentile=68.27,
+                              confidence_level=0.95,
+                              bias_correction=bias_correction))
 
     return irf.E_bin, np.array(res)
 
 
-def energy_resolution(true_energy, reco_energy, percentile=68.27, error_percentile=68.27, bias_correction=False):
+def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
-    Compute the energy resolution of RecoE as the Qth (68 as standard) containment radius of DeltaE/E
-    with the lower and upper confidence limits
+    Compute the energy resolution of reco_energy as the percentile (68 as standard) containment radius of DeltaE/E
+    with the lower and upper confidence limits defined by the given confidence level
 
     Parameters
     ----------
@@ -298,16 +301,17 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, error_percenti
     `numpy.array` - [energy_resolution, lower_confidence_limit, upper_confidence_limit]
     """
     return resolution(true_energy, reco_energy, percentile=percentile,
-                      error_percentile=error_percentile, bias_correction=bias_correction)
+                      confidence_level=confidence_level,
+                      bias_correction=bias_correction)
 
 
-def energy_res_per_energy(SimuE, RecoE, bias_correction=False):
+def energy_res_per_energy(simu_energy, reco_energy, bias_correction=False):
     """
 
     Parameters
     ----------
-    SimuE: 1d numpy array of simulated energies
-    RecoE: 1d numpy array of reconstructed energies
+    simu_energy: 1d numpy array of simulated energies
+    reco_energy: 1d numpy array of reconstructed energies
 
     Returns
     -------
@@ -316,8 +320,8 @@ def energy_res_per_energy(SimuE, RecoE, bias_correction=False):
     resE = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
-        mask = (SimuE > irf.E_bin[i]) & (SimuE < irf.E_bin[i+1])
-        resE.append(energy_resolution(SimuE[mask], RecoE[mask], bias_correction=bias_correction))
+        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
+        resE.append(energy_resolution(simu_energy[mask], reco_energy[mask], bias_correction=bias_correction))
 
 
     return irf.E_bin, np.array(resE)
@@ -423,25 +427,25 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az, percentile=68, conf
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
 
-def angular_resolution_per_energy(RecoAlt, RecoAz, SimuAlt, SimuAz, Energy, **kwargs):
+def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy, **kwargs):
     """
     Plot the angular resolution as a function of the event simulated energy
 
     Parameters
     ----------
-    RecoAlt: `numpy.ndarray`
-    RecoAz: `numpy.ndarray`
-    SimuAlt: `numpy.ndarray`
-    SimuAz: `numpy.ndarray`
-    Energy: `numpy.ndarray`
+    reco_alt: `numpy.ndarray`
+    reco_az: `numpy.ndarray`
+    simu_alt: `numpy.ndarray`
+    simu_az: `numpy.ndarray`
+    energy: `numpy.ndarray`
     **kwargs: args for `angular_resolution`
 
     Returns
     -------
     (E, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
     """
-    assert len(RecoAlt) == len(Energy)
-    assert len(Energy) > 0, "Empty arrays"
+    assert len(reco_alt) == len(energy)
+    assert len(energy) > 0, "Empty arrays"
 
     irf = irf_cta()
 
@@ -449,8 +453,8 @@ def angular_resolution_per_energy(RecoAlt, RecoAz, SimuAlt, SimuAz, Energy, **kw
     RES = []
 
     for i, e in enumerate(E_bin[:-1]):
-        mask = (Energy > E_bin[i]) & (Energy <= E_bin[i+1])
-        RES.append(angular_resolution(RecoAlt[mask], RecoAz[mask], SimuAlt[mask], SimuAz[mask], **kwargs))
+        mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
+        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask], **kwargs))
 
     return E_bin, np.array(RES)
 
