@@ -270,7 +270,9 @@ def resolution_per_energy(simu, reco, simu_energy, bias_correction=False):
 
     Returns
     -------
-    (e, res) : tuple of 1d numpy arrays - energy, resolution
+    (energy_bins, resolution):
+        energy_bins - 1D `numpy.ndarray`
+        resolution: - 3D `numpy.ndarray` see `ctaplot.ana.resolution`
     """
     res = []
     irf = irf_cta()
@@ -305,7 +307,8 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
                       bias_correction=bias_correction)
 
 
-def energy_res_per_energy(simu_energy, reco_energy, bias_correction=False):
+def energy_resolution_per_energy(simu_energy, reco_energy,
+                                 percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
 
     Parameters
@@ -317,14 +320,14 @@ def energy_res_per_energy(simu_energy, reco_energy, bias_correction=False):
     -------
     (e, e_res) : tuple of 1d numpy arrays - energy, resolution in energy
     """
-    resE = []
+    res_e = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
         mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
-        resE.append(energy_resolution(simu_energy[mask], reco_energy[mask], bias_correction=bias_correction))
+        res_e.append(energy_resolution(simu_energy[mask], reco_energy[mask], bias_correction=bias_correction))
 
 
-    return irf.E_bin, np.array(resE)
+    return irf.E_bin, np.array(res_e)
 
 
 def energy_bias(SimuE, RecoE):
@@ -402,7 +405,8 @@ def theta2(RecoAlt, RecoAz, AltSource, AzSource):
         return angular_separation_altaz(RecoAlt, RecoAz, AltSource, AzSource)**2
 
 
-def angular_resolution(reco_alt, reco_az, simu_alt, simu_az, percentile=68, confidence_level=0.95):
+def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
+                       percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the angular resolution as the Qth (standard being 68)
     containment radius of theta2 with lower and upper limits on this value
@@ -427,7 +431,8 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az, percentile=68, conf
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
 
-def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy, **kwargs):
+def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
+                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Plot the angular resolution as a function of the event simulated energy
 
@@ -454,7 +459,12 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy, 
 
     for i, e in enumerate(E_bin[:-1]):
         mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
-        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask], **kwargs))
+        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask],
+                                      percentile=percentile,
+                                      confidence_level=confidence_level,
+                                      bias_correction=bias_correction,
+                                      )
+                   )
 
     return E_bin, np.array(RES)
 
