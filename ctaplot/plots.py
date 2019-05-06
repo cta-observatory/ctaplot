@@ -1223,7 +1223,7 @@ def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwarg
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, Eres = ana.energy_res_per_energy(SimuE, RecoE, bias_correction=bias_correction)
+    E_bin, Eres = ana.energy_resolution_per_energy(SimuE, RecoE, bias_correction=bias_correction)
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
