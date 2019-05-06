@@ -827,7 +827,9 @@ def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
     return ax
 
 
-def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=None, **kwargs):
+def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
+                                percentile=68.27, confidence_level=0.95, bias_correction=False,
+                                ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
 
@@ -856,14 +858,18 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE, ax=
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    E_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE)
+    e_bin, RES = ana.angular_resolution_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
+                                                   percentile=percentile,
+                                                   confidence_level=confidence_level,
+                                                   bias_correction=bias_correction
+                                                   )
 
     # Angular resolution is traditionally presented in degrees
     RES = np.degrees(RES)
 
-    E = ana.logbin_mean(E_bin)
+    E = ana.logbin_mean(e_bin)
 
-    ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
+    ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
                 yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
 
     ax.set_title('Angular resolution')
@@ -1203,7 +1209,9 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     return ax
 
 
-def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwargs):
+def plot_energy_resolution(SimuE, RecoE,
+                           percentile=68.27, confidence_level=0.95, bias_correction=False,
+                           ax=None,  **kwargs):
     """
     Plot the enregy resolution as a function of the energy
 
@@ -1223,7 +1231,11 @@ def plot_energy_resolution(SimuE, RecoE, ax=None, bias_correction=False, **kwarg
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, Eres = ana.energy_resolution_per_energy(SimuE, RecoE, bias_correction=bias_correction)
+    E_bin, Eres = ana.energy_resolution_per_energy(SimuE, RecoE,
+                                                   percentile=percentile,
+                                                   confidence_level=confidence_level,
+                                                   bias_correction=bias_correction,
+                                                   )
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
@@ -1396,7 +1408,9 @@ def plot_site(tel_x, tel_y, ax=None, **kwargs):
     return ax
 
 
-def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy, ax=None, **kwargs):
+def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
+                                      percentile=68.27, confidence_level=0.95, bias_correction=False,
+                                      ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
 
@@ -1425,7 +1439,11 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy)
+    E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
+                                                  percentile=percentile,
+                                                  confidence_level=confidence_level,
+                                                  bias_correction=bias_correction,
+                                                  )
     E = ana.logbin_mean(E_bin)
 
     ax.errorbar(
