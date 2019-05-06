@@ -630,24 +630,24 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68, confidence_
                                                                                 confidence_level=confidence_level)))
 
 
-def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=1.645):
+def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, percentile=68.27, confidence_level=0.95):
     """
     Plot the angular resolution as a function of the event simulated energy
 
     Parameters
     ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: `numpy.ndarray`
-    SimuY: `numpy.ndarray`
-    Energy: `numpy.ndarray`
+    reco_x: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
+    simu_x: `numpy.ndarray`
+    simu_y: `numpy.ndarray`
+    energy: `numpy.ndarray`
 
     Returns
     -------
     (E, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
     """
-    assert len(RecoX) == len(Energy)
-    assert len(Energy) > 0, "Empty arrays"
+    assert len(reco_x) == len(energy)
+    assert len(energy) > 0, "Empty arrays"
 
     irf = irf_cta()
 
@@ -655,8 +655,9 @@ def impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy, Q=68, conf=
     RES = []
 
     for i, e in enumerate(E_bin[:-1]):
-        mask = (Energy > E_bin[i]) & (Energy <= E_bin[i+1])
-        RES.append(impact_resolution(RecoX[mask], RecoY[mask], SimuX[mask], SimuY[mask], percentile=Q, confidence_level=conf))
+        mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
+        RES.append(impact_resolution(reco_x[mask], reco_y[mask], simu_x[mask], simu_y[mask],
+                                     percentile=percentile, confidence_level=confidence_level))
 
     return E_bin, np.array(RES)
 
