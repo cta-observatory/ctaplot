@@ -642,7 +642,8 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68.27, confiden
                                                                                 )))
 
 
-def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, percentile=68.27, confidence_level=0.95):
+def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
+                                 percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Plot the angular resolution as a function of the event simulated energy
 
@@ -669,7 +670,9 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, percent
     for i, e in enumerate(E_bin[:-1]):
         mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
         RES.append(impact_resolution(reco_x[mask], reco_y[mask], simu_x[mask], simu_y[mask],
-                                     percentile=percentile, confidence_level=confidence_level))
+                                     percentile=percentile,
+                                     confidence_level=confidence_level,
+                                     bias_correction=bias_correction))
 
     return E_bin, np.array(RES)
 
