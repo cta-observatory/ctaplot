@@ -617,7 +617,7 @@ def logbin_mean(E_bin):
     return 10 ** ((np.log10(E_bin[:-1]) + np.log10(E_bin[1:])) / 2.)
 
 
-def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68, confidence_level=0.95):
+def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the shower impact parameter resolution as the Qth (68 as standard) containment radius of the square distance
     to the simulated one with the lower and upper limits corresponding to the required confidence level (1.645 for 95%)
@@ -637,7 +637,9 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68, confidence_
     d2 = impact_parameter_error(reco_x, reco_y, simu_x, simu_y)**2
     return np.sqrt(np.append(RQ(d2, percentile), percentile_confidence_interval(d2,
                                                                                 percentile=percentile,
-                                                                                confidence_level=confidence_level)))
+                                                                                confidence_level=confidence_level,
+                                                                                bias_correction=bias_correction,
+                                                                                )))
 
 
 def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, percentile=68.27, confidence_level=0.95):
