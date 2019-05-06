@@ -256,9 +256,9 @@ def resolution(simu, reco, percentile=68.27, confidence_level=0.95, bias_correct
     b = bias(simu, reco) if bias_correction else 0
 
     res = np.abs((reco - simu) / reco - b)
-    return np.append(RQ(res, percentile), percentile_confidence_interval(res,
-                                                                         percentile=percentile,
-                                                                         confidence_level=confidence_level))
+    return np.append(_percentile(res, percentile), percentile_confidence_interval(res,
+                                                                                  percentile=percentile,
+                                                                                  confidence_level=confidence_level))
 
 
 def resolution_per_energy(simu, reco, simu_energy, bias_correction=False):
@@ -425,9 +425,16 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     -------
     `numpy.array` [angular_resolution, lower limit, upper limit]
     """
-    t2 = np.sort(theta2(reco_alt, reco_az, simu_alt, simu_az))
+    if bias_correction:
+        b_alt = bias(simu_alt, reco_alt)
+        b_az = bias(simu_az, reco_az)
+    else:
+        b_alt = 0
+        b_az = 0
 
-    ang_res = RQ(t2, percentile)
+    t2 = np.sort(theta2(reco_alt*(1 - b_alt), reco_az*(1-b_az), simu_alt, simu_az))
+
+    ang_res = _percentile(t2, percentile)
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
 
@@ -550,7 +557,7 @@ def impact_parameter_error(RecoX, RecoY, SimuX, SimuY):
     return np.sqrt((RecoX-SimuX)**2 + (RecoY-SimuY)**2)
 
 
-def RQ(x, Q=68):
+def _percentile(x, percentile=68.27):
     """
     Compute the value of the Qth containment radius
     Return 0 if the list is empty
@@ -565,7 +572,7 @@ def RQ(x, Q=68):
     if len(x) == 0:
         return 0
     else:
-        return np.percentile(x, Q)
+        return np.percentile(x, percentile)
 
 
 def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
@@ -634,12 +641,18 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68.27, confiden
     -------
     `numpy.array` - [impact_resolution, lower_limit, upper_limit]
     """
-    d2 = impact_parameter_error(reco_x, reco_y, simu_x, simu_y)**2
-    return np.sqrt(np.append(RQ(d2, percentile), percentile_confidence_interval(d2,
-                                                                                percentile=percentile,
-                                                                                confidence_level=confidence_level,
-                                                                                bias_correction=bias_correction,
-                                                                                )))
+    if bias_correction:
+        b_x = bias(simu_x, reco_x)
+        b_y = bias(simu_y, reco_y)
+    else:
+        b_x = 0
+        b_y = 0
+
+    d2 = impact_parameter_error(reco_x*(1-b_x), reco_y*(1-b_y), simu_x, simu_y)**2
+    return np.sqrt(np.append(_percentile(d2, percentile), percentile_confidence_interval(d2,
+                                                                                         percentile=percentile,
+                                                                                         confidence_level=confidence_level,
+                                                                                         )))
 
 
 def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
