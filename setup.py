@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-# import sys
+
 import os
 from setuptools import setup
-
-
 
 def package_files(directory):
     paths = []
@@ -18,7 +16,7 @@ dataset = package_files('share')
 print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
-      version=0.2,
+      version=0.21,
       description="DESCRIPTION",
       # these should be minimum list of what is needed to run (note
       # don't need to list the sub-dependencies like numpy, since
