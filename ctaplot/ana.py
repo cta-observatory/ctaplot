@@ -627,7 +627,7 @@ def logbin_mean(E_bin):
 def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the shower impact parameter resolution as the Qth (68 as standard) containment radius of the square distance
-    to the simulated one with the lower and upper limits corresponding to the required confidence level (1.645 for 95%)
+    to the simulated one with the lower and upper limits corresponding to the required confidence level
 
     Parameters
     ----------
