@@ -261,7 +261,41 @@ def resolution(simu, reco, percentile=68.27, confidence_level=0.95, bias_correct
                                                                                   confidence_level=confidence_level))
 
 
-def resolution_per_energy(simu, reco, simu_energy, bias_correction=False):
+def resolution_per_bin(x, y_true, y_reco, percentile=68.27, confidence_level=0.95, bias_correction=False, bins=10):
+    """
+    Resolution of y as a function of binned.
+
+    Parameters
+    ----------
+    x: `numpy.ndarray`
+    y_true: `numpy.ndarray`
+    y_reco: `numpy.ndarray`
+    percentile: float
+    confidence_level: float
+    bias_correction: bool
+    bins: int or `numpy.ndarray` (see `numpy.histogram`)
+
+    Returns
+    -------
+    (x_bins, res): (`numpy.ndarray`, `numpy.ndarray`)
+        x_bins: bins for x
+        res: resolutions with confidence level intervals for each bin
+    """
+    _, x_bins = np.histogram(x, bins=bins)
+    bin_index = np.digitize(x, x_bins)
+    res = []
+    for ii in np.arange(1, len(x_bins)):
+        mask = bin_index == ii
+        res.append(resolution(y_true[mask], y_reco[mask],
+                              percentile=percentile,
+                              confidence_level=confidence_level,
+                              bias_correction=bias_correction,
+                              )
+                   )
+
+    return x_bins, np.array(res)
+
+def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Parameters
     ----------
@@ -274,16 +308,15 @@ def resolution_per_energy(simu, reco, simu_energy, bias_correction=False):
         energy_bins - 1D `numpy.ndarray`
         resolution: - 3D `numpy.ndarray` see `ctaplot.ana.resolution`
     """
-    res = []
-    irf = irf_cta()
-    for i, e in enumerate(irf.E):
-        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
-        res.append(resolution(simu[mask], reco[mask],
-                              percentile=68.27,
-                              confidence_level=0.95,
-                              bias_correction=bias_correction))
 
-    return irf.E_bin, np.array(res)
+    irf = irf_cta()
+    res = resolution_per_bin(simu_energy, simu, reco,
+                             percentile=percentile,
+                             confidence_level=confidence_level,
+                             bias_correction=bias_correction,
+                             bins=irf.E)
+
+    return irf.E_bin, res
 
 
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
@@ -324,7 +357,10 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
     irf = irf_cta()
     for i, e in enumerate(irf.E):
         mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
-        res_e.append(energy_resolution(simu_energy[mask], reco_energy[mask], bias_correction=bias_correction))
+        res_e.append(energy_resolution(simu_energy[mask], reco_energy[mask],
+                                       percentile=percentile,
+                                       confidence_level=confidence_level,
+                                       bias_correction=bias_correction))
 
 
     return irf.E_bin, np.array(res_e)
@@ -437,7 +473,6 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     ang_res = _percentile(t2, percentile)
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
-
 def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
                                   percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
@@ -474,6 +509,39 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
                    )
 
     return E_bin, np.array(RES)
+
+
+def angular_resolution_per_separation_angle(simu_alt, simu_az, reco_alt, reco_az, alt_pointing, az_pointing, bins=10):
+    """
+    Compute the angular resolution as a function of separation angle for the pointing direction
+
+    Parameters
+    ----------
+    simu_alt: `numpy.ndarray`
+    simu_az: `numpy.ndarray`
+    reco_alt: `numpy.ndarray`
+    reco_az: `numpy.ndarray`
+    alt_pointing: `numpy.ndarray`
+    az_pointing: `numpy.ndarray`
+    bins: float or `numpy.ndarray`
+
+    Returns
+    -------
+    (bins, res):
+        bins: 1D `numpy.ndarray`
+        res: 2D `numpy.ndarray` - resolutions with confidence intervals (output from `ctaplot.ana.resolution`)
+    """
+    ang_sep_to_pointing = angular_separation_altaz(simu_alt, simu_az, alt_pointing, az_pointing)
+
+    _, ang_sep_bins = np.histogram(ang_sep_to_pointing, bins=bins)
+    bin_index = np.digitize(ang_sep_to_pointing, ang_sep_bins)
+
+    res = []
+    for ii in np.arange(1, len(ang_sep_bins)):
+        mask = bin_index == ii
+        res.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask]))
+
+    return ang_sep_bins, np.array(res)
 
 
 def effective_area(SimuE, RecoE, simuArea):
