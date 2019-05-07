@@ -1593,9 +1593,13 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     return ax
 
 
-def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, percentile=68.27, **kwargs):
+def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile=68.27, ax=None, **kwargs):
     """
-    Plot binned statistic with errorbars corresponding to the given percentile
+    Plot statistics on the quantity y binned following the quantity x.
+    The statistic can be given by a string (￿'mean￿', ￿'sum', ￿'max￿'...) or a function. See `scipy.stats.binned_statistic`.
+    Errorbars may be added and represents the dispersion (given by the percentile option) of the y distribution
+    around the measured value in a bin. These error bars might not make sense for some statistics,
+    it is left to the user to use the function responsibly.
 
     Parameters
     ----------
