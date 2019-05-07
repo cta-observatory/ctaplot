@@ -830,7 +830,7 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.close()
 
 
-def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
+def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     """
     Plot a variable resolution as a function of the energy
 
@@ -838,7 +838,7 @@ def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
     ----------
     reco: `numpy.ndarray`
     simu: `numpy.ndarray`
-    SimuE: `numpy.ndarray`
+    energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -857,7 +857,7 @@ def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    E_bin, RES = ana.resolution_per_energy(simu, reco, SimuE)
+    E_bin, RES = ana.resolution_per_energy(simu, reco, energy)
 
     E = ana.logbin_mean(E_bin)
 
@@ -1729,7 +1729,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    res_bins, res = angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+    res_bins, res = ana.angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
                                                               alt_pointing, az_pointing, bins=bins)
     res_unit='rad'
     if res_degree:
