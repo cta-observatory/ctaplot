@@ -148,3 +148,24 @@ def test_plot_effective_area_per_energy_power_law():
 
     plots.plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                              reco_energy, simu_area, color='black')
+
+def test_plot_resolution():
+    x = np.linspace(0, 10, 1000)
+    y_true = 0.5 + np.random.rand(1000)
+    y_reco = np.random.normal(loc=1, size=1000)
+    from ctaplot.ana import resolution_per_bin
+    bins, res = resolution_per_bin(x, y_true, y_reco)
+    plots.plot_resolution(bins, res, color='black')
+
+def test_plot_angular_resolution_per_off_pointing_angle():
+    n = 1000
+    simu_alt = 0.5 + np.random.rand(n)
+    simu_az = 0.5 + np.random.rand(n)
+    reco_alt = 0.5 + np.random.rand(n)
+    reco_az = 0.5 + np.random.rand(n)
+    alt_p = np.ones(n)
+    az_p = np.ones(n)
+
+    plots.plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az, alt_p, az_p,
+                                                        bins=4, color='red', alpha=0.5
+                                                        )
