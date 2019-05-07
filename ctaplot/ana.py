@@ -511,7 +511,7 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
     return E_bin, np.array(RES)
 
 
-def angular_resolution_per_separation_angle(simu_alt, simu_az, reco_alt, reco_az, alt_pointing, az_pointing, bins=10):
+def angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az, alt_pointing, az_pointing, bins=10):
     """
     Compute the angular resolution as a function of separation angle for the pointing direction
 
