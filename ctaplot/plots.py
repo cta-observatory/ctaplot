@@ -528,6 +528,47 @@ def plot_multiplicity_per_telescope_type(EventTup, Outfile=None):
     return LST, MST, SST
 
 
+def plot_resolution(bins, res, log=False, ax=None, **kwargs):
+    """
+    Plot the passed resolution.
+
+    Parameters
+    ----------
+    bins: 1D `numpy.ndarray`
+    res: 2D `numpy.ndarray` - output from `ctpalot.ana.resolution`
+        res[:,0]: resolution
+        res[:,1]: lower confidence limit
+        res[:,2]: upper confidence limit
+    log: bool
+        if true, x is logscaled
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+    ax.set_ylabel(r'res')
+
+    if not log:
+        x = (bins[:-1] + bins[1:]) / 2.
+    else:
+        x = ana.logbin_mean(bins)
+        ax.set_xscale('log')
+
+    ax.errorbar(x, res[:, 0], xerr=(bins[1:] - bins[:-1]) / 2.,
+                yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]), fmt='o', **kwargs)
+
+    ax.set_title('Resolution')
+    return ax
+
+
 def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
     """
     Plot the effective area as a function of the energy
@@ -789,7 +830,7 @@ def plot_layout_map(TelX, TelY, TelId, TelType, LayoutId, Outfile="LayoutMap"):
     plt.close()
 
 
-def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
+def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     """
     Plot a variable resolution as a function of the energy
 
@@ -797,7 +838,7 @@ def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
     ----------
     reco: `numpy.ndarray`
     simu: `numpy.ndarray`
-    SimuE: `numpy.ndarray`
+    energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -816,7 +857,7 @@ def plot_resolution_per_energy(reco, simu, SimuE, ax=None, **kwargs):
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    E_bin, RES = ana.resolution_per_energy(simu, reco, SimuE)
+    E_bin, RES = ana.resolution_per_energy(simu, reco, energy)
 
     E = ana.logbin_mean(E_bin)
 
@@ -1552,9 +1593,13 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     return ax
 
 
-def plot_binned_stat(x, y, ax=None, errorbar=True, statistic='mean', bins=20, percentile=68, **kwargs):
+def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile=68.27, ax=None, **kwargs):
     """
-    Plot binned statistic with errorbars corresponding to the given percentile
+    Plot statistics on the quantity y binned following the quantity x.
+    The statistic can be given by a string (￿'mean￿', ￿'sum', ￿'max￿'...) or a function. See `scipy.stats.binned_statistic`.
+    Errorbars may be added and represents the dispersion (given by the percentile option) of the y distribution
+    around the measured value in a bin. These error bars might not make sense for some statistics,
+    it is left to the user to use the function responsibly.
 
     Parameters
     ----------
@@ -1654,5 +1699,45 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
 
     energy_nodes = ana.logbin_mean(ebin)
     ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., fmt='o', **kwargs)
+
+    return ax
+
+
+def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+                                                   alt_pointing, az_pointing, res_degree=False, bins=10, ax=None,
+                                                   **kwargs):
+    """
+    Plot the angular resolution as a function of the angular separation between events true position and the
+    pointing direction. Angles must be given in radians.
+
+
+    Parameters
+    ----------
+    simu_alt: `numpy.ndarray`
+    simu_az: `numpy.ndarray`
+    reco_alt: `numpy.ndarray`
+    reco_az: `numpy.ndarray`
+    alt_pointing: `numpy.ndarray`
+    az_pointing: `numpy.ndarray`
+    res_degree: bool
+        if True, the angular resolution is computed in degrees.
+    bins: int or `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    res_bins, res = ana.angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+                                                              alt_pointing, az_pointing, bins=bins)
+    res_unit='rad'
+    if res_degree:
+        res = np.rad2deg(res)
+        res_unit='deg'
+
+    ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
+    ax.set_xlabel("Angular separation to pointing direction {}".format(res_unit))
+    ax.set_ylabel("Angular resolution {}".format(res_unit))
 
     return ax

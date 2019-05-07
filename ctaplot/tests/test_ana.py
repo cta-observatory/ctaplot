@@ -41,6 +41,12 @@ def test_resolution():
     y = 10 * np.ones(x.shape[0])
     assert np.isclose(ana.resolution(y, x), 0.099 * np.ones(3), rtol=1e-1).all()
 
+def test_resolution_per_bin():
+    x = np.linspace(0, 10, 100)
+    y_true = np.ones(100)
+    y_reco = np.random.normal(loc=1, size=100)
+    bins, res = ana.resolution_per_bin(x, y_true, y_reco)
+
 
 def test_resolution_per_energy():
     x = np.random.normal(size=100000, scale=1, loc=10)
