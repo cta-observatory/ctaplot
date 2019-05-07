@@ -1701,3 +1701,43 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., fmt='o', **kwargs)
 
     return ax
+
+
+def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+                                                   alt_pointing, az_pointing, res_degree=False, bins=10, ax=None,
+                                                   **kwargs):
+    """
+    Plot the angular resolution as a function of the angular separation between events true position and the
+    pointing direction. Angles must be given in radians.
+
+
+    Parameters
+    ----------
+    simu_alt: `numpy.ndarray`
+    simu_az: `numpy.ndarray`
+    reco_alt: `numpy.ndarray`
+    reco_az: `numpy.ndarray`
+    alt_pointing: `numpy.ndarray`
+    az_pointing: `numpy.ndarray`
+    res_degree: bool
+        if True, the angular resolution is computed in degrees.
+    bins: int or `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    res_bins, res = angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+                                                              alt_pointing, az_pointing, bins=bins)
+    res_unit='rad'
+    if res_degree:
+        res = np.rad2deg(res)
+        res_unit='deg'
+
+    ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
+    ax.set_xlabel("Angular separation to pointing direction {}".format(res_unit))
+    ax.set_ylabel("Angular resolution {}".format(res_unit))
+
+    return ax
