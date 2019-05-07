@@ -310,13 +310,11 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
     """
 
     irf = irf_cta()
-    res = resolution_per_bin(simu_energy, simu, reco,
+    return resolution_per_bin(simu_energy, simu, reco,
                              percentile=percentile,
                              confidence_level=confidence_level,
                              bias_correction=bias_correction,
-                             bins=irf.E)
-
-    return irf.E_bin, res
+                             bins=irf.E_bin)
 
 
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
@@ -473,6 +471,49 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     ang_res = _percentile(t2, percentile)
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
+
+def angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, x,
+                               percentile=68.27, confidence_level=0.95, bias_correction=False, bins=10):
+    """
+    Compute the angular resolution per binning of x
+
+    Parameters
+    ----------
+    simu_alt: `numpy.ndarray`
+    simu_az: `numpy.ndarray`
+    reco_alt: `numpy.ndarray`
+    reco_az: `numpy.ndarray`
+    x: `numpy.ndarray`
+    percentile: float
+        0 < percentile < 100
+    confidence_level: float
+        0 < confidence_level < 1
+    bias_correction: bool
+    bins: int or `numpy.ndarray`
+
+    Returns
+    -------
+    bins, ang_res:
+        bins: 1D `numpy.ndarray`
+        ang_res: 2D `numpy.ndarray`
+    """
+    _, x_bins = np.histogram(x, bins=bins)
+    bin_index = np.digitize(x, x_bins)
+
+    ang_res = []
+    for ii in np.arange(1, len(x_bins)):
+        mask = bin_index == ii
+        ang_res.append(angular_resolution(reco_alt[mask], reco_az[mask],
+                                          simu_alt[mask], simu_az[mask],
+                                          percentile=percentile,
+                                          confidence_level=confidence_level,
+                                          bias_correction=bias_correction,
+                                          )
+                       )
+
+    return x_bins, np.array(ang_res)
+
+
 def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
                                   percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
@@ -533,15 +574,7 @@ def angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_
     """
     ang_sep_to_pointing = angular_separation_altaz(simu_alt, simu_az, alt_pointing, az_pointing)
 
-    _, ang_sep_bins = np.histogram(ang_sep_to_pointing, bins=bins)
-    bin_index = np.digitize(ang_sep_to_pointing, ang_sep_bins)
-
-    res = []
-    for ii in np.arange(1, len(ang_sep_bins)):
-        mask = bin_index == ii
-        res.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask]))
-
-    return ang_sep_bins, np.array(res)
+    return angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
 
 
 def effective_area(SimuE, RecoE, simuArea):
