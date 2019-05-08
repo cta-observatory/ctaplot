@@ -1621,7 +1621,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     >>> import numpy as np
     >>> x = np.random.rand(1000)
     >>> y = x**2
-    >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95)
+    >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95, marker='o', linestyle='')
     """
 
     ax = plt.gca() if ax is None else ax
@@ -1737,7 +1737,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
         res_unit='deg'
 
     ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
-    ax.set_xlabel("Angular separation to pointing direction {}".format(res_unit))
-    ax.set_ylabel("Angular resolution {}".format(res_unit))
+    ax.set_xlabel("Angular separation to pointing direction [rad]")
+    ax.set_ylabel("Angular resolution [{}]".format(res_unit))
 
     return ax
