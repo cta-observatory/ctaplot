@@ -562,8 +562,11 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
         x = ana.logbin_mean(bins)
         ax.set_xscale('log')
 
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
     ax.errorbar(x, res[:, 0], xerr=(bins[1:] - bins[:-1]) / 2.,
-                yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]), fmt='o', **kwargs)
+                yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]), **kwargs)
 
     ax.set_title('Resolution')
     return ax
@@ -608,7 +611,11 @@ def plot_effective_area_per_energy(SimuE, RecoE, simuArea, ax=None, **kwargs):
 
     E_bin, Seff = ana.effective_area_per_energy(SimuE, RecoE, simuArea)
     E = ana.logbin_mean(E_bin)
-    ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., fmt='o', **kwargs)
+
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
+    ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., **kwargs)
 
     return ax
 
@@ -861,8 +868,11 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
 
     E = ana.logbin_mean(E_bin)
 
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
     ax.errorbar(E, RES[:, 0], xerr=(E_bin[1:] - E_bin[:-1]) / 2.,
-                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
+                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
 
     ax.set_title('Resolution')
     return ax
@@ -910,8 +920,11 @@ def plot_angular_res_per_energy(RecoAlt, RecoAz, AltSource, AzSource, SimuE,
 
     E = ana.logbin_mean(e_bin)
 
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
     ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
-                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), fmt='o', **kwargs)
+                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
 
     ax.set_title('Angular resolution')
     return ax
@@ -1487,11 +1500,13 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
                                                   )
     E = ana.logbin_mean(E_bin)
 
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+
     ax.errorbar(
         E, RES[:, 0],
         xerr=(E - E_bin[:-1], E_bin[1:] - E),
         yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
-        fmt='o',
         **kwargs,
     )
 
@@ -1698,7 +1713,10 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
                                                          spectral_index, reco_energy, simu_area)
 
     energy_nodes = ana.logbin_mean(ebin)
-    ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., fmt='o', **kwargs)
+
+    if 'fmt' not in kwargs:
+        kwargs['fmt'] = 'o'
+    ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., **kwargs)
 
     return ax
 
