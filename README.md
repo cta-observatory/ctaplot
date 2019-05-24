@@ -8,6 +8,12 @@ Deep learning is a lot about bookkeeping and trials and errors. GammaBoard ease 
 
 It is a working prototype used in CTA, especially for the [GammaLearn](https://gitlab.lapp.in2p3.fr/GammaLearn/) project
 
+## Dependencies
+- Matplotlib
+- Scikit-learn
+- Pandas
+- Pytables
+- ctaplot (>=0.2.2)
 
 ## Demo
 
