@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
+import tables
 from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score
 
@@ -30,7 +31,6 @@ def load_data_from_h5(experiment, experiments_directory):
                            )
     except Exception as e:
         print(e)
-        # print("The hdf5 file for the experiment {} does not exist".format(experiment))
         return None
     return data
 
@@ -69,9 +69,14 @@ def load_run_config(experiment, experiments_directory):
     max_scatter_range = -np.inf
     energy_range_max = -np.inf
     energy_range_min = np.inf
+    min_alt = np.inf
+    max_alt = -np.inf
+
+    result_file = None
 
     try:
-        result_file = pd.HDFStore(file)
+        # result_file = pd.HDFStore(file)
+        result_file = tables.open_file(file)
         run_config = result_file.root.simulation.run_config
         for row in run_config:
             num_events += row['num_showers'] * row['shower_reuse']
@@ -79,13 +84,20 @@ def load_run_config(experiment, experiments_directory):
             max_scatter_range = row['max_scatter_range'] if max_scatter_range < row['max_scatter_range'] else max_scatter_range
             energy_range_max = row['energy_range_max'] if energy_range_max < row['energy_range_max'] else energy_range_max
             energy_range_min = row['energy_range_min'] if energy_range_min > row['energy_range_min'] else energy_range_min
+            min_alt = row['min_alt'] if min_alt > row['min_alt'] else min_alt
+            max_alt = row['max_alt'] if max_alt < row['max_alt'] else max_alt
         assert np.alltrue(np.array(spectral_index) == spectral_index[0]), \
             'Cannot deal with different spectral index for the experiment ({})'.format(experiment)
-        scattering_surface = max_scatter_range**2 * np.pi
+        print(min_alt)
+        print(max_alt)
+        assert min_alt == max_alt, 'Cant deal with different shower altitude for the experiment ({})'.format(experiment)
+        scattering_surface = max_scatter_range**2 * np.pi * np.sin(max_alt)
         result_file.close()
     except Exception as e:
-        print(e)
+        # print(e)
         print("Cannot load the configuration of the simulation for experiment {} file".format(experiment))
+        if result_file is not None:
+            result_file.close()
         return None
     return {'num_events': num_events,
             'spectral_index': spectral_index[0],
@@ -93,22 +105,6 @@ def load_run_config(experiment, experiments_directory):
             'energy_range_max': energy_range_max,
             'scattering_surface': scattering_surface
             }
-
-# def dummy_number_of_simulated_events(experiment, experiments_directory, prod=3, particle='gamma'):
-#     assert experiment in os.listdir(experiments_directory)
-#
-#     num_run = load_number_run(experiment, experiments_directory)
-#     if prod == 3:
-#         if particle == 'proton':
-#             number_event_per_run = 2000000
-#         elif particle == 'gamma':
-#             number_event_per_run = 500000
-#         else:
-#             number_event_per_run = 0
-#     else:
-#         number_event_per_run = 0
-#
-#     return num_run * number_event_per_run
 
 
 def load_info(experiment, experiments_directory):
@@ -160,6 +156,7 @@ def change_errorbar_visibility(err_container, visible:bool):
 
 
 reco_linestyle = ':'
+reco_fmt = 'v'
 
 
 class Experiment(object):
@@ -237,7 +234,9 @@ class Experiment(object):
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
-                                                                      linestyle=reco_linestyle)
+                                                                      fmt=reco_fmt,
+                                                                      linestyle=reco_linestyle
+                                                                      )
 
             self.set_plotted(True)
 
@@ -254,7 +253,9 @@ class Experiment(object):
                                                                  ax=ax,
                                                                  label=self.name + '_reco',
                                                                  color=self.color,
-                                                                 linestyle=reco_linestyle)
+                                                                 fmt=reco_fmt,
+                                                                 linestyle=reco_linestyle
+                                                                 )
 
             self.set_plotted(True)
 
@@ -278,6 +279,7 @@ class Experiment(object):
                                                                             ax=ax,
                                                                             label=self.name + '_reco',
                                                                             color=self.color,
+                                                                            fmt=reco_fmt,
                                                                             linestyle=reco_linestyle
                                                                             )
             self.ax_imp_res.set_xscale('log')
@@ -288,30 +290,6 @@ class Experiment(object):
     def plot_effective_area(self, ax=None, site='north', prod=3):
         if self.get_loaded():
             self.ax_eff_area = ax if ax is not None else plt.gca()
-
-            # if self.num_runs is not None:
-            #     if self.mc_trig_events is not None:
-            #         E_trig, S_trig = ctaplot.ana.effective_area_per_energy_power_law(3e-3, 3.3e2,
-            #                                                            len(e)*self.num_runs, -2,
-            #                                                            self.mc_trig_events.mc_trig_energies,
-            #                                                            18.45e6)
-            #         self.ax_eff_area.plot(E_trig[:-1], S_trig, label=self.name + '_triggered', color=self.color, linestyle='-.')
-            #
-            #     E, S = ctaplot.ana.effective_area_per_energy_power_law(3e-3, 3.3e2,
-            #                                                            len(e)*self.num_runs, -2,
-            #                                                            self.gamma_data.mc_energy,
-            #                                                            18.45e6)
-            #     self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
-            #
-            #     if self.reco_gamma_data is not None:
-            #         E_reco, S_reco = ctaplot.ana.effective_area_per_energy_power_law(3e-3, 3.3e2,
-            #                                                                len(e) * self.num_runs, -2,
-            #                                                                self.reco_gamma_data.mc_energy,
-            #                                                                18.45e6)
-            #         self.ax_eff_area.plot(E_reco[:-1], S_reco,
-            #                               label=self.name + '_reco',
-            #                               color=self.color,
-            #                               linestyle=reco_linestyle)
 
             if self.run_config is not None:
                 if self.mc_trig_events is not None:
@@ -354,16 +332,10 @@ class Experiment(object):
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
             self.ax_roc = plt.gca() if ax is None else ax
-            try:
-                fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                        self.data.reco_hadroness, pos_label=1)
-                self.auc = roc_auc_score(self.data.mc_particle,
-                                         self.data.reco_hadroness)
-            except AttributeError as e:
-                fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                        self.data.reco_particle, pos_label=1)
-                self.auc = roc_auc_score(self.data.mc_particle,
-                                         self.data.reco_particle)
+            fpr, tpr, _ = roc_curve(self.data.mc_particle,
+                                    self.data.reco_hadroness, pos_label=1)
+            self.auc = roc_auc_score(self.data.mc_particle,
+                                     self.data.reco_hadroness)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
