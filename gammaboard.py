@@ -35,19 +35,6 @@ def load_data_from_h5(experiment, experiments_directory):
     return data
 
 
-def load_number_run(experiment, experiments_directory):
-    assert experiment in os.listdir(experiments_directory)
-
-    try:
-        num_run = int(pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
-                                  key='runs',
-                                  )['num'][0])
-    except:
-        print("Cannot load the number of run for experiment {} file".format(experiment))
-        return None
-    return num_run
-
-
 def load_trig_events(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
 
@@ -66,11 +53,11 @@ def load_run_config(experiment, experiments_directory):
     file = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
     num_events = 0
     spectral_index = []
-    max_scatter_range = -np.inf
-    energy_range_max = -np.inf
-    energy_range_min = np.inf
-    min_alt = np.inf
-    max_alt = -np.inf
+    max_scatter_range = []
+    energy_range_max = []
+    energy_range_min = []
+    min_alt = []
+    max_alt = []
 
     result_file = None
 
@@ -81,17 +68,25 @@ def load_run_config(experiment, experiments_directory):
         for row in run_config:
             num_events += row['num_showers'] * row['shower_reuse']
             spectral_index.extend([row['spectral_index']])
-            max_scatter_range = row['max_scatter_range'] if max_scatter_range < row['max_scatter_range'] else max_scatter_range
-            energy_range_max = row['energy_range_max'] if energy_range_max < row['energy_range_max'] else energy_range_max
-            energy_range_min = row['energy_range_min'] if energy_range_min > row['energy_range_min'] else energy_range_min
-            min_alt = row['min_alt'] if min_alt > row['min_alt'] else min_alt
-            max_alt = row['max_alt'] if max_alt < row['max_alt'] else max_alt
+            max_scatter_range.extend(row['max_scatter_range'])
+            energy_range_max.extend(row['energy_range_max'])
+            energy_range_min.extend(row['energy_range_min'])
+            min_alt.extend(row['min_alt'])
+            max_alt.extend(row['max_alt'])
         assert np.alltrue(np.array(spectral_index) == spectral_index[0]), \
             'Cannot deal with different spectral index for the experiment ({})'.format(experiment)
-        print(min_alt)
-        print(max_alt)
-        assert min_alt == max_alt, 'Cant deal with different shower altitude for the experiment ({})'.format(experiment)
-        scattering_surface = max_scatter_range**2 * np.pi * np.sin(max_alt)
+        assert np.alltrue(np.array(max_scatter_range) == max_scatter_range[0]), \
+            'Cannot deal with different max_scatter_range for the experiment ({})'.format(experiment)
+        assert np.alltrue(np.array(energy_range_min) == energy_range_min[0]), \
+            'Cannot deal with different energy_range_min for the experiment ({})'.format(experiment)
+        assert np.alltrue(np.array(energy_range_max) == energy_range_max[0]), \
+            'Cannot deal with different energy_range_max for the experiment ({})'.format(experiment)
+        assert np.alltrue(np.array(min_alt) == min_alt[0]), \
+            'Cannot deal with different min_alt for the experiment ({})'.format(experiment)
+        assert np.alltrue(np.array(max_alt) == max_alt[0]), \
+            'Cannot deal with different max_alt for the experiment ({})'.format(experiment)
+        assert min_alt[0] == max_alt[0], 'Cant deal with different shower altitude for the experiment ({})'.format(experiment)
+        scattering_surface = max_scatter_range[0]**2 * np.pi * np.sin(max_alt[0])
         result_file.close()
     except Exception as e:
         # print(e)
@@ -101,8 +96,8 @@ def load_run_config(experiment, experiments_directory):
         return None
     return {'num_events': num_events,
             'spectral_index': spectral_index[0],
-            'energy_range_min': energy_range_min,
-            'energy_range_max': energy_range_max,
+            'energy_range_min': energy_range_min[0],
+            'energy_range_max': energy_range_max[0],
             'scattering_surface': scattering_surface
             }
 
@@ -177,7 +172,6 @@ class Experiment(object):
         self.data = None
         self.gamma_data = None
         self.reco_gamma_data = None
-        self.num_runs = None
         self.mc_trig_events = None
         self.run_config = None
         self.loaded = False
@@ -196,7 +190,6 @@ class Experiment(object):
                 self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
             else:
                 self.gamma_data = self.data
-        self.num_runs = load_number_run(self.name, self.experiments_directory)
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
         self.run_config = load_run_config(self.name, self.experiments_directory)
 
