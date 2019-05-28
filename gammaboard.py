@@ -68,11 +68,11 @@ def load_run_config(experiment, experiments_directory):
         for row in run_config:
             num_events += row['num_showers'] * row['shower_reuse']
             spectral_index.extend([row['spectral_index']])
-            max_scatter_range.extend(row['max_scatter_range'])
-            energy_range_max.extend(row['energy_range_max'])
-            energy_range_min.extend(row['energy_range_min'])
-            min_alt.extend(row['min_alt'])
-            max_alt.extend(row['max_alt'])
+            max_scatter_range.extend([row['max_scatter_range']])
+            energy_range_max.extend([row['energy_range_max']])
+            energy_range_min.extend([row['energy_range_min']])
+            min_alt.extend([row['min_alt']])
+            max_alt.extend([row['max_alt']])
         assert np.alltrue(np.array(spectral_index) == spectral_index[0]), \
             'Cannot deal with different spectral index for the experiment ({})'.format(experiment)
         assert np.alltrue(np.array(max_scatter_range) == max_scatter_range[0]), \
@@ -89,7 +89,6 @@ def load_run_config(experiment, experiments_directory):
         scattering_surface = max_scatter_range[0]**2 * np.pi * np.sin(max_alt[0])
         result_file.close()
     except Exception as e:
-        # print(e)
         print("Cannot load the configuration of the simulation for experiment {} file".format(experiment))
         if result_file is not None:
             result_file.close()
