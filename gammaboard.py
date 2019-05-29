@@ -214,6 +214,7 @@ class Experiment(object):
                                                                   self.gamma_data.mc_altitude,
                                                                   self.gamma_data.mc_azimuth,
                                                                   self.gamma_data.mc_energy,
+                                                                  bias_correction=True,
                                                                   ax=ax,
                                                                   label=self.name,
                                                                   color=self.color)
@@ -223,6 +224,7 @@ class Experiment(object):
                                                                       self.reco_gamma_data.mc_altitude,
                                                                       self.reco_gamma_data.mc_azimuth,
                                                                       self.reco_gamma_data.mc_energy,
+                                                                      bias_correction=True,
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
@@ -236,12 +238,14 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_ene_res = ctaplot.plot_energy_resolution(self.gamma_data.mc_energy,
                                                              self.gamma_data.reco_energy,
+                                                             bias_correction=True,
                                                              ax=ax,
                                                              label=self.name,
                                                              color=self.color)
             if self.reco_gamma_data is not None:
                 self.ax_ene_res = ctaplot.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                  self.reco_gamma_data.reco_energy,
+                                                                 bias_correction=True,
                                                                  ax=ax,
                                                                  label=self.name + '_reco',
                                                                  color=self.color,
@@ -258,6 +262,7 @@ class Experiment(object):
                                                                         self.gamma_data.mc_impact_x,
                                                                         self.gamma_data.mc_impact_y,
                                                                         self.gamma_data.mc_energy,
+                                                                        bias_correction=True,
                                                                         ax=ax,
                                                                         label=self.name,
                                                                         color=self.color
@@ -268,6 +273,7 @@ class Experiment(object):
                                                                             self.reco_gamma_data.mc_impact_x,
                                                                             self.reco_gamma_data.mc_impact_y,
                                                                             self.reco_gamma_data.mc_energy,
+                                                                            bias_correction=True,
                                                                             ax=ax,
                                                                             label=self.name + '_reco',
                                                                             color=self.color,
