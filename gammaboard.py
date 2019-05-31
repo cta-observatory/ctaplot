@@ -163,11 +163,12 @@ class Experiment(object):
 
     """
 
-    def __init__(self, experiment_name, experiments_directory):
+    def __init__(self, experiment_name, experiments_directory, bias_correction):
 
         self.name = experiment_name
         self.experiments_directory = experiments_directory
         self.info = load_info(self.name, self.experiments_directory)
+        self.bias_correction = bias_correction
         self.data = None
         self.gamma_data = None
         self.reco_gamma_data = None
@@ -176,6 +177,9 @@ class Experiment(object):
         self.loaded = False
         self.plotted = False
         self.color = None
+        self.precision = None
+        self.recall = None
+        self.auc = None
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -214,7 +218,7 @@ class Experiment(object):
                                                                   self.gamma_data.mc_altitude,
                                                                   self.gamma_data.mc_azimuth,
                                                                   self.gamma_data.mc_energy,
-                                                                  bias_correction=True,
+                                                                  bias_correction=self.bias_correction,
                                                                   ax=ax,
                                                                   label=self.name,
                                                                   color=self.color)
@@ -224,7 +228,7 @@ class Experiment(object):
                                                                       self.reco_gamma_data.mc_altitude,
                                                                       self.reco_gamma_data.mc_azimuth,
                                                                       self.reco_gamma_data.mc_energy,
-                                                                      bias_correction=True,
+                                                                      bias_correction=self.bias_correction,
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
@@ -238,14 +242,14 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_ene_res = ctaplot.plot_energy_resolution(self.gamma_data.mc_energy,
                                                              self.gamma_data.reco_energy,
-                                                             bias_correction=True,
+                                                             bias_correction=self.bias_correction,
                                                              ax=ax,
                                                              label=self.name,
                                                              color=self.color)
             if self.reco_gamma_data is not None:
                 self.ax_ene_res = ctaplot.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                  self.reco_gamma_data.reco_energy,
-                                                                 bias_correction=True,
+                                                                 bias_correction=self.bias_correction,
                                                                  ax=ax,
                                                                  label=self.name + '_reco',
                                                                  color=self.color,
@@ -262,7 +266,7 @@ class Experiment(object):
                                                                         self.gamma_data.mc_impact_x,
                                                                         self.gamma_data.mc_impact_y,
                                                                         self.gamma_data.mc_energy,
-                                                                        bias_correction=True,
+                                                                        bias_correction=self.bias_correction,
                                                                         ax=ax,
                                                                         label=self.name,
                                                                         color=self.color
@@ -273,7 +277,7 @@ class Experiment(object):
                                                                             self.reco_gamma_data.mc_impact_x,
                                                                             self.reco_gamma_data.mc_impact_y,
                                                                             self.reco_gamma_data.mc_energy,
-                                                                            bias_correction=True,
+                                                                            bias_correction=self.bias_correction,
                                                                             ax=ax,
                                                                             label=self.name + '_reco',
                                                                             color=self.color,
@@ -285,7 +289,7 @@ class Experiment(object):
             self.ax_imp_res.set_ylabel('Impact resolution [km]')
             self.set_plotted(True)
 
-    def plot_effective_area(self, ax=None, site='north', prod=3):
+    def plot_effective_area(self, ax=None):
         if self.get_loaded():
             self.ax_eff_area = ax if ax is not None else plt.gca()
 
@@ -334,6 +338,11 @@ class Experiment(object):
                                     self.data.reco_hadroness, pos_label=1)
             self.auc = roc_auc_score(self.data.mc_particle,
                                      self.data.reco_hadroness)
+            true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
+            proton = self.data[self.data.mc_particle == 1]
+            false_positive =  proton[self.data.reco_particle == 0]
+            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+            self.recall = len(true_positive) / len(self.gamma_data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
@@ -380,7 +389,8 @@ class Experiment(object):
             self.visibility_impact_resolution_plot(visible)
         if 'reco_hadroness' in self.data:
             self.visibility_roc_curve_plot(visible)
-        self.visibility_effective_area_plot(visible)
+        if 'mc_energy' in self.data:
+            self.visibility_effective_area_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
         """
@@ -592,13 +602,12 @@ def create_resolution_fig(site='south', ref=None):
     return fig, axes
 
 
-def plot_exp_on_fig(exp, fig, site='south'):
+def plot_exp_on_fig(exp, fig):
     """
     Plot an experiment results on a figure create with `create_fig`
     Args
         exp (experiment class)
         fig (`matplotlib.pyplot.fig`)
-        site (string)
     """
     axes = fig.get_axes()
     ax_ang_res = axes[0]
@@ -615,7 +624,8 @@ def plot_exp_on_fig(exp, fig, site='south'):
         exp.plot_impact_resolution(ax=ax_imp_res)
     if 'reco_hadroness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
-    exp.plot_effective_area(ax=ax_eff_area, site=site)
+    if 'mc_energy' in exp.data:
+        exp.plot_effective_area(ax=ax_eff_area)
 
 
 def update_legend(visible_experiments, ax):
@@ -628,13 +638,14 @@ def update_legend(visible_experiments, ax):
 
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
-    legend_elements = [Line2D([0], [0], color=exp.color, label='AUC = {:.4f}'.format(exp.auc))
+    legend_elements = [Line2D([0], [0], color=exp.color,
+                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}'.format(exp.auc, exp.precision, exp.recall))
                        for (name, exp) in sorted(experiments.items()) if hasattr(exp, 'auc')]
     ax.legend(handles=legend_elements, loc='best')
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_exp, ax_auc, site='south'):
+                         fig_resolution, visible_experiments, ax_exp, ax_auc):
 
     def plot_on_click(sender):
         """
@@ -677,7 +688,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             visible_experiments.remove(exp)
 
         if not exp.get_plotted() and visible and exp.data is not None:
-            plot_exp_on_fig(exp, fig_resolution, site)
+            plot_exp_on_fig(exp, fig_resolution)
 
         exp.visibility_all_plot(visible)
         update_legend(visible_experiments, ax_exp)
@@ -687,7 +698,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_legend, ax_auc, site):
+                              visible_experiments, ax_legend, ax_auc):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -711,7 +722,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_legend, ax_auc, site))
+                                        fig_resolution, visible_experiments, ax_legend, ax_auc))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -730,7 +741,7 @@ class GammaBoard(object):
         site (string): 'south' for Paranal and 'north' for LaPalma
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
-    def __init__(self, experiments_directory, site='south', ref=None):
+    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False):
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
@@ -740,7 +751,7 @@ class GammaBoard(object):
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
-        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory)
+        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
@@ -756,7 +767,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_legend, ax_roc, site)
+                                             self._fig_resolution, visible_experiments, ax_legend, ax_roc)
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
