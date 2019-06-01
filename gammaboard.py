@@ -640,7 +640,7 @@ def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], color=exp.color,
                               label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}'.format(exp.auc, exp.precision, exp.recall))
-                       for (name, exp) in sorted(experiments.items()) if hasattr(exp, 'auc')]
+                       for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
     ax.legend(handles=legend_elements, loc='best')
 
 
