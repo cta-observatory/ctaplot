@@ -47,12 +47,6 @@ In cases for which the CTA instrument response functions are used in a research 
 Install
 -------
 
-The release 0.2 is available in pip:
-
-.. code-block:: bash
-
-   pip install ctaplot
-
 
 Requirements packages:
 
