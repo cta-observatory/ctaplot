@@ -180,6 +180,7 @@ class Experiment(object):
         self.precision = None
         self.recall = None
         self.auc = None
+        self.rocness = None
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -189,8 +190,14 @@ class Experiment(object):
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_particle' in self.data:
-                self.gamma_data = self.data[self.data.mc_particle == 0]
-                self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                if 'reco_hadroness' in self.data:
+                    self.rocness = 'Hadroness'
+                    self.gamma_data = self.data[self.data.mc_particle == 0]
+                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                elif 'reco_gammaness' in self.data:
+                    self.rocness = 'Gammaness'
+                    self.gamma_data = self.data[self.data.mc_particle == 1]
+                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -334,13 +341,25 @@ class Experiment(object):
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
             self.ax_roc = plt.gca() if ax is None else ax
-            fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                    self.data.reco_hadroness, pos_label=1)
-            self.auc = roc_auc_score(self.data.mc_particle,
-                                     self.data.reco_hadroness)
-            true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
-            proton = self.data[self.data.mc_particle == 1]
-            false_positive =  proton[self.data.reco_particle == 0]
+            if 'reco_hadroness' in self.data:
+                fpr, tpr, _ = roc_curve(self.data.mc_particle,
+                                        self.data.reco_hadroness, pos_label=1)
+                self.auc = roc_auc_score(self.data.mc_particle,
+                                         self.data.reco_hadroness)
+                true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
+                proton = self.data[self.data.mc_particle == 1]
+                false_positive =  proton[self.data.reco_particle == 0]
+            elif 'reco_gammaness' in self.data:
+                fpr, tpr, _ = roc_curve(self.data.mc_particle,
+                                        self.data.reco_gammaness, pos_label=1)
+                self.auc = roc_auc_score(self.data.mc_particle,
+                                         self.data.reco_gammaness)
+                true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
+                proton = self.data[self.data.mc_particle == 0]
+                false_positive = proton[self.data.reco_particle == 1]
+            else:
+                raise ValueError
+
             self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
             self.recall = len(true_positive) / len(self.gamma_data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
@@ -387,7 +406,7 @@ class Experiment(object):
             self.visibility_energy_resolution_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
-        if 'reco_hadroness' in self.data:
+        if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
@@ -622,7 +641,7 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_energy_resolution(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
-    if 'reco_hadroness' in exp.data:
+    if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
@@ -639,7 +658,10 @@ def update_legend(visible_experiments, ax):
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}'.format(exp.auc, exp.precision, exp.recall))
+                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, {}'.format(exp.auc,
+                                                                                       exp.precision,
+                                                                                       exp.recall,
+                                                                                       exp.rocness))
                        for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
     ax.legend(handles=legend_elements, loc='best')
 
