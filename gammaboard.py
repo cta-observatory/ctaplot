@@ -35,6 +35,7 @@ def load_data_from_h5(experiment, experiments_directory):
     return data
 
 
+# TODO Find a more suitable naming
 def load_trig_events(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
 
