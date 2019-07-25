@@ -167,7 +167,7 @@ class Experiment(object):
 
     """
 
-    def __init__(self, experiment_name, experiments_directory, bias_correction):
+    def __init__(self, experiment_name, experiments_directory, bias_correction, classif_resolution):
 
         self.name = experiment_name
         self.experiments_directory = experiments_directory
@@ -183,8 +183,10 @@ class Experiment(object):
         self.color = None
         self.precision = None
         self.recall = None
+        self.accuracy = None
         self.auc = None
         self.rocness = None
+        self.classif_resolution = classif_resolution
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -233,7 +235,7 @@ class Experiment(object):
                                                                   ax=ax,
                                                                   label=self.name,
                                                                   color=self.color)
-            if self.reco_gamma_data is not None:
+            if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_ang_res = ctaplot.plot_angular_res_per_energy(self.reco_gamma_data.reco_altitude,
                                                                       self.reco_gamma_data.reco_azimuth,
                                                                       self.reco_gamma_data.mc_altitude,
@@ -256,7 +258,7 @@ class Experiment(object):
                                                              ax=ax,
                                                              label=self.name,
                                                              color=self.color)
-            if self.reco_gamma_data is not None:
+            if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_ene_res = ctaplot.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                  self.reco_gamma_data.reco_energy,
                                                                  bias_correction=self.bias_correction,
@@ -280,7 +282,7 @@ class Experiment(object):
                                                                         label=self.name,
                                                                         color=self.color
                                                                         )
-            if self.reco_gamma_data is not None:
+            if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_imp_res = ctaplot.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
                                                                             self.reco_gamma_data.reco_impact_y,
                                                                             self.reco_gamma_data.mc_impact_x,
@@ -331,7 +333,7 @@ class Experiment(object):
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
                                           label=self.name + '_reco',
                                           color=self.color,
-                                          linestyle=reco_linestyle)
+                                          linestyle=':')
             else:
                 print('Cannot evaluate the effective area for experiment {}'.format(self.name))
                 self.ax_eff_area = ctaplot.plot_effective_area_per_energy(np.ones(10),
@@ -349,7 +351,7 @@ class Experiment(object):
                                          self.data.reco_hadroness)
                 true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
                 proton = self.data[self.data.mc_particle == 1]
-                false_positive =  proton[self.data.reco_particle == 0]
+                false_positive = proton[self.data.reco_particle == 0]
             elif 'reco_gammaness' in self.data:
                 fpr, tpr, _ = roc_curve(self.data.mc_particle,
                                         self.data.reco_gammaness, pos_label=1)
@@ -363,35 +365,33 @@ class Experiment(object):
 
             self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
             self.recall = len(true_positive) / len(self.gamma_data)
+            correct = len(self.data[self.data.mc_particle == self.data.reco_particle])
+            self.accuracy = correct / len(self.data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_energy_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ene_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_impact_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_imp_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_effective_area_plot(self, visible: bool):
-        # if self.get_plotted():
-        #     for c in self.ax_eff_area.containers:
-        #         if c.get_label() == self.name:
-        #             change_errorbar_visibility(c, visible)
         if self.get_plotted():
             for l in self.ax_eff_area.lines:
-                if self.name in l.get_label():
+                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered']:
                     l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
@@ -598,6 +598,10 @@ def create_resolution_fig(site='south', ref=None):
         ctaplot.plot_angular_res_cta_requirements(site, ax=ax_ang_res, color='black')
         ctaplot.plot_energy_resolution_cta_requirements(site, ax=ax_ene_res, color='black')
         ctaplot.plot_effective_area_cta_requirements(site, ax=ax_eff_area, color='black')
+    else:
+        ax_eff_area.set_xscale('log')
+        ax_eff_area.set_yscale('log')
+        ax_eff_area.set_xlabel('Energy [TeV]')
     if ref is not None:
         ax_ang_res.legend()
         ax_ene_res.legend()
@@ -609,6 +613,7 @@ def create_resolution_fig(site='south', ref=None):
     ax_roc.set_xlabel('False Positive Rate')
     ax_roc.set_ylabel('True Positive Rate')
     ax_roc.set_title('Receiver Operating Characteristic')
+    # ax_roc.axis('equal')
 
     ax_legend.set_axis_off()
 
@@ -653,18 +658,19 @@ def update_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    ax.legend(handles=legend_elements, loc='best', ncol=4)
+    ax.legend(handles=legend_elements, loc='best', ncol=2)
 
 
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, {}'.format(exp.auc,
-                                                                                       exp.precision,
-                                                                                       exp.recall,
-                                                                                       exp.rocness))
+                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, Acc = {:.4f}'.format(exp.auc,
+                                                                                                     exp.precision,
+                                                                                                     exp.recall,
+                                                                                                     exp.accuracy
+                                                                                                     ))
                        for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
-    ax.legend(handles=legend_elements, loc='best')
+    ax.legend(handles=legend_elements, loc='lower right')
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
@@ -764,7 +770,7 @@ class GammaBoard(object):
         site (string): 'south' for Paranal and 'north' for LaPalma
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False):
+    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
@@ -774,11 +780,14 @@ class GammaBoard(object):
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
-        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory, bias_correction)
+        self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
+                                                      bias_correction, classif_resolution)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
+
         colors = np.arange(0, 1, 1/len(self.experiments_dict.keys()), dtype=np.float32)
+        np.random.seed(1)
         np.random.shuffle(colors)
         cmap = plt.cm.tab20
         for (key, color) in zip(self.experiments_dict.keys(), colors):
