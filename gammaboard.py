@@ -333,7 +333,7 @@ class Experiment(object):
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
                                           label=self.name + '_reco',
                                           color=self.color,
-                                          linestyle=reco_linestyle)
+                                          linestyle=':')
             else:
                 print('Cannot evaluate the effective area for experiment {}'.format(self.name))
                 self.ax_eff_area = ctaplot.plot_effective_area_per_energy(np.ones(10),
@@ -373,29 +373,25 @@ class Experiment(object):
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_energy_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ene_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_impact_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_imp_res.containers:
-                if self.name in c.get_label():
+                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_effective_area_plot(self, visible: bool):
-        # if self.get_plotted():
-        #     for c in self.ax_eff_area.containers:
-        #         if c.get_label() == self.name:
-        #             change_errorbar_visibility(c, visible)
         if self.get_plotted():
             for l in self.ax_eff_area.lines:
-                if self.name in l.get_label():
+                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered']:
                     l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
