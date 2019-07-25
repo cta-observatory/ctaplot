@@ -150,8 +150,11 @@ def change_errorbar_visibility(err_container, visible:bool):
         pass
 
 
-reco_linestyle = ':'
-reco_fmt = 'v'
+post_classification_opt = dict(ms=0,
+                               elinewidth=0.001,
+                               linestyle=':',
+                               fmt='v',
+                               )
 
 
 class Experiment(object):
@@ -240,8 +243,7 @@ class Experiment(object):
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
-                                                                      fmt=reco_fmt,
-                                                                      linestyle=reco_linestyle
+                                                                      **post_classification_opt,
                                                                       )
 
             self.set_plotted(True)
@@ -261,8 +263,7 @@ class Experiment(object):
                                                                  ax=ax,
                                                                  label=self.name + '_reco',
                                                                  color=self.color,
-                                                                 fmt=reco_fmt,
-                                                                 linestyle=reco_linestyle
+                                                                 **post_classification_opt
                                                                  )
 
             self.set_plotted(True)
@@ -289,8 +290,7 @@ class Experiment(object):
                                                                             ax=ax,
                                                                             label=self.name + '_reco',
                                                                             color=self.color,
-                                                                            fmt=reco_fmt,
-                                                                            linestyle=reco_linestyle
+                                                                            **post_classification_opt
                                                                             )
             self.ax_imp_res.set_xscale('log')
             self.ax_imp_res.set_xlabel('Energy [TeV]')
