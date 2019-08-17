@@ -8,7 +8,7 @@ def plot_energy_distribution():
     RecoE = np.random.rand(10)
     maskSimuDetected = np.ones(100, dtype=bool)
     maskSimuDetected[50:] = False
-    plots.plot_energy_distribution(SimuE, RecoE, maskSimuDetected=maskSimuDetected)
+    plots.plot_energy_distribution(SimuE, RecoE, mask_mc_detected=maskSimuDetected)
 
 
 def test_plot_energy_resolution():
@@ -169,3 +169,23 @@ def test_plot_angular_resolution_per_off_pointing_angle():
     plots.plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az, alt_p, az_p,
                                                         bins=4, color='red', alpha=0.5
                                                         )
+
+
+def test_plot_multiplicity_hist():
+    multiplicity = np.random.randint(24, size=100)
+    plots.plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=True, alpha=0.5)
+
+
+def test_plot_multiplicity_per_telescope_type():
+    multiplicity = np.random.randint(10, size=50)
+    telescope_type =np.random.choice(['a', 'b', 'c'], size=len(multiplicity))
+    plots.plot_multiplicity_per_telescope_type(multiplicity, telescope_type, quartils=True, alpha=0.6)
+
+
+def test_plot_angular_res_per_energy():
+    reco_alt = np.random.rand(10)
+    reco_az = np.random.rand(10)
+    mc_alt = np.ones(10)
+    mc_az = np.zeros(10)
+    energy = 10**np.random.rand(10)
+    plots.plot_angular_res_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy, bias_correction=True, alpha=0.4)
