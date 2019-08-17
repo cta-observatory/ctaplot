@@ -9,6 +9,7 @@ Contain mathematical functions to make results analysis
 import numpy as np
 import ctaplot.dataset as ds
 from scipy.stats import binned_statistic, norm
+from astropy.utils import deprecated
 
 _relative_scaling_method = 's1'
 
@@ -437,25 +438,26 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
     return irf.E_bin, np.array(res_e)
 
 
-def energy_bias(SimuE, RecoE):
+def energy_bias(simu_energy, reco_energy):
     """
-    Compute the energy bias per energy bin.
+    Compute the energy relative bias per energy bin.
+
     Parameters
     ----------
-    SimuE: 1d numpy array of simulated energies
-    RecoE: 1d numpy array of reconstructed energies
+    simu_energy: 1d numpy array of simulated energies
+    reco_energy: 1d numpy array of reconstructed energies
 
     Returns
     -------
     (e, biasE) : tuple of 1d numpy arrays - energy, energy bias
     """
-    biasE = []
+    bias_e = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
-        mask = (SimuE > irf.E_bin[i]) & (SimuE < irf.E_bin[i+1])
-        biasE.append(relative_bias(SimuE[mask], RecoE[mask]))
+        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
+        bias_e.append(relative_bias(simu_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
-    return irf.E_bin, np.array(biasE)
+    return irf.E_bin, np.array(bias_e)
 
 
 
@@ -489,27 +491,27 @@ def get_angles_0pi(angles):
     return np.mod(angles, np.pi)
 
 
-def theta2(RecoAlt, RecoAz, AltSource, AzSource):
+def theta2(reco_alt, reco_az, simu_alt, simu_az):
     """
     Compute the theta2 in radians
 
     Parameters
     ----------
-    RecoAlt: 1d `numpy.ndarray` - reconstructed Altitude in radians
-    RecoAz: 1d `numpy.ndarray` - reconstructed Azimuth in radians
-    AltSource: 1d `numpy.ndarray` - true Altitude in radians
-    AzSource: 1d `numpy.ndarray` -  true Azimuth in radians
+    reco_alt: 1d `numpy.ndarray` - reconstructed Altitude in radians
+    reco_az: 1d `numpy.ndarray` - reconstructed Azimuth in radians
+    simu_alt: 1d `numpy.ndarray` - true Altitude in radians
+    simu_az: 1d `numpy.ndarray` -  true Azimuth in radians
 
     Returns
     -------
     1d `numpy.ndarray`
     """
-    assert (len(RecoAz) == len(RecoAlt))
-    assert (len(RecoAlt) == len(AltSource))
-    if len(RecoAlt) == 0:
+    assert (len(reco_az) == len(reco_alt))
+    assert (len(reco_alt) == len(simu_alt))
+    if len(reco_alt) == 0:
         return np.empty(0)
     else:
-        return angular_separation_altaz(RecoAlt, RecoAz, AltSource, AzSource)**2
+        return angular_separation_altaz(reco_alt, reco_az, simu_alt, simu_az) ** 2
 
 
 def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
@@ -653,30 +655,30 @@ def angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_
     return angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
 
 
-def effective_area(SimuE, RecoE, simuArea):
+def effective_area(simu_energy, reco_energy, simu_area):
     """
     Compute the effective area from a list of simulated energies and reconstructed energies
     Parameters
     ----------
-    SimuE: 1d numpy array
-    RecoE: 1d numpy array
-    simuArea: float - area on which events are simulated
+    simu_energy: 1d numpy array
+    reco_energy: 1d numpy array
+    simu_area: float - area on which events are simulated
     Returns
     -------
     float = effective area
     """
-    return simuArea * len(RecoE)/len(SimuE)
+    return simu_area * len(reco_energy) / len(simu_energy)
 
 
-def effective_area_per_energy(SimuE, RecoE, simuArea):
+def effective_area_per_energy(simu_energy, reco_energy, simu_area):
     """
     Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
 
     Parameters
     ----------
-    SimuE: 1d numpy array
-    RecoE: 1d numpy array
-    simuArea: float - area on which events are simulated
+    simu_energy: 1d numpy array
+    reco_energy: 1d numpy array
+    simu_area: float - area on which events are simulated
 
     Returns
     -------
@@ -685,53 +687,28 @@ def effective_area_per_energy(SimuE, RecoE, simuArea):
 
     irf = irf_cta()
 
-    count_R, bin_R = np.histogram(RecoE, bins=irf.E_bin)
-    count_S, bin_S = np.histogram(SimuE, bins=irf.E_bin)
+    count_R, bin_R = np.histogram(reco_energy, bins=irf.E_bin)
+    count_S, bin_S = np.histogram(simu_energy, bins=irf.E_bin)
 
     np.seterr(divide='ignore', invalid='ignore')
-    return irf.E_bin, np.nan_to_num(simuArea * count_R/count_S)
+    return irf.E_bin, np.nan_to_num(simu_area * count_R / count_S)
 
 
-def mask_range(X, Xmin=0, Xmax=np.inf):
-    """
-    create a mask for X to get values between Xmin and Xmax
-    Parameters
-    ----------
-    X: 1d numpy array
-    Xmin: float
-    Xmax: float
-
-    Returns
-    -------
-    1d numpy array of boolean
-    """
-    mask = (X > Xmin) & (X < Xmax)
-    return mask
-
-
-def angles_modulo_degrees(RecoAlt, RecoAz, SimuAlt, SimuAz):
-    RecoAlt2 = np.degrees(get_angles_0pi(RecoAlt))
-    RecoAz2 = np.degrees(get_angles_pipi(RecoAz))
-    AltSource = np.degrees(get_angles_0pi(SimuAlt[0]))
-    AzSource = np.degrees(get_angles_pipi(SimuAz[0]))
-    return RecoAlt2, RecoAz2, AltSource, AzSource
-
-
-def impact_parameter_error(RecoX, RecoY, SimuX, SimuY):
+def impact_parameter_error(reco_x, reco_y, simu_x, simu_y):
     """
     compute the error distance between simulated and reconstructed impact parameters
     Parameters
     ----------
-    RecoX: 1d numpy array
-    RecoY
-    SimuX
-    SimuY
+    reco_x: 1d numpy array
+    reco_y: 1d numpy array
+    simu_x: 1d numpy array
+    simu_y: 1d numpy array
 
     Returns
     -------
     1d numpy array: distances
     """
-    return np.sqrt((RecoX-SimuX)**2 + (RecoY-SimuY)**2)
+    return np.sqrt((reco_x - simu_x) ** 2 + (reco_y - simu_y) ** 2)
 
 
 def _percentile(x, percentile=68.27):
@@ -786,54 +763,60 @@ def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
     return ang_sep
 
 
-def logbin_mean(E_bin):
+def logbin_mean(x_bin):
     """
     Function that gives back the mean of each bin in logscale
 
     Parameters
     ----------
-    E_bin: `numpy.ndarray`
+    x_bin: `numpy.ndarray`
 
     Returns
     -------
     `numpy.ndarray`
     """
-    return 10 ** ((np.log10(E_bin[:-1]) + np.log10(E_bin[1:])) / 2.)
+    return 10 ** ((np.log10(x_bin[:-1]) + np.log10(x_bin[1:])) / 2.)
 
 
-def impact_resolution(reco_x, reco_y, simu_x, simu_y, percentile=68.27, confidence_level=0.95, bias_correction=False):
+def impact_resolution(reco_x, reco_y, simu_x, simu_y,
+                      percentile=68.27, confidence_level=0.95, bias_correction=False, relative_scaling_method=None):
     """
     Compute the shower impact parameter resolution as the Qth (68 as standard) containment radius of the square distance
     to the simulated one with the lower and upper limits corresponding to the required confidence level
 
     Parameters
     ----------
-    RecoX: `numpy.ndarray`
-    RecoY: `numpy.ndarray`
-    SimuX: `numpy.ndarray`
-    SimuY: `numpy.ndarray`
-    confidence_level: `float`
+    reco_x: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
+    simu_x: `numpy.ndarray`
+    simu_y: `numpy.ndarray`
+    percentile: float
+        see `ctaplot.ana.resolution`
+    confidence_level: float
+        see `ctaplot.ana.resolution`
+    bias_correction: bool
+        see `ctaplot.ana.resolution`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
 
     Returns
     -------
-    `numpy.array` - [impact_resolution, lower_limit, upper_limit]
+    (impact_resolution, lower_confidence_level, upper_confidence_level): (`numpy.array`, `numpy.array`, `numpy.array`)
     """
-    if bias_correction:
-        b_x = relative_bias(simu_x, reco_x)
-        b_y = relative_bias(simu_y, reco_y)
-    else:
-        b_x = 0
-        b_y = 0
 
-    d2 = impact_parameter_error(reco_x*(1-b_x), reco_y*(1-b_y), simu_x, simu_y)**2
-    return np.sqrt(np.append(_percentile(d2, percentile), percentile_confidence_interval(d2,
-                                                                                         percentile=percentile,
-                                                                                         confidence_level=confidence_level,
-                                                                                         )))
+    return distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+                                 percentile=percentile,
+                                 confidence_level=confidence_level,
+                                 bias_correction=bias_correction,
+                                 relative_scaling_method=relative_scaling_method
+                                 )
 
 
 def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
-                                 percentile=68.27, confidence_level=0.95, bias_correction=False):
+                                 percentile=68.27,
+                                 confidence_level=0.95,
+                                 bias_correction=False,
+                                 relative_scaling_method=None):
     """
     Plot the angular resolution as a function of the event simulated energy
 
@@ -844,27 +827,31 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
     simu_x: `numpy.ndarray`
     simu_y: `numpy.ndarray`
     energy: `numpy.ndarray`
+    percentile: float
+        see `ctaplot.ana.resolution`
+    confidence_level: float
+        see `ctaplot.ana.resolution`
+    bias_correction: bool
+        see `ctaplot.ana.resolution`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
 
     Returns
     -------
-    (E, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
+    (energy, resolution) : (1d numpy array, 1d numpy array)
     """
     assert len(reco_x) == len(energy)
     assert len(energy) > 0, "Empty arrays"
 
     irf = irf_cta()
 
-    E_bin = irf.E_bin
-    RES = []
-
-    for i, e in enumerate(E_bin[:-1]):
-        mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
-        RES.append(impact_resolution(reco_x[mask], reco_y[mask], simu_x[mask], simu_y[mask],
-                                     percentile=percentile,
-                                     confidence_level=confidence_level,
-                                     bias_correction=bias_correction))
-
-    return E_bin, np.array(RES)
+    return distance2d_resolution_per_bin(energy, reco_x, reco_y, simu_x, simu_y,
+                                         bins=irf.E_bin,
+                                         percentile=percentile,
+                                         confidence_level=confidence_level,
+                                         bias_correction=bias_correction,
+                                         relative_scaling_method=relative_scaling_method,
+                                         )
 
 
 def percentile_confidence_interval(x, percentile=68, confidence_level=0.95):
