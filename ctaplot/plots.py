@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
 import ctaplot.ana as ana
+from astropy.utils import deprecated
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -564,13 +565,13 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     return ax
 
 
-def plot_effective_area_per_energy(mc_energy, reco_energy, simulated_area, ax=None, **kwargs):
+def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=None, **kwargs):
     """
     Plot the effective area as a function of the energy
 
     Parameters
     ----------
-    mc_energy: `numpy.ndarray` - all simulated event energies
+    simu_energy: `numpy.ndarray` - all simulated event energies
     reco_energy: `numpy.ndarray` - all reconstructed event energies
     simulated_area: float
     ax: `matplotlib.pyplot.axes`
@@ -585,9 +586,9 @@ def plot_effective_area_per_energy(mc_energy, reco_energy, simulated_area, ax=No
     >>> import numpy as np
     >>> import ctaplot
     >>> irf = ctaplot.ana.irf_cta()
-    >>> simue = 10**(-2 + 4*np.random.rand(1000))
-    >>> recoe = 10**(-2 + 4*np.random.rand(100))
-    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simue, recoe, irf.LaPalmaArea_prod3)
+    >>> simu_e = 10**(-2 + 4*np.random.rand(1000))
+    >>> reco_e = 10**(-2 + 4*np.random.rand(100))
+    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simu_e, reco_e, irf.LaPalmaArea_prod3)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -601,7 +602,7 @@ def plot_effective_area_per_energy(mc_energy, reco_energy, simulated_area, ax=No
     ax.set_xscale('log')
     ax.set_yscale('log')
 
-    E_bin, Seff = ana.effective_area_per_energy(mc_energy, reco_energy, simulated_area)
+    E_bin, Seff = ana.effective_area_per_energy(simu_energy, reco_energy, simulated_area)
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
@@ -762,6 +763,7 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
+    ax.axis('equal')
 
     if tel_type is not None and 'c' not in kwargs and 'color' not in kwargs:
         values = np.arange(len(set(tel_type)))
@@ -928,7 +930,7 @@ def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
+def hist_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
     """
     plot impact parameter error distribution and save it under Outfile
     Parameters
@@ -939,7 +941,7 @@ def plot_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwarg
     simu_y: `numpy.ndarray`
     Outfile: string
     """
-    d = np.sqrt((reco_x - simu_x) ** 2 + (reco_y - simu_y) ** 2)
+    d = ana.impact_parameter_error(reco_x, reco_y, simu_x, simu_y)
 
     ax = plt.gca() if ax is None else ax
 
@@ -956,7 +958,8 @@ def plot_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwarg
     ax.hist(d, **kwargs)
     return ax
 
-
+@deprecated('18/08/2019', message='`plot_impact_parameter_error_per_energy` will be removed in a future release.'
+                                  'Use `plot_impact_parameter_resolution_per_energy` instead')
 def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
     """
     plot the impact parameter error distance as a function of energy and save the plot as Outfile
@@ -1014,6 +1017,32 @@ def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energ
     ax.set_title('Impact parameter resolution')
 
     return E, np.array(err_mean)
+
+
+def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
+    """
+
+    Parameters
+    ----------
+    reco_x
+    reco_y
+    simu_x
+    simu_y
+    energy
+    ax
+    kwargs
+
+    Returns
+    -------
+
+    """
+    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy)
+    ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
+    ax.set_xlabel("Energy")
+    ax.set_ylabel("Impact parameter resolution")
+    ax.set_title("Impact parameter resolution as a function of the energy")
+
+    return ax
 
 
 def plot_impact_parameter_error_per_multiplicity(reco_x, reco_y, simu_x, simu_y, multiplicity,
@@ -1074,69 +1103,62 @@ def plot_impact_parameter_error_per_multiplicity(reco_x, reco_y, simu_x, simu_y,
     return M, np.array(e_mean)
 
 
-def plot_site_map(telX, telY, telTypes=None, Outfile="SiteMap.png"):
-    """
-    Map of the site with telescopes positions
-
-    Parameters
-    ----------
-    telX: `numpy.ndarray`
-    telY: `numpy.ndarray`
-    telTypes: `numpy.ndarray`
-    Outfile: string - name of the output file
-    """
-    plt.figure(figsize=(12, 12))
-
-    assert (len(telX) == len(telY)), "telX and telY should have the same length"
-    if telTypes:
-        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
-        plt.scatter(telX, telY, color=telTypes, s=30)
-    else:
-        plt.scatter(telX, telY, color='black', s=30)
-
-    plt.axis('equal')
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-
-
-def plot_impact_map(impactX, impactY, telX, telY, telTypes=None, Outfile="ImpactMap.png"):
+def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
+                    ax=None,
+                    Outfile="ImpactMap.png",
+                    hist_kwargs={},
+                    scatter_kwargs={},
+                    ):
     """
     Map of the site with telescopes positions and impact points heatmap
 
     Parameters
     ----------
-    impactX: `numpy.ndarray`
-    impactY: `numpy.ndarray`
-    telX: `numpy.ndarray`
-    telY: `numpy.ndarray`
-    telTypes: `numpy.ndarray`
+    impact_x: `numpy.ndarray`
+    impact_y: `numpy.ndarray`
+    tel_x: `numpy.ndarray`
+    tel_y: `numpy.ndarray`
+    tel_types: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    hist_kwargs: `kwargs` for `matplotlib.pyplot.hist`
+    scatter_kwargs: `kwargs` for `matplotlib.pyplot.scatter`
     Outfile: string - name of the output file
     """
-    plt.figure(figsize=(12, 12))
+    ax = plt.gca() if ax is None else ax
 
-    plt.hist2d(impactX, impactY, bins=40)
-    plt.colorbar()
+    hist_kwargs['bins'] = 40 if 'bins' not in hist_kwargs else hist_kwargs['bins']
+    ax.hist2d(impact_x, impact_y, **hist_kwargs)
+    pcm = ax.get_children()[0]
+    plt.colorbar(pcm, ax=ax)
 
-    assert (len(telX) == len(telY)), "telX and telY should have the same length"
-    if telTypes:
-        assert (len(telTypes) == len(telX)), "telTypes and telX should have the same length"
-        plt.scatter(telX, telY, color=telTypes, s=30)
+    assert (len(tel_x) == len(tel_y)), "tel_x and tel_y should have the same length"
+
+    scatter_kwargs['s'] = 50 if 's' not in scatter_kwargs else scatter_kwargs['s']
+
+    if tel_types and 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
+        scatter_kwargs['color'] = tel_types
+        assert (len(tel_types) == len(tel_x)), "tel_types and tel_x should have the same length"
+        ax.scatter(tel_x, tel_y, **scatter_kwargs)
     else:
-        plt.scatter(telX, telY, color='black', s=30)
+        if 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
+            scatter_kwargs['color'] = 'black'
+        scatter_kwargs['marker'] = '+' if 'marker' not in scatter_kwargs else scatter_kwargs['marker']
+        ax.scatter(tel_x, tel_y, **scatter_kwargs)
 
-    plt.axis('equal')
+    ax.axis('equal')
     plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
+
+    return ax
 
 
-def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
+def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
     """
     Plot the energy bias
 
     Parameters
     ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
+    simu_energy: `numpy.ndarray`
+    reco_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -1144,11 +1166,11 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
+    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, biasE = ana.energy_bias(SimuE, RecoE)
+    E_bin, biasE = ana.energy_bias(simu_energy, reco_energy)
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
@@ -1165,16 +1187,16 @@ def plot_energy_bias(SimuE, RecoE, ax=None, **kwargs):
     return ax
 
 
-def plot_energy_resolution(SimuE, RecoE,
+def plot_energy_resolution(simu_energy, reco_energy,
                            percentile=68.27, confidence_level=0.95, bias_correction=False,
-                           ax=None,  **kwargs):
+                           ax=None, **kwargs):
     """
     Plot the enregy resolution as a function of the energy
 
     Parameters
     ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
+    simu_energy: `numpy.ndarray`
+    reco_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     bias_correction: `bool`
     kwargs: args for `matplotlib.pyplot.plot`
@@ -1183,11 +1205,11 @@ def plot_energy_resolution(SimuE, RecoE,
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(SimuE) == len(RecoE), "simulated and reconstructured energy arrrays should have the same length"
+    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, Eres = ana.energy_resolution_per_energy(SimuE, RecoE,
+    E_bin, Eres = ana.energy_resolution_per_energy(simu_energy, reco_energy,
                                                    percentile=percentile,
                                                    confidence_level=confidence_level,
                                                    bias_correction=bias_correction,
@@ -1268,55 +1290,10 @@ def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
     return ax
 
 
-def saveplot_energy_resolution(SimuE, RecoE, Outfile="EnergyResolution.png", cta_site=None):
-    """
-    plot the energy resolution of the reconstruction
-    Parameters
-    ----------
-    SimuE: `numpy.ndarray`
-    RecoE: `numpy.ndarray`
-    cta_goal: boolean - If True CTA energy resolution requirement is plotted
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-
-    ax = plot_energy_resolution(SimuE, RecoE)
-
-    if cta_site != None:
-        ax = plot_energy_resolution_cta_requirements(cta_site, ax=ax)
-
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
-    plt.close()
-    return ax
-
-
-def plot_reco_histo(y_true, y_reco):
-    """
-    plot the histogram of a reconstructed feature after prediction from a machine learning algorithm
-    plt.show() to display
-    Parameters
-    ----------
-    y_true: real values of the feature to predict
-    y_reco: predicted values by the ML algo
-    """
-    plt.figure(figsize=(7, 6))
-
-    plt.hist2d(y_true, y_reco, bins=50)
-    plt.colorbar()
-    plt.plot(y_true, y_true, color='black', label="perfect prediction line")
-    plt.axis('equal')
-    plt.xlabel("To predict")
-    plt.ylabel("Predicted")
-    plt.legend()
-
-    plt.title("Histogram of the predicted feature")
-
-
 def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
     """
     Plot the impact parameter error as a function of the distance to the site center.
+
     Parameters
     ----------
     reco_x: `numpy.ndarray`
@@ -1339,28 +1316,6 @@ def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=N
     ax.hist2d(distance_center, imp_err, **kwargs)
     ax.set_xlabel("Distance to site center")
     ax.set_ylabel("Impact point error")
-    return ax
-
-
-def plot_site(tel_x, tel_y, ax=None, **kwargs):
-    """
-    Plot the telescopes positions
-    Parameters
-    ----------
-    tel_x: 1D numpy array
-    tel_y: 1D numpy array
-    ax: `~matplotlib.axes.Axes` or None
-    **kwargs : Extra keyword arguments are passed to `matplotlib.pyplot.scatter`
-
-    Returns
-    -------
-    ax : `~matplotlib.axes.Axes`
-    """
-    ax = plt.gca() if ax is None else ax
-
-    ax.scatter(tel_x, tel_y, **kwargs)
-    ax.axis('equal')
-
     return ax
 
 
@@ -1460,14 +1415,14 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     return ax
 
 
-def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
+def plot_dispersion(simu_x, reco_x, x_log=False, ax=None, **kwargs):
     """
     Plot the dispersion around an expected value X_true
 
     Parameters
     ----------
-    X_true: `numpy.ndarray`
-    X_exp: `numpy.ndarray`
+    simu_x: `numpy.ndarray`
+    reco_x: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.hist2d`
 
@@ -1481,9 +1436,9 @@ def plot_dispersion(X_true, X_exp, x_log=False, ax=None, **kwargs):
     if not 'bins' in kwargs:
         kwargs['bins'] = 50
 
-    x = np.log10(X_true) if x_log else X_true
+    x = np.log10(simu_x) if x_log else simu_x
 
-    ax.hist2d(x, X_true - X_exp, **kwargs)
+    ax.hist2d(x, simu_x - reco_x, **kwargs)
     return ax
 
 
