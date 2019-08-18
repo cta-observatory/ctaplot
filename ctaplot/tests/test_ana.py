@@ -137,7 +137,7 @@ def test_distance2d_resolution():
 
 
 def test_distance2d_resolution_per_bin():
-    size = 10000
+    size = 1000000
     x = np.random.rand(size)
     simu_x = np.ones(size)
     simu_y = np.ones(size)
