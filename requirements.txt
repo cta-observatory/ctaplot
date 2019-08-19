@@ -1,6 +1,7 @@
 matplotlib
 numpy
 scipy
+astropy
 
 # documentation:
 sphinx>=1.4

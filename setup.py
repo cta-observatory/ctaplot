@@ -17,10 +17,7 @@ print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
       version='0.2.2',
-      description="DESCRIPTION",
-      # these should be minimum list of what is needed to run (note
-      # don't need to list the sub-dependencies like numpy, since
-      # astropy already depends on it)
+      description="compute and plot cta IRF",
       install_requires=[
           'numpy',
           'matplotlib>=2.0',

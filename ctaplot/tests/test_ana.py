@@ -35,17 +35,60 @@ def test_impact_resolution_per_energy():
 
 
 def test_resolution():
-    x = np.random.rand(100)
+    x = np.linspace(0, 10, 100)
     assert (ana.resolution(x, x) == np.zeros(3)).all()
-    x = np.random.normal(size=100000, scale=1, loc=10)
-    y = 10 * np.ones(x.shape[0])
-    assert np.isclose(ana.resolution(y, x), 0.099 * np.ones(3), rtol=1e-1).all()
+
+    # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
+    loc = np.random.rand() * 100
+    scale = np.random.rand() * 10
+    size = 10000
+    y_true = loc * np.ones(size)
+    y_reco = np.random.normal(loc=loc, scale=scale, size=size)
+    relative_scaling_method = 's1'
+    res = ana.resolution(y_true, y_reco, relative_scaling_method=relative_scaling_method)
+    assert np.isclose(res[0],
+                      scale / ana.relative_scaling(y_true, y_reco, relative_scaling_method).mean(),
+                      rtol=1e-1)
+
+    # Test bias
+    bias = np.random.rand() * 100
+    y_reco_bias = np.random.normal(loc=loc+bias, scale=scale, size=size)
+
+    assert np.isclose(ana.resolution(y_true, y_reco_bias,
+                                     bias_correction=True,
+                                     relative_scaling_method=relative_scaling_method)[0],
+                      scale / ana.relative_scaling(y_true, y_reco, relative_scaling_method).mean(),
+                      rtol=1e-1)
+
+    assert np.isclose(ana.resolution(y_true, y_reco)[0],
+                      ana.resolution(y_true, y_reco, bias_correction=True)[0],
+                      rtol=1e-1,
+                      )
+
+    # Test relative scaling
+    for relative_scaling_method in ['s0', 's1', 's2', 's3', 's4']:
+        assert np.isclose(ana.resolution(y_true, y_reco_bias,
+                                         bias_correction=True,
+                                         relative_scaling_method=relative_scaling_method)[0],
+                          scale / ana.relative_scaling(y_true, y_reco, relative_scaling_method).mean(),
+                          rtol=1e-1)
+
 
 def test_resolution_per_bin():
-    x = np.linspace(0, 10, 100)
-    y_true = np.ones(100)
-    y_reco = np.random.normal(loc=1, size=100)
-    bins, res = ana.resolution_per_bin(x, y_true, y_reco)
+    # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
+    size = 100000
+    loc = np.random.rand() * 100
+    scale = np.random.rand() * 10
+    x = np.linspace(0, 10, size)
+    y_true = loc * np.ones(size)
+    y_reco = np.random.normal(loc=loc, scale=scale, size=size)
+    bins, res = ana.resolution_per_bin(x, y_true, y_reco, bins=6)
+    np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
+
+    bias = 50
+    y_reco = np.random.normal(loc=loc+bias, scale=scale, size=size)
+    bins, res = ana.resolution_per_bin(x, y_true, y_reco, bias_correction=True)
+    np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
 
 
 def test_resolution_per_energy():
@@ -53,7 +96,8 @@ def test_resolution_per_energy():
     y = 10 * np.ones(x.shape[0])
     E = 10 ** (-3 + 6 * np.random.rand(x.shape[0]))
     e_bin, res_e = ana.resolution_per_energy(y, x, E)
-    assert np.isclose(res_e, 0.099 * np.ones(res_e.shape[1]), rtol=1e-1).all()
+    assert np.isclose(res_e, 1./ana.relative_scaling(y, x).mean(), rtol=1e-1).all()
+
 
 def test_power_law_integrated_distribution():
     from ctaplot.ana import power_law_integrated_distribution
@@ -68,4 +112,89 @@ def test_power_law_integrated_distribution():
     y = power_law_integrated_distribution(emin, emax, Nevents, spectral_index, bins)
 
     np.testing.assert_allclose(Nevents, np.sum(y), rtol=1.e-2)
+
+
+def test_distance2d_resolution():
+    size = 10000
+    simu_x = np.ones(size)
+    simu_y = np.ones(size)
+    # reconstructed positions on a circle around true position
+    t = np.random.rand(size) * np.pi * 2
+    reco_x = 1 + 3*np.cos(t)
+    reco_y = 1 + 3*np.sin(t)
+    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+                                                      percentile=68.27, confidence_level=0.95, bias_correction=False)
+
+    np.testing.assert_equal(res, 3)
+
+    # with different bias on X and Y:
+    reco_x = 5 + 2*np.cos(t)
+    reco_y = 7 + 2*np.sin(t)
+    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+                                                      percentile=68.27, confidence_level=0.95, bias_correction=True)
+
+    assert np.isclose(res, 2, rtol=1e-1)
+
+
+def test_distance2d_resolution_per_bin():
+    size = 1000000
+    x = np.random.rand(size)
+    simu_x = np.ones(size)
+    simu_y = np.ones(size)
+    t = np.random.rand(size) * np.pi * 2
+    reco_x = 3*np.cos(t)
+    reco_y = 3*np.sin(t)
+
+    bin, res = ana.distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=10, bias_correction=True)
+
+    np.testing.assert_allclose(res, 3, rtol=1e-1)
+
+
+def test_angular_resolution():
+    size=10000
+    simu_alt = np.random.rand(size)
+    simu_az = np.random.rand(size)
+    scale = 0.01
+    bias = 3
+
+    # test alt
+    reco_alt = simu_alt + np.random.normal(loc=bias, scale=scale, size=size)
+    reco_az = simu_az
+
+    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True)[0],
+                      scale,
+                      rtol=1e-1)
+
+    # test az
+    simu_alt = np.zeros(size)  # angular separation evolves linearly with az if alt=0
+    reco_alt = simu_alt
+    reco_az = simu_az + np.random.normal(loc=-1, scale=scale, size=size)
+    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True)[0],
+                      scale,
+                      rtol=1e-1)
+
+
+def test_angular_resolution_small_angles():
+    """
+    At small angles, the angular resolution should be equal to the distance2d resolution
+    """
+    size = 1000
+    simu_az = np.ones(size)
+    simu_alt = np.random.rand(size)
+    reco_alt = simu_alt + np.random.normal(1, 0.05, size)
+    reco_az = 2 * simu_az
+    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+                               ana.distance2d_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+                               rtol=1e-1,
+                               )
+
+
+    simu_az = np.random.rand(size)
+    simu_alt = np.zeros(size)
+    reco_alt = simu_alt
+    reco_az = simu_az + np.random.normal(-3, 2, size)
+    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+                               ana.distance2d_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+                               rtol=1e-1,
+                               )
 
