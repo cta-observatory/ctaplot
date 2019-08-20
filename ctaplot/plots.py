@@ -629,8 +629,7 @@ def plot_effective_area_cta_requirements(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
+    cta_req = ana.cta_requirements(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
     ax.set_xscale('log')
@@ -662,8 +661,7 @@ def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
+    cta_req = ana.cta_performances(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
     ax.set_xscale('log')
@@ -695,8 +693,7 @@ def plot_sensitivity_cta_requirements(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
+    cta_req = ana.cta_requirements(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
     ax.set_xscale('log')
@@ -727,8 +724,7 @@ def plot_sensitivity_cta_performances(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
+    cta_req = ana.cta_performances(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
     ax.set_xscale('log')
@@ -882,8 +878,7 @@ def plot_angular_res_cta_requirements(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
+    cta_req = ana.cta_requirements(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
     if not 'label' in kwargs:
@@ -915,8 +910,7 @@ def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
+    cta_req = ana.cta_performances(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
     if not 'label' in kwargs:
@@ -1245,8 +1239,7 @@ def plot_energy_resolution_cta_requirements(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements()
-    cta_req.site = cta_site
+    cta_req = ana.cta_requirements(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
     if not 'label' in kwargs:
@@ -1275,8 +1268,7 @@ def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances()
-    cta_req.site = cta_site
+    cta_req = ana.cta_performances(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
     if not 'label' in kwargs:
@@ -1732,3 +1724,31 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
 
     return ax
 
+
+def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=None, **kwargs):
+    """
+    Plot the algebric difference between a new resolution and reference resolution.
+
+    Parameters
+    ----------
+    bins: `numpy.ndarray`
+    reference_resolution: `numpy.ndarray`
+        output from `ctaplot.ana.resolution`
+    new_resolution: `numpy.ndarray`
+        output from `ctaplot.ana.resolution`
+    ax: `matplotlib.pyplot.axis`
+    kwargs: args for `ctaplot.plots.plot_resolution`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+
+    ax = plt.gca() if ax is None else ax
+    delta_res = new_resolution - reference_resolution
+    delta_res[:, 1:] = 0    # the condidence intervals have no meaning here
+    plot_resolution(bins, delta_res, ax=ax, **kwargs)
+    ax.set_ylabel(r"$\Delta$ res")
+    ax.set_title("Resolution difference")
+
+    return ax
