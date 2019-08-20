@@ -28,7 +28,7 @@ class irf_cta:
         self.E = logbin_mean(self.E_bin)
 
 
-class cta_performances:
+class cta_performance:
     def __init__(self, site):
         self.site = site
         self.E = np.empty(0)
@@ -108,7 +108,7 @@ class cta_performances:
 
 
 
-class cta_requirements:
+class cta_requirement:
     def __init__(self, site):
         self.site = site
         self.E = np.empty(0)

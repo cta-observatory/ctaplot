@@ -8,18 +8,18 @@ def test_logspace_decades_nbin():
     assert ca[-1] == 10
 
 
-def test_class_cta_requirements():
+def test_class_cta_requirement():
     for site in ['north', 'south']:
-        ctaq = ana.cta_requirements(site)
+        ctaq = ana.cta_requirement(site)
         ctaq.get_effective_area()
         ctaq.get_angular_resolution()
         ctaq.get_energy_resolution()
         ctaq.get_sensitivity()
 
 
-def test_class_cta_performances():
+def test_class_cta_performance():
     for site in ['north', 'south']:
-        ctaq = ana.cta_performances(site)
+        ctaq = ana.cta_performance(site)
         ctaq.get_effective_area()
         ctaq.get_angular_resolution()
         ctaq.get_energy_resolution()

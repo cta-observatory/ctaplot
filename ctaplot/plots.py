@@ -613,14 +613,15 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
     return ax
 
 
-def plot_effective_area_cta_requirements(cta_site, ax=None, **kwargs):
+def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the effective area
 
     Parameters
     ----------
-    cta_site: string - see `hipectaold.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
+    cta_site: string
+        see `ctaplot.ana.cta_requirement`
+    ax: `matplotlib.pyplot.axes`
 
     Returns
     -------
@@ -629,7 +630,7 @@ def plot_effective_area_cta_requirements(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_requirements(cta_site)
+    cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
     ax.set_xscale('log')
@@ -638,21 +639,22 @@ def plot_effective_area_cta_requirements(cta_site, ax=None, **kwargs):
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
+        kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
 
     return ax
 
 
-def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
+def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
     """
     Plot the CTA performances for the effective area
 
     Parameters
     ----------
-    cta_site: string - see `hipectaold.ana.cta_requirements`
-    ax: `matplotlib.pyplot.axes`, optional
+    cta_site: string
+        see `ctaplot.ana.cta_requirement`
+    ax: `matplotlib.pyplot.axes`
 
     Returns
     -------
@@ -661,7 +663,7 @@ def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_performances(cta_site)
+    cta_req = ana.cta_performance(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
     ax.set_xscale('log')
@@ -670,7 +672,7 @@ def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
+        kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
 
@@ -678,12 +680,12 @@ def plot_effective_area_cta_performances(cta_site, ax=None, **kwargs):
 
 
 
-def plot_sensitivity_cta_requirements(cta_site, ax=None, **kwargs):
+def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the sensitivity
     Parameters
     ----------
-    cta_site: string - see `ctaplot.ana.cta_requirements`
+    cta_site: string - see `ctaplot.ana.cta_requirement`
     ax: `matplotlib.pyplot.axes`, optional
 
     Returns
@@ -693,7 +695,7 @@ def plot_sensitivity_cta_requirements(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_requirements(cta_site)
+    cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
     ax.set_xscale('log')
@@ -702,19 +704,20 @@ def plot_sensitivity_cta_requirements(cta_site, ax=None, **kwargs):
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
+        kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
 
     return ax
 
 
-def plot_sensitivity_cta_performances(cta_site, ax=None, **kwargs):
+def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
     """
     Plot the CTA performances for the sensitivity
+
     Parameters
     ----------
-    cta_site: string - see `ctaplot.ana.cta_requirements`
+    cta_site: string - see `ctaplot.ana.cta_requirement`
     ax: `matplotlib.pyplot.axes`, optional
 
     Returns
@@ -724,7 +727,7 @@ def plot_sensitivity_cta_performances(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_performances(cta_site)
+    cta_req = ana.cta_performance(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
     ax.set_xscale('log')
@@ -733,7 +736,7 @@ def plot_sensitivity_cta_performances(cta_site, ax=None, **kwargs):
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
+        kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
 
@@ -810,9 +813,9 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     return ax
 
 
-def plot_angular_res_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
-                                percentile=68.27, confidence_level=0.95, bias_correction=False,
-                                ax=None, **kwargs):
+def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
+                                       percentile=68.27, confidence_level=0.95, bias_correction=False,
+                                       ax=None, **kwargs):
     """
     Plot the angular resolution as a function of the energy
 
@@ -863,12 +866,13 @@ def plot_angular_res_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
     return ax
 
 
-def plot_angular_res_cta_requirements(cta_site, ax=None, **kwargs):
+def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the CTA requirement for the angular resolution
     Parameters
     ----------
-    cta_site: string, see `ana.cta_requirements`
+    cta_site: string
+        see `ctaplot.ana.cta_requirement`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -878,11 +882,11 @@ def plot_angular_res_cta_requirements(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements(cta_site)
+    cta_req = ana.cta_requirement(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
+        kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.plot(e_cta, ar_cta, **kwargs)
 
@@ -894,13 +898,13 @@ def plot_angular_res_cta_requirements(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
+def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     """
     Plot the official CTA performances (June 2018) for the angular resolution
 
     Parameters
     ----------
-    cta_site: string, see `ana.cta_performances`
+    cta_site: string, see `ana.cta_performance`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -910,11 +914,11 @@ def plot_angular_res_cta_performance(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances(cta_site)
+    cta_req = ana.cta_performance(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
+        kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
@@ -1223,13 +1227,14 @@ def plot_energy_resolution(simu_energy, reco_energy,
     return ax
 
 
-def plot_energy_resolution_cta_requirements(cta_site, ax=None, **kwargs):
+def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     """
     Plot the cta requirement for the energy resolution
 
     Parameters
     ----------
-    cta_site: string, see `ana.cta_requirements`
+    cta_site: string
+        see `ana.cta_requirement`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -1239,11 +1244,11 @@ def plot_energy_resolution_cta_requirements(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_requirements(cta_site)
+    cta_req = ana.cta_requirement(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirements {}".format(cta_site)
+        kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
     ax.set_xlabel("Energy [TeV]")
@@ -1252,13 +1257,14 @@ def plot_energy_resolution_cta_requirements(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
+def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     """
     Plot the cta performances (June 2018) for the energy resolution
 
     Parameters
     ----------
-    cta_site: string, see `ana.cta_performances`
+    cta_site: string
+        see `ctaplot.ana.cta_performance`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -1268,11 +1274,11 @@ def plot_energy_resolution_cta_performances(cta_site, ax=None, **kwargs):
     """
 
     ax = plt.gca() if ax is None else ax
-    cta_req = ana.cta_performances(cta_site)
+    cta_req = ana.cta_performance(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
     if not 'label' in kwargs:
-        kwargs['label'] = "CTA performances {}".format(cta_site)
+        kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
     ax.set_xlabel("Energy [TeV]")
