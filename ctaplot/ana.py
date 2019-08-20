@@ -29,8 +29,8 @@ class irf_cta:
 
 
 class cta_performances:
-    def __init__(self):
-        self.site = ''
+    def __init__(self, site):
+        self.site = site
         self.E = np.empty(0)
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
@@ -109,8 +109,8 @@ class cta_performances:
 
 
 class cta_requirements:
-    def __init__(self):
-        self.site = ''
+    def __init__(self, site):
+        self.site = site
         self.E = np.empty(0)
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
@@ -329,7 +329,7 @@ def resolution_per_bin(x, y_true, y_reco,
                        relative_scaling_method=None,
                        bins=10):
     """
-    Resolution of y as a function of binned.
+    Resolution of y as a function of binned x.
 
     Parameters
     ----------
@@ -446,7 +446,7 @@ def energy_bias(simu_energy, reco_energy):
 
     Returns
     -------
-    (e, biasE) : tuple of 1d numpy arrays - energy, energy bias
+    (energy_bins, bias) : tuple of 1d numpy arrays - energy, energy bias
     """
     bias_e = []
     irf = irf_cta()
@@ -907,28 +907,31 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
     return y
 
 
-def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, RecoE, simuArea):
+def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, reco_energy, simu_area):
     """
     Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
 
     Parameters
     ----------
-    SimuE: 1d numpy array
-    RecoE: 1d numpy array
-    simuArea: float - area on which events are simulated
+    emin: float
+    emax: float
+    total_number_events: int
+    spectral_index: float
+    reco_energy: 1d numpy array
+    simu_area: float - area on which events are simulated
 
     Returns
     -------
-    (E, Seff) : (1d numpy array, 1d numpy array)
+    (energy, effective_area) : (1d numpy array, 1d numpy array)
     """
 
     irf = irf_cta()
     bins = irf.E_bin
     simu_per_bin = power_law_integrated_distribution(emin, emax, total_number_events, spectral_index, bins)
-    count_R, bin_R = np.histogram(RecoE, bins=bins)
+    count_R, bin_R = np.histogram(reco_energy, bins=bins)
 
-    np.seterr(divide='ignore', invalid='ignore')
-    return bins, np.nan_to_num(simuArea * count_R / simu_per_bin)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return bins, np.nan_to_num(simu_area * count_R / simu_per_bin)
 
 
 def distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
@@ -1018,3 +1021,54 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
                        )
 
     return x_bins, np.array(dist_res)
+
+
+def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
+    """
+    Bias between `simu` and `reco` per bin of `x`.
+
+    Parameters
+    ----------
+    simu: `numpy.ndarray`
+    reco: `numpy.ndarray`
+    x: : `numpy.ndarray`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
+    bins: bins for `numpy.histogram`
+
+    Returns
+    -------
+    bins, bias: `numpy.ndarray, numpy.ndarray`
+    """
+    _, x_bins = np.histogram(x, bins=bins)
+    bin_index = np.digitize(x, x_bins)
+    b = []
+    for ii in np.arange(1, len(x_bins)):
+        mask = bin_index == ii
+        b.append(relative_bias(simu[mask], reco[mask], relative_scaling_method=relative_scaling_method))
+
+    return x_bins, np.array(b)
+
+
+def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
+    """
+    Bias between `simu` and `reco` per bins of energy
+
+    Parameters
+    ----------
+    simu: `numpy.ndarray`
+    reco: `numpy.ndarray`
+    energy: : `numpy.ndarray`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
+
+    Returns
+    -------
+    bins, bias: `numpy.ndarray, numpy.ndarray`
+    """
+
+    irf = irf_cta()
+    energy_bin = irf.E_bin
+
+    return bias_per_bin(simu, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
+

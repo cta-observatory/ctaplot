@@ -180,3 +180,16 @@ def test_plot_angular_res_per_energy():
     mc_az = np.zeros(10)
     energy = 10**np.random.rand(10)
     plots.plot_angular_res_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy, bias_correction=True, alpha=0.4)
+
+
+def test_plot_resolution_difference():
+    from ctaplot.ana import resolution_per_bin, irf_cta
+    size = 1000
+    simu = np.logspace(-2, 2, size)
+    reco = 2 * simu
+    reco2 = 3 * simu
+    irf = irf_cta()
+    bin = irf.E_bin
+    bins, res1 = resolution_per_bin(simu, simu, reco, bins=bin, relative_scaling_method='s1')
+    bins, res2 = resolution_per_bin(simu, simu, reco2, bins=bin, relative_scaling_method='s1')
+    plots.plot_resolution_difference(bins, res1, res2, ax=None, color='red', alpha=0.8, label='nice diff')
