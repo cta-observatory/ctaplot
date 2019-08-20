@@ -19,35 +19,35 @@ def test_plot_energy_resolution():
 
 def test_plot_energy_resolution_cta_requirements():
     plt.close('all')
-    plots.plot_energy_resolution_cta_requirements('north', color='green')
+    plots.plot_energy_resolution_cta_requirement('north', color='green')
 
 
 def test_plot_energy_resolution_cta_performances():
-    plots.plot_energy_resolution_cta_performances('north', color='green')
+    plots.plot_energy_resolution_cta_performance('north', color='green')
 
 
 def test_plot_angular_resolution_cta_performances():
-    plots.plot_angular_res_cta_performance('north', color='green')
+    plots.plot_angular_resolution_cta_performance('north', color='green')
 
 
 def test_plot_angular_resolution_cta_requirements():
-    plots.plot_angular_res_cta_requirements('north', color='green')
+    plots.plot_angular_resolution_cta_requirement('north', color='green')
 
 
 def test_plot_effective_area_cta_performances():
-    plots.plot_effective_area_cta_performances('north', color='green')
+    plots.plot_effective_area_cta_performance('north', color='green')
 
 
 def test_plot_effective_area_cta_requirements():
-    plots.plot_effective_area_cta_requirements('north', color='green')
+    plots.plot_effective_area_cta_requirement('north', color='green')
 
 
 def test_plot_sensitivity_cta_performances():
-    plots.plot_sensitivity_cta_performances('north', color='green')
+    plots.plot_sensitivity_cta_performance('north', color='green')
 
 
 def test_plot_sensitivity_cta_requirements():
-    plots.plot_sensitivity_cta_requirements('north', color='green')
+    plots.plot_sensitivity_cta_requirement('north', color='green')
 
 def test_plot_theta2():
     n = 10
@@ -179,7 +179,7 @@ def test_plot_angular_res_per_energy():
     mc_alt = np.ones(10)
     mc_az = np.zeros(10)
     energy = 10**np.random.rand(10)
-    plots.plot_angular_res_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy, bias_correction=True, alpha=0.4)
+    plots.plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy, bias_correction=True, alpha=0.4)
 
 
 def test_plot_resolution_difference():
