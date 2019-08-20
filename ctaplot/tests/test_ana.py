@@ -3,34 +3,36 @@ import numpy as np
 
 def test_logspace_decades_nbin():
     ca = ana.logspace_decades_nbin(0.1, 10, n=9)
-    assert len(ca)==19
-    assert ca[0]==0.1
-    assert ca[-1]==10
+    assert len(ca) == 19
+    assert ca[0] == 0.1
+    assert ca[-1] == 10
 
 
 def test_class_cta_requirements():
-    ctaq = ana.cta_requirements()
-    ctaq.get_effective_area()
-    ctaq.get_angular_resolution()
-    ctaq.get_energy_resolution()
-    ctaq.get_sensitivity()
+    for site in ['north', 'south']:
+        ctaq = ana.cta_requirements(site)
+        ctaq.get_effective_area()
+        ctaq.get_angular_resolution()
+        ctaq.get_energy_resolution()
+        ctaq.get_sensitivity()
 
 
 def test_class_cta_performances():
-    ctaq = ana.cta_performances()
-    ctaq.get_effective_area()
-    ctaq.get_angular_resolution()
-    ctaq.get_energy_resolution()
-    ctaq.get_sensitivity()
+    for site in ['north', 'south']:
+        ctaq = ana.cta_performances(site)
+        ctaq.get_effective_area()
+        ctaq.get_angular_resolution()
+        ctaq.get_energy_resolution()
+        ctaq.get_sensitivity()
 
 
 def test_impact_resolution_per_energy():
-    SimuX = np.random.rand(100) * 1000
-    SimuY = np.random.rand(100) * 1000
-    RecoX = SimuX + 1
-    RecoY = SimuY + 1
-    Energy = np.logspace(-2, 2, 100)
-    E, R = ana.impact_resolution_per_energy(RecoX, RecoY, SimuX, SimuY, Energy)
+    simu_x = np.random.rand(100) * 1000
+    simu_y = np.random.rand(100) * 1000
+    reco_x = simu_x + 1
+    reco_y = simu_y + 1
+    energy = np.logspace(-2, 2, 100)
+    E, R = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy)
     assert (np.isclose(R, np.sqrt(2))).all()
 
 
@@ -198,3 +200,20 @@ def test_angular_resolution_small_angles():
                                rtol=1e-1,
                                )
 
+
+def test_bias_per_bin():
+    size = 100000
+    simu = np.ones(size)
+    reco = np.random.normal(loc=2, scale=0.5, size=size)
+    x = np.linspace(0, 10, size)
+    bins, bias = ana.bias_per_bin(simu, reco, x)
+    np.testing.assert_allclose(bias, 1, rtol=1e-1)
+
+
+def test_bias_per_energy():
+    size = 100000
+    simu = np.ones(size)
+    reco = np.random.normal(loc=2, scale=0.5, size=size)
+    energy = np.logspace(-2, 2, size)
+    bins, bias = ana.bias_per_energy(simu, reco, energy)
+    np.testing.assert_allclose(bias, 1, rtol=1e-1)
