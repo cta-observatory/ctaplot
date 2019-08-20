@@ -29,8 +29,8 @@ class irf_cta:
 
 
 class cta_performances:
-    def __init__(self):
-        self.site = ''
+    def __init__(self, site):
+        self.site = site
         self.E = np.empty(0)
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
@@ -109,8 +109,8 @@ class cta_performances:
 
 
 class cta_requirements:
-    def __init__(self):
-        self.site = ''
+    def __init__(self, site):
+        self.site = site
         self.E = np.empty(0)
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
@@ -1025,17 +1025,20 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
 
 def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
     """
+    Bias between `simu` and `reco` per bin of `x`.
 
     Parameters
     ----------
-    simu
-    reco
-    x
-    relative_scaling_method
+    simu: `numpy.ndarray`
+    reco: `numpy.ndarray`
+    x: : `numpy.ndarray`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
+    bins: bins for `numpy.histogram`
 
     Returns
     -------
-
+    bins, bias: `numpy.ndarray, numpy.ndarray`
     """
     _, x_bins = np.histogram(x, bins=bins)
     bin_index = np.digitize(x, x_bins)
@@ -1049,17 +1052,19 @@ def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
 
 def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
     """
+    Bias between `simu` and `reco` per bins of energy
 
     Parameters
     ----------
-    simu
-    reco
-    energy
-    relative_scaling_method
+    simu: `numpy.ndarray`
+    reco: `numpy.ndarray`
+    energy: : `numpy.ndarray`
+    relative_scaling_method: str
+        see `ctaplot.ana.relative_scaling`
 
     Returns
     -------
-
+    bins, bias: `numpy.ndarray, numpy.ndarray`
     """
 
     irf = irf_cta()
