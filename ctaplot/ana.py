@@ -329,7 +329,7 @@ def resolution_per_bin(x, y_true, y_reco,
                        relative_scaling_method=None,
                        bins=10):
     """
-    Resolution of y as a function of binned.
+    Resolution of y as a function of binned x.
 
     Parameters
     ----------
