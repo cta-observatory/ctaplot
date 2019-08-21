@@ -53,54 +53,62 @@ class cta_performance:
         if self.site == 'south':
             if observation_time == 50:
                 self.E, self.effective_area = np.loadtxt(
-                    ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-EffArea.txt'),
+                    ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
             if observation_time == 0.5:
                 self.E, self.effective_area = np.loadtxt(
-                    ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
+                    ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
 
         if self.site == 'north':
             if observation_time == 50:
                 self.E, self.effective_area = np.loadtxt(
-                    ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-EffArea.txt'),
+                    ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
             if observation_time == 0.5:
                 self.E, self.effective_area = np.loadtxt(
-                    ds.get('CTA-Performance-prod3b-v1-North-20deg-30m-EffArea.txt'),
+                    ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
         return self.E, self.effective_area
 
     def get_angular_resolution(self):
         if self.site == 'south':
             self.E, self.angular_resolution = np.loadtxt(
-                ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Angres.txt'),
+                ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Angres.txt'),
                 skiprows=11, unpack=True)
         if self.site == 'north':
             self.E, self.angular_resolution = np.loadtxt(
-                ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Angres.txt'),
+                ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Angres.txt'),
                 skiprows=11, unpack=True)
 
         return self.E, self.angular_resolution
 
     def get_energy_resolution(self):
         if self.site in ['south', 'paranal']:
-            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-Eres.txt'),
+            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Eres.txt'),
                                                         skiprows=11, unpack=True)
         if self.site in ['north', 'lapalma']:
-            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-Eres.txt'),
+            self.E, self.energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Eres.txt'),
                                                         skiprows=11, unpack=True)
 
         return self.E, self.energy_resolution
 
     def get_sensitivity(self, observation_time=50):
         if self.site in ['south', 'paranal']:
-            Emin, Emax, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-South-20deg-50h-DiffSens.txt'),
+            observation_times = {50: 'CTA-Performance-prod3b-v2-South-20deg-50h-DiffSens.txt',
+                                 0.5: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt',
+                                 5: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt'
+            }
+            Emin, Emax, self.sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                   skiprows=10, unpack=True)
             self.E = logbin_mean(np.append(Emin, Emax[-1]))
 
         if self.site in ['north', 'lapalma']:
-            Emin, Emax, self.sensitivity = np.loadtxt(ds.get('CTA-Performance-prod3b-v1-North-20deg-50h-DiffSens.txt'),
+            observation_times = {50: 'CTA-Performance-prod3b-v2-North-20deg-50h-DiffSens.txt',
+                                 0.5: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt',
+                                 5: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt'
+            }
+            Emin, Emax, self.sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                   skiprows=10, unpack=True)
             self.E = logbin_mean(np.append(Emin, Emax[-1]))
 

@@ -1,0 +1,24 @@
+
+CTA Performance - Northern site
+for further details, see:
+www.cta-observatory.org/science/cta-performance/ (prod3b-v2)
+=======================================================
+
+E (TeV) 	 Energy
+        	 resolution
+------- 	------------------
+0.1		 0.21
+0.158		 0.19
+0.251		 0.17
+0.398		 0.15
+0.631		 0.12
+1		 0.097
+1.58		 0.082
+2.51		 0.073
+3.98		 0.063
+6.31		 0.053
+10		 0.047
+15.8		 0.046
+25.1		 0.046
+39.8		 0.046
+63.1		 0.046
