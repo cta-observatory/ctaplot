@@ -16,7 +16,7 @@ dataset = package_files('share')
 print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
-      version='0.2.2',
+      version='ctaplot.__version__',
       description="compute and plot cta IRF",
       install_requires=[
           'numpy',
