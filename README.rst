@@ -53,7 +53,8 @@ Requirements packages:
 * python > 3.6
 * numpy  
 * scipy>=0.19    
-* matplotlib>=2.0   
+* matplotlib>=2.0
+* astropy
 
 We recommend the use of `anaconda <https://www.anaconda.com>`_
 
