@@ -3,7 +3,7 @@ ctaplot
 
 ctaplot is a collection of functions to make instrument response functions (IRF) and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
-Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions:
+Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions such as:
 
 * angular resolution
 * energy resolution
@@ -27,7 +27,7 @@ The CTA instrument response functions data used in ctaplot come from the CTA Con
 
 In cases for which the CTA instrument response functions are used in a research project, we ask to add the following acknowledgement in any resulting publication:    
 
-“This research has made use of the CTA instrument response functions provided by the CTA Consortium and Observatory, see http://www.cta-observatory.org/science/cta-performance/ (version prod3b-v1) for more details.”
+“This research has made use of the CTA instrument response functions provided by the CTA Consortium and Observatory, see http://www.cta-observatory.org/science/cta-performance/ (version prod3b-v2) for more details.”
 
 ----
 
@@ -61,7 +61,5 @@ One can also clone the package and install locally:
 
 .. code-block:: bash
 
-   git clone https://github.com/vuillaut/ctaplot.git
-   cd ctaplot
-   python setup.py install
+   pip install ctaplot
 
