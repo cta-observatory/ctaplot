@@ -1,11 +1,37 @@
 import pkg_resources
+import os
 
 __all__ = ['get']
 
 
 def get(resource_name):
     """ get the filename for a resource """
-    if not pkg_resources.resource_exists(__name__, resource_name):
-        raise FileNotFoundError("Couldn't find resource: '{}'"
-                                .format(resource_name))
-    return pkg_resources.resource_filename(__name__, resource_name)
+    try:
+        resource_path = find_resource(resource_name)
+    except FileNotFoundError:
+        if not pkg_resources.resource_exists(__name__, resource_name):
+            raise FileNotFoundError("Couldn't find resource: '{}'"
+                                    .format(resource_name))
+        else:
+            resource_path = pkg_resources.resource_filename(__name__, resource_name)
+    return resource_path
+
+
+def find_resource(resource_name):
+    """
+    Find a resource in the share directory
+
+    Parameters
+    ----------
+    resource_name: str
+        name of a file to find
+
+    Returns
+    -------
+    str - absolute path to the resource
+    """
+    share_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), '../share/')
+    for root, dirs, files in os.walk(share_dir):
+        if resource_name in files:
+            return os.path.abspath(os.path.join(root, resource_name))
+    raise FileNotFoundError("Couldn't find resource: '{}'".format(resource_name))
