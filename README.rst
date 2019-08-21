@@ -57,7 +57,7 @@ Requirements packages:
 
 We recommend the use of `anaconda <https://www.anaconda.com>`_
 
-One can also clone the package and install locally:
+The package is available through pip:
 
 .. code-block:: bash
 
