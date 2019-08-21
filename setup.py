@@ -16,12 +16,13 @@ dataset = package_files('share')
 print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
-      version='ctaplot.__version__',
+      version='0.3.0',
       description="compute and plot cta IRF",
       install_requires=[
           'numpy',
           'matplotlib>=2.0',
           'scipy>=0.19',
+          'astropy',
       ],
       packages=['ctaplot'],
       tests_require=['pytest'],
