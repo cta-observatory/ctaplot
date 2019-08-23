@@ -30,6 +30,19 @@ export GAMMABOARD_DATA=path_to_the_data_directory
 
 We recommend that you add this line to your bash source file (`$HOME/.bashrc` or `$HOME/.bash_profile`)
 
+
+## Run GammaBoard
+
+To lunch the dashboard, you can simply try the command:
+```gammaboard```
+
+This will run a temporary copy of the dashboard (a jupyter notebook).
+Local changes that you make will running the dashboard will be discarded afterwards.
+
+GammaBoard is using data in a specific directory storing all your experiments files.
+This directory is known under `$GAMMABOARD_DATA` by default.
+However, you can change the path access at any time in the dashboard itself.
+
 ## Demo
 
 Here is a simple demo of GammaBoard.
