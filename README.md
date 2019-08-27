@@ -11,12 +11,12 @@ comparison of the reconstruction performances of your machine learning experimen
 It is a working prototype used in CTA, especially by the [GammaLearn](https://gitlab.lapp.in2p3.fr/GammaLearn/) project
 
 ## Dependencies
-- Matplotlib
-- Scikit-learn
-- Pandas
-- Pytables
-- ctaplot (>=0.3.0)
-
+- ctaplot>=0.3.0
+- pytables
+- pandas
+- scikit-learn
+- jupyter
+- ipywidgets
 
 ## Install
 
