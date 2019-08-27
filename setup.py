@@ -32,7 +32,7 @@ setup(name='gammaboard',
       license=readfile('LICENSE'),
       url='https://github.com/gammaboard/gammaboard',
       long_description=readfile('README.md'),
-      data_files=[('gammaboard/', 'gammaboard/dashboard.ipynb')],
+      data_files=[('gammaboard/', ['gammaboard/dashboard.ipynb'])],
       entry_points={
           'console_scripts': [
               'gammaboard = gammaboard:open_dashboard'
