@@ -1,4 +1,5 @@
 import os
+import subprocess
 import json
 import tables
 import ctaplot
@@ -831,5 +832,7 @@ def open_dashboard():
         copyfile(os.path.join(gammaboard_dir, 'dashboard.ipynb'),
                  tmp_dashboard
                  )
-        print(tmp_dashboard)
-        os.system('jupyter notebook {}'.format(tmp_dashboard))
+        command = 'jupyter notebook {}'.format(tmp_dashboard)
+        process = subprocess.Popen(command, shell=True)
+
+    return process
