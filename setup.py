@@ -22,6 +22,8 @@ setup(name='gammaboard',
           'tables',
           'pandas',
           'scikit-learn',
+          'jupyter',
+          'ipywidgets'
       ],
       packages=['gammaboard'],
       tests_require=['pytest'],
