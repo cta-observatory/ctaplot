@@ -14,6 +14,7 @@ from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score
 import pkg_resources
 import sys
+import argparse
 
 
 __all__ = ['open_dashboard',
@@ -852,9 +853,17 @@ def open_dashboard():
     -------
 
     """
-    original_dashboard_path = find_resource('dashboard.ipynb')
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
-        copyfile(original_dashboard_path, tmp_dashboard)
-        command = 'jupyter notebook {}'.format(tmp_dashboard)
-        os.system(command)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', help='dashboard file')
+    args = parser.parse_args()
+    dashboard = args.d
+
+    if dashboard is not None:
+        command = 'jupyter notebook {}'.format(dashboard)
+    else:
+        original_dashboard_path = find_resource('dashboard.ipynb')
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
+            copyfile(original_dashboard_path, tmp_dashboard)
+            command = 'jupyter notebook {}'.format(tmp_dashboard)
+    os.system(command)

@@ -21,7 +21,8 @@ It is a working prototype used in CTA, especially by the [GammaLearn](https://gi
 ## Install
 
 ```
-pip install gammaboard
+cd gammaboard
+pip install .
 ```
 
 ```
@@ -33,7 +34,7 @@ We recommend that you add this line to your bash source file (`$HOME/.bashrc` or
 
 ## Run GammaBoard
 
-To lunch the dashboard, you can simply try the command:
+To launch the dashboard, you can simply try the command:
 ```gammaboard```
 
 This will run a temporary copy of the dashboard (a jupyter notebook).
