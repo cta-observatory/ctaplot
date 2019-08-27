@@ -19,7 +19,7 @@ setup(name='gammaboard',
       description="A dashboard to show them all",
       install_requires=[
           'ctaplot>=0.3.0',
-          'pytables',
+          'tables',
           'pandas',
           'scikit-learn',
       ],
