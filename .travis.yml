@@ -24,4 +24,3 @@ install:
 script:
     - pytest
 
-
