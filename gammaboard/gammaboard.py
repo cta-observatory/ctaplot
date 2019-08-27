@@ -1,15 +1,26 @@
 import os
+import subprocess
 import json
-from collections import OrderedDict
-
+import tables
 import ctaplot
+import tempfile
+from shutil import copyfile
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import pandas as pd
-import tables
+from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score
+import pkg_resources
+import sys
+
+
+__all__ = ['open_dashboard',
+           'load_data_from_h5',
+           'GammaBoard',
+           'plot_migration_matrices'
+           ]
 
 
 def load_data_from_h5(experiment, experiments_directory):
@@ -226,7 +237,7 @@ class Experiment(object):
 
     def plot_angular_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ang_res = ctaplot.plot_angular_res_per_energy(self.gamma_data.reco_altitude,
+            self.ax_ang_res = ctaplot.plot_angular_resolution_per_energy(self.gamma_data.reco_altitude,
                                                                   self.gamma_data.reco_azimuth,
                                                                   self.gamma_data.mc_altitude,
                                                                   self.gamma_data.mc_azimuth,
@@ -235,8 +246,9 @@ class Experiment(object):
                                                                   ax=ax,
                                                                   label=self.name,
                                                                   color=self.color)
+
             if self.reco_gamma_data is not None and self.classif_resolution:
-                self.ax_ang_res = ctaplot.plot_angular_res_per_energy(self.reco_gamma_data.reco_altitude,
+                self.ax_ang_res = ctaplot.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
                                                                       self.reco_gamma_data.reco_azimuth,
                                                                       self.reco_gamma_data.mc_altitude,
                                                                       self.reco_gamma_data.mc_azimuth,
@@ -591,13 +603,13 @@ def create_resolution_fig(site='south', ref=None):
     ax_legend = axes[2][1]
 
     if ref == 'performances':
-        ctaplot.plot_angular_res_cta_performance(site, ax=ax_ang_res, color='black')
-        ctaplot.plot_energy_resolution_cta_performances(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_cta_performances(site, ax=ax_eff_area, color='black')
+        ctaplot.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
+        ctaplot.plot_energy_resolution_cta_performance(site, ax=ax_ene_res, color='black')
+        ctaplot.plot_effective_area_cta_performance(site, ax=ax_eff_area, color='black')
     elif ref == 'requirements':
-        ctaplot.plot_angular_res_cta_requirements(site, ax=ax_ang_res, color='black')
-        ctaplot.plot_energy_resolution_cta_requirements(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_cta_requirements(site, ax=ax_eff_area, color='black')
+        ctaplot.plot_angular_resolution_cta_requirement(site, ax=ax_ang_res, color='black')
+        ctaplot.plot_energy_resolution_cta_requirement(site, ax=ax_ene_res, color='black')
+        ctaplot.plot_effective_area_cta_requirement(site, ax=ax_eff_area, color='black')
     else:
         ax_eff_area.set_xscale('log')
         ax_eff_area.set_yscale('log')
@@ -803,3 +815,46 @@ class GammaBoard(object):
 
         self.exp_box = HBox([carousel, experiment_info_box])
 
+
+def find_resource(resource_name):
+    """
+    Find a resource in the share directory
+
+    Parameters
+    ----------
+    resource_name: str
+        name of a file to find
+
+    Returns
+    -------
+    str - absolute path to the resource
+    """
+    # If ctaplot is installed via python setup.py develop, data files stay in share
+    share_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), '')
+    for root, dirs, files in os.walk(share_dir):
+        if resource_name in files:
+            return os.path.abspath(os.path.join(root, resource_name))
+
+    # If ctaplot is installed via pip install, data files are copied in <sys.prefix>/ctaplot
+    sys_dir = os.path.join(sys.prefix, 'gammaboard')
+    if not os.path.exists(os.path.join(sys_dir, resource_name)):
+        raise FileNotFoundError("Couldn't find resource: '{}'".format(resource_name))
+    else:
+        return os.path.join(sys_dir, resource_name)
+
+
+def open_dashboard():
+    """
+    Open a temporary copy of the dashboard.
+    All changes made in the dashboard by the user will be discarded when closed.
+
+    Returns
+    -------
+
+    """
+    original_dashboard_path = find_resource('dashboard.ipynb')
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
+        copyfile(original_dashboard_path, tmp_dashboard)
+        command = 'jupyter notebook {}'.format(tmp_dashboard)
+        os.system(command)
