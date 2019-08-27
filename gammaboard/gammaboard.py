@@ -857,4 +857,4 @@ def open_dashboard():
         tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
         copyfile(original_dashboard_path, tmp_dashboard)
         command = 'jupyter notebook {}'.format(tmp_dashboard)
-    os.system(command)
+        os.system(command)
