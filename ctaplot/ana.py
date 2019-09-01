@@ -232,6 +232,8 @@ def bias(simu, reco):
     float
     """
     assert len(simu) == len(reco), "both arrays should have the same size"
+    if len(simu) == 0:
+        return 0
     return np.median(reco - simu)
 
 
@@ -251,6 +253,9 @@ def relative_bias(simu, reco, relative_scaling_method='s1'):
     -------
 
     """
+    assert len(reco) == len(simu)
+    if len(simu) == 0:
+        return 0
     return np.median((reco - simu) / relative_scaling(simu, reco, method=relative_scaling_method))
 
 
