@@ -3,6 +3,7 @@
 
 import os
 from setuptools import setup
+import re
 
 def package_files(directory):
     paths = []
@@ -11,12 +12,18 @@ def package_files(directory):
             paths.append(os.path.join('.', path, filename))
     return paths
 
+
+def get_property(prop, project):
+    result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
+    return result.group(1)
+
+
 dataset = package_files('share')
 
 print("dataset {}".format(dataset))
 
 setup(name='ctaplot',
-      version='0.3.1',
+      version=get_property('__version__', 'ctaplot'),
       description="compute and plot cta IRF",
       install_requires=[
           'numpy',
