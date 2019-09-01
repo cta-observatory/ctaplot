@@ -15,6 +15,7 @@
 import os
 import sys
 import shutil
+import re
 
 sys.path.insert(0, os.path.abspath('..'))
 notebooks_dir = '../examples/notebooks/'
@@ -23,6 +24,10 @@ if not os.path.exists('notebooks'):
 [shutil.copy(notebooks_dir + file, 'notebooks')
  for file in os.listdir(notebooks_dir) if file.endswith('.ipynb')]
 
+def get_property(prop, project):
+    result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
+    return result.group(1)
+
 # -- Project information -----------------------------------------------------
 
 project = 'ctaplot'
@@ -30,9 +35,9 @@ copyright = '2018, Thomas Vuillaume'
 author = 'Thomas Vuillaume'
 
 # The short X.Y version
-version = '0.1'
+version = get_property('__version__', 'ctaplot')
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = get_property('__version__', 'ctaplot')
 
 
 # -- General configuration ---------------------------------------------------
