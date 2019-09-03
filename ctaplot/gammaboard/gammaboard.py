@@ -1,8 +1,6 @@
 import os
-import subprocess
 import json
 import tables
-import ctaplot
 import tempfile
 from shutil import copyfile
 import numpy as np
@@ -14,7 +12,8 @@ from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score
 import pkg_resources
 import sys
-
+from .. import plots
+from .. import ana
 
 __all__ = ['open_dashboard',
            'load_data_from_h5',
@@ -97,20 +96,22 @@ def load_run_config(experiment, experiments_directory):
             'Cannot deal with different min_alt for the experiment ({})'.format(experiment)
         assert np.alltrue(np.array(max_alt) == max_alt[0]), \
             'Cannot deal with different max_alt for the experiment ({})'.format(experiment)
-        assert min_alt[0] == max_alt[0], 'Cant deal with different shower altitude for the experiment ({})'.format(experiment)
-        scattering_surface = max_scatter_range[0]**2 * np.pi * np.sin(max_alt[0])
+        assert min_alt[0] == max_alt[0], 'Cant deal with different shower altitude for the experiment ({})'.format(
+            experiment)
+        scattering_surface = max_scatter_range[0] ** 2 * np.pi * np.sin(max_alt[0])
         result_file.close()
     except Exception as e:
         print("Cannot load the configuration of the simulation for experiment {} file".format(experiment))
         if result_file is not None:
             result_file.close()
         return None
-    return {'num_events': num_events,
-            'spectral_index': spectral_index[0],
-            'energy_range_min': energy_range_min[0],
-            'energy_range_max': energy_range_max[0],
-            'scattering_surface': scattering_surface
-            }
+    return {
+        'num_events': num_events,
+        'spectral_index': spectral_index[0],
+        'energy_range_min': energy_range_min[0],
+        'energy_range_max': energy_range_max[0],
+        'scattering_surface': scattering_surface
+    }
 
 
 def load_info(experiment, experiments_directory):
@@ -136,7 +137,6 @@ def load_info(experiment, experiments_directory):
 
 
 def print_dict(dictionary, indent=''):
-
     for key, value in dictionary.items():
         if isinstance(value, dict):
             print(indent, key)
@@ -145,7 +145,7 @@ def print_dict(dictionary, indent=''):
             print(indent, key, ' : ', value)
 
 
-def change_errorbar_visibility(err_container, visible:bool):
+def change_errorbar_visibility(err_container, visible: bool):
     """
     Change the visibility of all lines of an errorbar container
     Args
@@ -237,75 +237,75 @@ class Experiment(object):
 
     def plot_angular_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ang_res = ctaplot.plot_angular_resolution_per_energy(self.gamma_data.reco_altitude,
-                                                                  self.gamma_data.reco_azimuth,
-                                                                  self.gamma_data.mc_altitude,
-                                                                  self.gamma_data.mc_azimuth,
-                                                                  self.gamma_data.mc_energy,
-                                                                  bias_correction=self.bias_correction,
-                                                                  ax=ax,
-                                                                  label=self.name,
-                                                                  color=self.color)
+            self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.gamma_data.reco_altitude,
+                                                                       self.gamma_data.reco_azimuth,
+                                                                       self.gamma_data.mc_altitude,
+                                                                       self.gamma_data.mc_azimuth,
+                                                                       self.gamma_data.mc_energy,
+                                                                       bias_correction=self.bias_correction,
+                                                                       ax=ax,
+                                                                       label=self.name,
+                                                                       color=self.color)
 
             if self.reco_gamma_data is not None and self.classif_resolution:
-                self.ax_ang_res = ctaplot.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
-                                                                      self.reco_gamma_data.reco_azimuth,
-                                                                      self.reco_gamma_data.mc_altitude,
-                                                                      self.reco_gamma_data.mc_azimuth,
-                                                                      self.reco_gamma_data.mc_energy,
-                                                                      bias_correction=self.bias_correction,
-                                                                      ax=ax,
-                                                                      label=self.name + '_reco',
-                                                                      color=self.color,
-                                                                      **post_classification_opt,
-                                                                      )
+                self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
+                                                                           self.reco_gamma_data.reco_azimuth,
+                                                                           self.reco_gamma_data.mc_altitude,
+                                                                           self.reco_gamma_data.mc_azimuth,
+                                                                           self.reco_gamma_data.mc_energy,
+                                                                           bias_correction=self.bias_correction,
+                                                                           ax=ax,
+                                                                           label=self.name + '_reco',
+                                                                           color=self.color,
+                                                                           **post_classification_opt,
+                                                                           )
 
             self.set_plotted(True)
 
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ene_res = ctaplot.plot_energy_resolution(self.gamma_data.mc_energy,
-                                                             self.gamma_data.reco_energy,
-                                                             bias_correction=self.bias_correction,
-                                                             ax=ax,
-                                                             label=self.name,
-                                                             color=self.color)
+            self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
+                                                           self.gamma_data.reco_energy,
+                                                           bias_correction=self.bias_correction,
+                                                           ax=ax,
+                                                           label=self.name,
+                                                           color=self.color)
             if self.reco_gamma_data is not None and self.classif_resolution:
-                self.ax_ene_res = ctaplot.plot_energy_resolution(self.reco_gamma_data.mc_energy,
-                                                                 self.reco_gamma_data.reco_energy,
-                                                                 bias_correction=self.bias_correction,
-                                                                 ax=ax,
-                                                                 label=self.name + '_reco',
-                                                                 color=self.color,
-                                                                 **post_classification_opt
-                                                                 )
+                self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data.mc_energy,
+                                                               self.reco_gamma_data.reco_energy,
+                                                               bias_correction=self.bias_correction,
+                                                               ax=ax,
+                                                               label=self.name + '_reco',
+                                                               color=self.color,
+                                                               **post_classification_opt
+                                                               )
 
             self.set_plotted(True)
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_imp_res = ctaplot.plot_impact_resolution_per_energy(self.gamma_data.reco_impact_x,
-                                                                        self.gamma_data.reco_impact_y,
-                                                                        self.gamma_data.mc_impact_x,
-                                                                        self.gamma_data.mc_impact_y,
-                                                                        self.gamma_data.mc_energy,
-                                                                        bias_correction=self.bias_correction,
-                                                                        ax=ax,
-                                                                        label=self.name,
-                                                                        color=self.color
-                                                                        )
+            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data.reco_impact_x,
+                                                                      self.gamma_data.reco_impact_y,
+                                                                      self.gamma_data.mc_impact_x,
+                                                                      self.gamma_data.mc_impact_y,
+                                                                      self.gamma_data.mc_energy,
+                                                                      bias_correction=self.bias_correction,
+                                                                      ax=ax,
+                                                                      label=self.name,
+                                                                      color=self.color
+                                                                      )
             if self.reco_gamma_data is not None and self.classif_resolution:
-                self.ax_imp_res = ctaplot.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
-                                                                            self.reco_gamma_data.reco_impact_y,
-                                                                            self.reco_gamma_data.mc_impact_x,
-                                                                            self.reco_gamma_data.mc_impact_y,
-                                                                            self.reco_gamma_data.mc_energy,
-                                                                            bias_correction=self.bias_correction,
-                                                                            ax=ax,
-                                                                            label=self.name + '_reco',
-                                                                            color=self.color,
-                                                                            **post_classification_opt
-                                                                            )
+                self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
+                                                                          self.reco_gamma_data.reco_impact_y,
+                                                                          self.reco_gamma_data.mc_impact_x,
+                                                                          self.reco_gamma_data.mc_impact_y,
+                                                                          self.reco_gamma_data.mc_energy,
+                                                                          bias_correction=self.bias_correction,
+                                                                          ax=ax,
+                                                                          label=self.name + '_reco',
+                                                                          color=self.color,
+                                                                          **post_classification_opt
+                                                                          )
             self.ax_imp_res.set_xscale('log')
             self.ax_imp_res.set_xlabel('Energy [TeV]')
             self.ax_imp_res.set_ylabel('Impact resolution [km]')
@@ -317,41 +317,41 @@ class Experiment(object):
 
             if self.run_config is not None:
                 if self.mc_trig_events is not None:
-                    E_trig, S_trig = ctaplot.ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                                                     self.run_config['energy_range_max'],
-                                                                                     self.run_config['num_events'],
-                                                                                     self.run_config['spectral_index'],
-                                                                                     self.mc_trig_events.mc_trig_energies,
-                                                                                     self.run_config['scattering_surface'])
+                    E_trig, S_trig = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
+                                                                             self.run_config['energy_range_max'],
+                                                                             self.run_config['num_events'],
+                                                                             self.run_config['spectral_index'],
+                                                                             self.mc_trig_events.mc_trig_energies,
+                                                                             self.run_config['scattering_surface'])
                     self.ax_eff_area.plot(E_trig[:-1], S_trig, label=self.name + '_triggered', color=self.color,
                                           linestyle='-.')
 
-                E, S = ctaplot.ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                                       self.run_config['energy_range_max'],
-                                                                       self.run_config['num_events'],
-                                                                       self.run_config['spectral_index'],
-                                                                       self.gamma_data.mc_energy,
-                                                                       self.run_config['scattering_surface'])
+                E, S = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
+                                                               self.run_config['energy_range_max'],
+                                                               self.run_config['num_events'],
+                                                               self.run_config['spectral_index'],
+                                                               self.gamma_data.mc_energy,
+                                                               self.run_config['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
                 if self.reco_gamma_data is not None:
-                    E_reco, S_reco = ctaplot.ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                                                     self.run_config['energy_range_max'],
-                                                                                     self.run_config['num_events'],
-                                                                                     self.run_config['spectral_index'],
-                                                                                     self.reco_gamma_data.mc_energy,
-                                                                                     self.run_config['scattering_surface']
-                                                                                     )
+                    E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
+                                                                             self.run_config['energy_range_max'],
+                                                                             self.run_config['num_events'],
+                                                                             self.run_config['spectral_index'],
+                                                                             self.reco_gamma_data.mc_energy,
+                                                                             self.run_config['scattering_surface']
+                                                                             )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
                                           label=self.name + '_reco',
                                           color=self.color,
                                           linestyle=':')
             else:
                 print('Cannot evaluate the effective area for experiment {}'.format(self.name))
-                self.ax_eff_area = ctaplot.plot_effective_area_per_energy(np.ones(10),
-                                                                          np.empty(0),
-                                                                          1,
-                                                                          )
+                self.ax_eff_area = plots.plot_effective_area_per_energy(np.ones(10),
+                                                                        np.empty(0),
+                                                                        1,
+                                                                        )
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
@@ -438,11 +438,12 @@ class Experiment(object):
         if self.get_loaded():
             mc = np.log10(self.gamma_data.mc_energy)
             reco = np.log10(self.gamma_data.reco_energy)
-            ax = ctaplot.plot_migration_matrix(mc, reco,
-                                               ax=ax,
-                                               colorbar=colorbar,
-                                               hist2d_args={'bins': 100,
-                                               'cmap': self.cm, 'cmin': 1})
+            ax = plots.plot_migration_matrix(mc, reco,
+                                             ax=ax,
+                                             colorbar=colorbar,
+                                             hist2d_args={
+                                                 'bins': 100,
+                                                 'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -466,11 +467,12 @@ class Experiment(object):
         if self.get_loaded():
             mc = self.gamma_data.mc_altitude
             reco = self.gamma_data.reco_altitude
-            ax = ctaplot.plot_migration_matrix(mc, reco,
-                                               ax=ax,
-                                               colorbar=colorbar,
-                                               hist2d_args={'bins': 100,
-                                                            'cmap': self.cm, 'cmin': 1})
+            ax = plots.plot_migration_matrix(mc, reco,
+                                             ax=ax,
+                                             colorbar=colorbar,
+                                             hist2d_args={
+                                                 'bins': 100,
+                                                 'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -494,11 +496,12 @@ class Experiment(object):
         if self.get_loaded():
             mc = self.gamma_data.mc_azimuth
             reco = self.gamma_data.reco_azimuth
-            ax = ctaplot.plot_migration_matrix(mc, reco,
-                                               ax=ax,
-                                               colorbar=colorbar,
-                                               hist2d_args={'bins': 100,
-                                                            'cmap': self.cm, 'cmin': 1})
+            ax = plots.plot_migration_matrix(mc, reco,
+                                             ax=ax,
+                                             colorbar=colorbar,
+                                             hist2d_args={
+                                                 'bins': 100,
+                                                 'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -522,11 +525,12 @@ class Experiment(object):
         if self.get_loaded():
             mc = self.gamma_data.mc_impact_x
             reco = self.gamma_data.reco_impact_x
-            ax = ctaplot.plot_migration_matrix(mc, reco,
-                                               ax=ax,
-                                               colorbar=colorbar,
-                                               hist2d_args={'bins': 100,
-                                                            'cmap': self.cm, 'cmin': 1})
+            ax = plots.plot_migration_matrix(mc, reco,
+                                             ax=ax,
+                                             colorbar=colorbar,
+                                             hist2d_args={
+                                                 'bins': 100,
+                                                 'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -550,11 +554,12 @@ class Experiment(object):
         if self.get_loaded():
             mc = self.gamma_data.mc_impact_y
             reco = self.gamma_data.reco_impact_y
-            ax = ctaplot.plot_migration_matrix(mc, reco,
-                                               ax=ax,
-                                               colorbar=colorbar,
-                                               hist2d_args={'bins': 100,
-                                                            'cmap': self.cm, 'cmin': 1})
+            ax = plots.plot_migration_matrix(mc, reco,
+                                             ax=ax,
+                                             colorbar=colorbar,
+                                             hist2d_args={
+                                                 'bins': 100,
+                                                 'cmap': self.cm, 'cmin': 1})
             ax.plot(mc, mc, color='teal')
             ax.axis('equal')
             ax.set_xlim(mc.min(), mc.max())
@@ -566,7 +571,6 @@ class Experiment(object):
 
 
 def plot_migration_matrices(exp, colorbar=True, **kwargs):
-
     if 'figsize' not in kwargs:
         kwargs['figsize'] = (25, 5)
     fig, axes = plt.subplots(1, 5, **kwargs)
@@ -603,13 +607,13 @@ def create_resolution_fig(site='south', ref=None):
     ax_legend = axes[2][1]
 
     if ref == 'performances':
-        ctaplot.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
-        ctaplot.plot_energy_resolution_cta_performance(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_cta_performance(site, ax=ax_eff_area, color='black')
+        plots.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_performance(site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_performance(site, ax=ax_eff_area, color='black')
     elif ref == 'requirements':
-        ctaplot.plot_angular_resolution_cta_requirement(site, ax=ax_ang_res, color='black')
-        ctaplot.plot_energy_resolution_cta_requirement(site, ax=ax_ene_res, color='black')
-        ctaplot.plot_effective_area_cta_requirement(site, ax=ax_eff_area, color='black')
+        plots.plot_angular_resolution_cta_requirement(site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_requirement(site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_requirement(site, ax=ax_eff_area, color='black')
     else:
         ax_eff_area.set_xscale('log')
         ax_eff_area.set_yscale('log')
@@ -666,7 +670,6 @@ def plot_exp_on_fig(exp, fig):
 
 
 def update_legend(visible_experiments, ax):
-
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
@@ -677,17 +680,16 @@ def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], color=exp.color,
                               label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, Acc = {:.4f}'.format(exp.auc,
-                                                                                                     exp.precision,
-                                                                                                     exp.recall,
-                                                                                                     exp.accuracy
-                                                                                                     ))
+                                                                                                 exp.precision,
+                                                                                                 exp.recall,
+                                                                                                 exp.accuracy
+                                                                                                 ))
                        for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
     ax.legend(handles=legend_elements, loc='lower right')
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                          fig_resolution, visible_experiments, ax_exp, ax_auc):
-
     def plot_on_click(sender):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -782,8 +784,8 @@ class GammaBoard(object):
         site (string): 'south' for Paranal and 'north' for LaPalma
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
 
+    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
         ax_legend = self._axes_resolution[2][1]
@@ -798,7 +800,7 @@ class GammaBoard(object):
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
 
-        colors = np.arange(0, 1, 1/len(self.experiments_dict.keys()), dtype=np.float32)
+        colors = np.arange(0, 1, 1 / len(self.experiments_dict.keys()), dtype=np.float32)
         np.random.seed(1)
         np.random.shuffle(colors)
         cmap = plt.cm.tab20
