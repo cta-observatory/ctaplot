@@ -84,13 +84,36 @@ def test_resolution_per_bin():
     x = np.linspace(0, 10, size)
     y_true = loc * np.ones(size)
     y_reco = np.random.normal(loc=loc, scale=scale, size=size)
-    bins, res = ana.resolution_per_bin(x, y_true, y_reco, bins=6)
-    np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
+    for scaling in ['s0', 's1', 's2', 's3', 's4']:
+        bins, res = ana.resolution_per_bin(x, y_true, y_reco, bins=6, relative_scaling_method=scaling)
+        np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco, scaling).mean(), rtol=1e-1)
 
     bias = 50
     y_reco = np.random.normal(loc=loc+bias, scale=scale, size=size)
     bins, res = ana.resolution_per_bin(x, y_true, y_reco, bias_correction=True)
     np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
+
+
+def test_resolution_per_bin_empty():
+    '''
+    testing for empty bins
+    '''
+    # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
+    size = 100000
+    loc = np.random.rand() * 100
+    scale = np.random.rand() * 10
+    x = np.linspace(0, 10, size)
+    bins = np.array([1, 2, 3, 5, 11, 15])
+    y_true = loc * np.ones(size)
+    y_reco = np.random.normal(loc=loc, scale=scale, size=size)
+    for scaling in ['s0', 's1', 's2', 's3', 's4']:
+        bins, res = ana.resolution_per_bin(x, y_true, y_reco,
+                                           bins=bins,
+                                           relative_scaling_method=scaling,
+                                           bias_correction=True)
+        v = scale / ana.relative_scaling(y_true, y_reco, scaling).mean()
+        expected_res = np.array([v, v, v, v, 0])
+        np.testing.assert_allclose(res[:, 0], expected_res, rtol=1e-1)
 
 
 def test_resolution_per_energy():
@@ -200,6 +223,9 @@ def test_angular_resolution_small_angles():
                                rtol=1e-1,
                                )
 
+def test_bias_empty():
+    x = np.empty(0)
+    assert ana.bias(x, x) == 0
 
 def test_bias_per_bin():
     size = 100000
