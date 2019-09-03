@@ -56,7 +56,7 @@ setup(name='ctaplot',
       data_files=[('ctaplot/', [dataset, 'ctaplot/gammaboard/dashboard.ipynb'])],
       entry_points={
           'console_scripts': [
-              'gammaboard = gammaboard:open_dashboard'
+              'gammaboard = ctaplot.gammaboard:open_dashboard'
           ]
       }
       )

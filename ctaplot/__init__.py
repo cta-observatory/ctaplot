@@ -3,7 +3,7 @@ from .plotcamera import *
 from .ana import *
 from .dataset import *
 from .io import *
-import gammaboard
+from .gammaboard import gammaboard
 
 
 __version__ = '0.4.0'
