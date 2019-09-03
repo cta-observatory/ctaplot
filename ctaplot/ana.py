@@ -279,15 +279,15 @@ def relative_scaling(simu, reco, method='s0'):
     `numpy.ndarray`
     """
     method = 's0' if method is None else method
-    scaling_options = {
-        's0': np.ones(len(simu)),
-        's1': np.abs(simu),
-        's2': np.abs(reco),
-        's3': (np.abs(simu) + np.abs(reco))/2.,
-        's4': np.max([np.abs(reco), np.abs(simu)], axis=0)
+    scaling_methods = {
+        's0': lambda simu, reco: np.ones(len(simu)),
+        's1': lambda simu, reco: np.abs(simu),
+        's2': lambda simu, reco: np.abs(reco),
+        's3': lambda simu, reco: (np.abs(simu) + np.abs(reco))/2.,
+        's4': lambda simu, reco: np.max([np.abs(reco), np.abs(simu)], axis=0)
     }
 
-    return scaling_options[method]
+    return scaling_methods[method](simu, reco)
 
 
 def resolution(simu, reco,
