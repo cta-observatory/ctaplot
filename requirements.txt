@@ -2,7 +2,7 @@ matplotlib
 numpy
 scipy
 astropy
-pytables
+tables
 pandas
 jupyter
 ipywidgets
