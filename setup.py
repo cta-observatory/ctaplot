@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
+# Licensed under a MIT license - see LICENSE.rst
 
 import os
 from setuptools import setup
@@ -12,10 +12,13 @@ def package_files(directory):
             paths.append(os.path.join('.', path, filename))
     return paths
 
-
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
     return result.group(1)
+
+def readfile(filename):
+    with open(filename, 'r+') as f:
+        return f.read()
 
 
 dataset = package_files('share')
@@ -30,20 +33,30 @@ setup(name='ctaplot',
           'matplotlib>=2.0',
           'scipy>=0.19',
           'astropy',
+          'tables',
+          'pandas',
+          'scikit-learn',
+          'jupyter',
+          'ipywidgets',
       ],
       packages=['ctaplot'],
       tests_require=['pytest'],
-      author='Thomas Vuillaume',
+      author='Thomas Vuillaume, Mikael Jacquemont',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
-      license='BSD3',
+      license=readfile('license.rst'),
       url='https://github.com/vuillaut/ctaplot',
-      long_description='',
+      long_description=readfile('README.rst'),
       classifiers=[
           'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: BSD License',
+          'License :: MIT License',
           'Programming Language :: Python :: 3',
           'Topic :: Scientific/Engineering :: Astronomy',
-          'Development Status :: 3 - Alpha',
+          'Development Status :: Alpha',
       ],
-      data_files=[('ctaplot/', dataset)],
+      data_files=[('ctaplot/', [dataset, 'ctaplot/gammaboard/dashboard.ipynb'])],
+      entry_points={
+          'console_scripts': [
+              'gammaboard = gammaboard:open_dashboard'
+          ]
+      }
       )

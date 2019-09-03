@@ -13,3 +13,9 @@ Modules
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+.. automodule:: ctaplot.gammaboard
+    :members:
+    :undoc-members:
+    :show-inheritance:

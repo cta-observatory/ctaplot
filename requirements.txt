@@ -2,6 +2,11 @@ matplotlib
 numpy
 scipy
 astropy
+pytables
+pandas
+jupyter
+ipywidgets
+scikit-learn
 
 # documentation:
 sphinx>=1.4
