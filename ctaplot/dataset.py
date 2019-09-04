@@ -33,9 +33,12 @@ def find_resource(resource_name):
     """
     # If ctaplot is installed via python setup.py develop, data files stay in share
     share_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), '../share/')
-    for root, dirs, files in os.walk(share_dir):
-        if resource_name in files:
-            return os.path.abspath(os.path.join(root, resource_name))
+    gammaboard_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), 'gammaboard/')
+    resources_dirs = [share_dir, gammaboard_dir]
+    for res_dir in resources_dirs:
+        for root, dirs, files in os.walk(res_dir):
+            if resource_name in files:
+                return os.path.abspath(os.path.join(root, resource_name))
 
     # If ctaplot is installed via pip install, data files are copied in <sys.prefix>/ctaplot
     sys_dir = os.path.join(sys.prefix, 'ctaplot')

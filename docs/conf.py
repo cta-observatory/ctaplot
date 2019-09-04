@@ -31,13 +31,12 @@ def get_property(prop, project):
 # -- Project information -----------------------------------------------------
 
 project = 'ctaplot'
-copyright = '2018, Thomas Vuillaume'
-author = 'Thomas Vuillaume'
+author = 'Thomas Vuillaume, Mikael Jacquemont'
 
 # The short X.Y version
-version = get_property('__version__', 'ctaplot')
+version = get_property('__version__', '../ctaplot')
 # The full version, including alpha/beta/rc tags
-release = get_property('__version__', 'ctaplot')
+release = get_property('__version__', '../ctaplot')
 
 
 # -- General configuration ---------------------------------------------------

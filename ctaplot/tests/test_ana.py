@@ -43,7 +43,7 @@ def test_resolution():
     # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
     loc = np.random.rand() * 100
     scale = np.random.rand() * 10
-    size = 10000
+    size = 1000000
     y_true = loc * np.ones(size)
     y_reco = np.random.normal(loc=loc, scale=scale, size=size)
     relative_scaling_method = 's1'
