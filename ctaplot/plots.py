@@ -43,6 +43,51 @@ BrewOranges = ['#feedde', '#fdbe85', '#fd8d3c', '#d94701']
 
 
 
+__all__ = ['plot_resolution',
+           'plot_resolution_difference',
+           'plot_energy_resolution',
+           'plot_binned_bias',
+           'plot_energy_bias',
+           'plot_impact_parameter_error_per_bin',
+           'plot_layout_map',
+           'plot_multiplicity_per_telescope_type',
+           'plot_multiplicity_hist',
+           'plot_angles_distribution',
+           'plot_angles_map_distri',
+           'plot_angular_resolution_cta_performance',
+           'plot_angular_resolution_cta_requirement',
+           'plot_angular_resolution_per_energy',
+           'plot_angular_resolution_per_off_pointing_angle',
+           'plot_bias_per_energy',
+           'plot_binned_stat',
+           'plot_dispersion',
+           'plot_effective_area_cta_performance',
+           'plot_effective_area_cta_requirement',
+           'plot_effective_area_per_energy',
+           'plot_effective_area_per_energy_power_law',
+           'plot_energy_distribution',
+           'plot_energy_resolution_cta_performance',
+           'plot_energy_resolution_cta_requirement',
+           'plot_feature_importance',
+           'plot_field_of_view_map',
+           'plot_impact_map',
+           'plot_impact_parameter_error_per_energy',
+           'plot_impact_parameter_error_per_multiplicity',
+           'plot_impact_parameter_error_site_center',
+           'plot_impact_parameter_resolution_per_energy',
+           'plot_impact_point_heatmap',
+           'plot_impact_point_map_distri',
+           'plot_impact_resolution_per_energy',
+           'plot_migration_matrix',
+           'plot_multiplicity_per_energy',
+           'plot_resolution_per_energy',
+           'plot_sensitivity_cta_performance',
+           'plot_sensitivity_cta_requirement',
+           'plot_theta2',
+           ]
+
+
+
 
 def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
     """
