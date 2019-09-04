@@ -348,10 +348,6 @@ class Experiment(object):
                                           linestyle=':')
             else:
                 print('Cannot evaluate the effective area for experiment {}'.format(self.name))
-                self.ax_eff_area = plots.plot_effective_area_per_energy(np.ones(10),
-                                                                        np.empty(0),
-                                                                        1,
-                                                                        )
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
