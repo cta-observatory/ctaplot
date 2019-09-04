@@ -23,6 +23,7 @@ def readfile(filename):
 
 dataset = package_files('share')
 dataset.append('./ctaplot/gammaboard/dashboard.ipynb')
+dataset.append('README.rst')
 
 print("dataset {}".format(dataset))
 
@@ -44,15 +45,13 @@ setup(name='ctaplot',
       tests_require=['pytest'],
       author='Thomas Vuillaume, Mikael Jacquemont',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
-      license=readfile('license.rst'),
       url='https://github.com/vuillaut/ctaplot',
       long_description=readfile('README.rst'),
+      license='MIT',
       classifiers=[
           'Intended Audience :: Science/Research',
-          'License :: MIT License',
           'Programming Language :: Python :: 3',
           'Topic :: Scientific/Engineering :: Astronomy',
-          'Development Status :: Alpha',
       ],
       data_files=[('ctaplot/', dataset)],
       entry_points={
