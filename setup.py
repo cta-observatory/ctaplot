@@ -22,6 +22,7 @@ def readfile(filename):
 
 
 dataset = package_files('share')
+dataset.append('./ctaplot/gammaboard/dashboard.ipynb')
 
 print("dataset {}".format(dataset))
 
@@ -39,7 +40,7 @@ setup(name='ctaplot',
           'jupyter',
           'ipywidgets',
       ],
-      packages=['ctaplot'],
+      packages=['ctaplot', 'ctaplot/gammaboard'],
       tests_require=['pytest'],
       author='Thomas Vuillaume, Mikael Jacquemont',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
@@ -53,7 +54,7 @@ setup(name='ctaplot',
           'Topic :: Scientific/Engineering :: Astronomy',
           'Development Status :: Alpha',
       ],
-      data_files=[('ctaplot/', [dataset, 'ctaplot/gammaboard/dashboard.ipynb'])],
+      data_files=[('ctaplot/', dataset)],
       entry_points={
           'console_scripts': [
               'gammaboard = ctaplot.gammaboard:open_dashboard'
