@@ -12,7 +12,7 @@ from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score
 from .. import plots
 from .. import ana
-from .. dataset import find_resource
+from .. dataset import get
 
 __all__ = ['open_dashboard',
            'load_data_from_h5',
@@ -823,7 +823,7 @@ def open_dashboard():
     -------
 
     """
-    original_dashboard_path = find_resource('dashboard.ipynb')
+    original_dashboard_path = get('dashboard.ipynb')
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
         copyfile(original_dashboard_path, tmp_dashboard)
