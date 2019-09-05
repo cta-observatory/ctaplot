@@ -12,8 +12,11 @@ Given a list of reconstructed and simulated quantities, compute and plot the Ins
 * impact point resolution
 
 
-You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_.
+You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_.     
+Or you can run a simple one here:
 
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/vuillaut/ctaplot/master?filepath=examples%2Fnotebooks%2Fresolution_examples.ipynb
 
 ----
 
