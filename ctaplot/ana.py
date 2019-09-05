@@ -537,7 +537,7 @@ def get_angles_0pi(angles):
     return np.mod(angles, np.pi)
 
 
-def theta2(reco_alt, reco_az, simu_alt, simu_az):
+def theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False):
     """
     Compute the theta2 in radians
 
@@ -556,8 +556,13 @@ def theta2(reco_alt, reco_az, simu_alt, simu_az):
     assert (len(reco_alt) == len(simu_alt))
     if len(reco_alt) == 0:
         return np.empty(0)
+    if bias_correction:
+        bias_alt = bias(simu_alt, reco_alt)
+        bias_az = bias(simu_az, reco_az)
     else:
-        return angular_separation_altaz(reco_alt, reco_az, simu_alt, simu_az) ** 2
+        bias_alt = 0
+        bias_az = 0
+    return angular_separation_altaz(reco_alt-bias_alt, reco_az-bias_az, simu_alt, simu_az) ** 2
 
 
 def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
