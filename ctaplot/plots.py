@@ -165,7 +165,7 @@ def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     return ax
 
 
-def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, energies=None, ax=None, outfile=None):
+def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, color_scale=None, ax=None):
     """
     Plot a map in angles [in degrees] of the photons seen by the telescope (after reconstruction)
 
@@ -175,7 +175,7 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, energies=No
     reco_az: `numpy.ndarray`
     source_alt: float, source Altitude
     source_az: float, source Azimuth
-    energies: `numpy.ndarray` - if given, set the colorbar
+    color_scale: `numpy.ndarray` - if given, set the colorbar
     ax: `matplotlib.pyplot.axes`
     outfile: string - if None, the plot is not saved
 
@@ -195,10 +195,10 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, energies=No
     ax.set_xlabel("Az [deg]")
     ax.set_ylabel("Alt [deg]")
 
-    ax.set_axis('equal')
+    ax.axis('equal')
 
-    if energies is not None:
-        c = np.log10(energies)
+    if color_scale is not None:
+        c = color_scale
         plt.colorbar()
     else:
         c = BrewBlues[-1]
@@ -206,9 +206,7 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, energies=No
     ax.scatter(reco_az, reco_alt, c=c)
     ax.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='orange', label="Source position")
 
-    plt.legend()
-    if type(outfile) is str:
-        plt.savefig(outfile + ".png", bbox_inches="tight", format='png', dpi=200)
+    ax.legend()
 
     return ax
 
@@ -267,7 +265,7 @@ def plot_angles_distribution(reco_alt, reco_az, source_alt, source_az, outfile=N
     return fig
 
 
-def plot_theta2(reco_alt, reco_az, mc_alt, mc_az, ax=None, **kwargs):
+def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=None, **kwargs):
     """
     Plot the theta2 distribution and display the corresponding angular resolution in degrees.
     The input must be given in radians.
@@ -276,8 +274,8 @@ def plot_theta2(reco_alt, reco_az, mc_alt, mc_az, ax=None, **kwargs):
     ----------
     reco_alt: `numpy.ndarray` - reconstructed altitude angle in radians
     reco_az: `numpy.ndarray` - reconstructed azimuth angle in radians
-    mc_alt: `numpy.ndarray` - true altitude angle in radians
-    mc_az: `numpy.ndarray` - true azimuth angle in radians
+    simu_alt: `numpy.ndarray` - true altitude angle in radians
+    simu_az: `numpy.ndarray` - true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
     **kwargs: options for `matplotlib.pyplot.hist`
 
@@ -288,8 +286,14 @@ def plot_theta2(reco_alt, reco_az, mc_alt, mc_az, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    theta2 = np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, mc_alt, mc_az))) ** 2
-    ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, mc_alt, mc_az))
+    if bias_correction:
+        bias_alt = ana.bias(simu_alt, reco_alt)
+        bias_az = ana.bias(simu_az, reco_az)
+        reco_alt = reco_alt - bias_alt
+        reco_az = reco_az - bias_az
+
+    theta2 = np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az))) ** 2
+    ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az))
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
     ax.set_ylabel('Count')
@@ -318,7 +322,7 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
     fig: `matplotlib.pyplot.figure`
     """
 
-    dx = 0.5
+    dx = 0.01
 
     fig = plt.figure(figsize=(12, 12))
 
@@ -334,7 +338,7 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
     plt.ylabel("Alt [deg]")
 
     if len(reco_alt) > 1000:
-        ax1.hist2d(a.RecoAlt, a.RecoAz, bins=60,
+        ax1.hist2d(reco_alt, reco_az, bins=60,
                    range=([source_alt - dx, source_alt + dx], [source_az - dx, source_az + dx]))
     else:
         ax1.scatter(reco_az, reco_alt, c=np.log10(energies))
@@ -1067,17 +1071,17 @@ def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, 
 
     Parameters
     ----------
-    reco_x
-    reco_y
-    simu_x
-    simu_y
-    energy
-    ax
-    kwargs
+    reco_x: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
+    simu_x: `numpy.ndarray`
+    simu_y: `numpy.ndarray`
+    energy: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `ctaplot.plots.plot_resolution`
 
     Returns
     -------
-
+    `matplotlib.pyplot.axes`
     """
     bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy)
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
