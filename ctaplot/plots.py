@@ -12,6 +12,8 @@ from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
 import ctaplot.ana as ana
 from astropy.utils import deprecated
+from sklearn import metrics, preprocessing
+from sklearn.multiclass import LabelBinarizer
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -84,6 +86,10 @@ __all__ = ['plot_resolution',
            'plot_sensitivity_cta_performance',
            'plot_sensitivity_cta_requirement',
            'plot_theta2',
+           'plot_roc_curve',
+           'plot_roc_curve_gammaness',
+           'plot_roc_curve_multiclass',
+           'plot_roc_curve_gammaness_per_energy'
            ]
 
 
@@ -1805,5 +1811,273 @@ def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=No
     plot_resolution(bins, delta_res, ax=ax, **kwargs)
     ax.set_ylabel(r"$\Delta$ res")
     ax.set_title("Resolution difference")
+
+    return ax
+
+
+def plot_roc_curve(simu_type, reco_proba,
+                   pos_label=None, sample_weight=None, drop_intermediate=True,
+                   ax=None, **kwargs):
+    """
+
+    Parameters
+    ----------
+    simu_type: `numpy.ndarray`
+        true labels: must contain only two labels of type int, float or str
+    reco_proba: `numpy.ndarray`
+        reconstruction probability, values must be between 0 and 1
+    pos_label : int or str, default=None
+        The label of the positive class.
+        When ``pos_label=None``, if y_true is in {-1, 1} or {0, 1},
+        ``pos_label`` is set to 1, otherwise an error will be raised.
+    sample_weight : array-like of shape = [n_samples], optional
+        Sample weights.
+    drop_intermediate : boolean, optional (default=True)
+        Whether to drop some suboptimal thresholds which would not appear
+        on a plotted ROC curve. This is useful in order to create lighter
+        ROC curves.
+    ax: `matplotlib.pyplot.axis`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    auc_score = metrics.roc_auc_score(simu_type, reco_proba)
+    if auc_score < 0.5:
+        auc_score = 1 - auc_score
+
+    if 'label' not in kwargs:
+        kwargs['label'] = "auc score = {:.3f}".format(auc_score)
+
+    fpr, tpr, thresholds = metrics.roc_curve(simu_type,
+                                             reco_proba,
+                                             pos_label=pos_label,
+                                             sample_weight=sample_weight,
+                                             drop_intermediate=drop_intermediate,
+                                             )
+
+    ax.plot(fpr, tpr, **kwargs)
+    ax.set_xlabel('False positive rate')
+    ax.set_ylabel('True positive rate')
+
+    ax.plot([0, 1], [0, 1], '--', color='black')
+    ax.axis('equal')
+    ax.legend(loc=4)
+
+    return ax
+
+
+def plot_roc_curve_multiclass(simu_type, reco_proba,
+                              pos_label=None,
+                              sample_weight=None, drop_intermediate=True,
+                              ax=None, **kwargs):
+    """
+    Plot a ROC curve for a multiclass classification.
+
+    Parameters
+    ----------
+    simu_type: `numpy.ndarray`
+        true labels: int, float or str
+    reco_proba: `dict` of `numpy.ndarray`
+        reconstruction probability for each class in `simu_type`, values must be between 0 and 1
+    pos_label : int or str, default=None
+        The label of the positive class.
+        When ``pos_label=None``, the ROC curve of each class is ploted.
+        If `pos_label` is not None, only the ROC curve of this class is ploted.
+    sample_weight : array-like of shape = [n_samples], optional
+        Sample weights.
+    drop_intermediate : boolean, optional (default=True)
+        Whether to drop some suboptimal thresholds which would not appear
+        on a plotted ROC curve. This is useful in order to create lighter
+        ROC curves.
+    ax: `matplotlib.pyplot.axis`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    label_binarizer = LabelBinarizer()
+    binarized_classes = label_binarizer.fit_transform(simu_type)
+
+    if pos_label is not None:
+        if pos_label not in set(simu_type) or pos_label not in reco_proba:
+            raise ValueError(f"simu_type and reco_proba must containe pos_label {pos_label}")
+        ii = np.where(label_binarizer.classes_ == pos_label)[0][0]
+
+        auc_score = metrics.roc_auc_score(binarized_classes[:, ii], reco_proba[pos_label])
+        kwargs['label'] = "class {} - auc = {:.3f}".format(pos_label, auc_score)
+        ax = plot_roc_curve(binarized_classes[:, ii],
+                            reco_proba[pos_label],
+                            pos_label=1,
+                            sample_weight=sample_weight,
+                            drop_intermediate=drop_intermediate,
+                            ax=ax,
+                            **kwargs,
+                            )
+
+    else:
+        for st in set(simu_type):
+            if st not in reco_proba:
+                raise ValueError("the class {} is not in reco_proba".format(st))
+
+        for ii, cls in enumerate(label_binarizer.classes_):
+            print(cls)
+            rp = reco_proba[cls]
+            auc_score = metrics.roc_auc_score(binarized_classes[:, ii], rp)
+
+            kwargs['label'] = "class {} - auc = {:.3f}".format(cls, auc_score)
+            ax = plot_roc_curve(binarized_classes[:, ii],
+                                rp,
+                                sample_weight=sample_weight,
+                                drop_intermediate=drop_intermediate,
+                                ax=ax,
+                                **kwargs,
+                                )
+
+    ax.set_xlabel('False positive rate')
+    ax.set_ylabel('True positive rate')
+    ax.set_title('ROC curve')
+
+    ax.plot([0, 1], [0, 1], '--', color='black')
+    ax.legend(loc=4)
+    ax.axis('equal')
+
+    return ax
+
+
+def plot_roc_curve_gammaness(simu_type, gammaness,
+                             gamma_label=0,
+                             sample_weight=None,
+                             drop_intermediate=True,
+                             ax=None, **kwargs):
+    """
+
+    Parameters
+    ----------
+    simu_type: `numpy.ndarray`
+        true labels: int, float or str
+    gammaness: `numpy.ndarray`
+        probability of each event to be a gamma, values must be between 0 and 1
+    gamma_label: the label of the gamma class in `simu_type`.
+    sample_weight : array-like of shape = [n_samples], optional
+        Sample weights.
+    drop_intermediate : boolean, optional (default=True)
+        Whether to drop some suboptimal thresholds which would not appear
+        on a plotted ROC curve. This is useful in order to create lighter
+        ROC curves.
+    ax: `matplotlib.pyplot.axis`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    if len(set(simu_type)) == 2:
+        ax = plot_roc_curve(simu_type, gammaness,
+                            pos_label=gamma_label,
+                            sample_weight=sample_weight,
+                            drop_intermediate=drop_intermediate,
+                            ax=ax,
+                            **kwargs,
+                            )
+    else:
+        ax = plot_roc_curve_multiclass(simu_type, {gamma_label: gammaness},
+                                       pos_label=gamma_label,
+                                       sample_weight=sample_weight,
+                                       drop_intermediate=drop_intermediate,
+                                       ax=ax,
+                                       **kwargs
+                                       )
+
+    ax.set_title("gamma ROC curve")
+    ax.set_xlabel("gamma false positive rate")
+    ax.set_ylabel("gamma true positive rate")
+    return ax
+
+
+def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma_label=0, energy_bins=None,
+                                        ax=None,
+                                        **kwargs):
+    """
+    Plot a gamma ROC curve per gamma energy bin.
+
+    Parameters
+    ----------
+    simu_type: `numpy.ndarray`
+        true labels: int, float or str
+    gammaness: `numpy.ndarray`
+        probability of each event to be a gamma, values must be between 0 and 1
+    simu_energy: `numpy.ndarray`
+        energy of the gamma events in TeV
+        simu_energy.shape == simu_type.shape (but energies for events that are not gammas are not considered)
+    gamma_label: the label of the gamma class in `simu_type`.
+    energy_bins: None or int or `numpy.ndarray`
+        bins in energy.
+        If `bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
+        If `bins` is an int, it defines the number of equal-width
+        bins in the given range.
+        If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
+        including the rightmost edge, allowing for non-uniform bin widths.
+    sample_weight : array-like of shape = [n_samples], optional
+        Sample weights.
+    drop_intermediate : boolean, optional (default=True)
+        Whether to drop some suboptimal thresholds which would not appear
+        on a plotted ROC curve. This is useful in order to create lighter
+        ROC curves.
+    ax: `matplotlib.pyplot.axis`
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    gamma_energy = simu_energy[simu_type == gamma_label]
+
+    if energy_bins is None:
+        irf = ana.irf_cta()
+        energy_bins = irf.E_bin
+    elif type(energy_bins) is int:
+        energy_bins = np.logspace(np.log10(gamma_energy).min(), np.log10(gamma_energy).max(), energy_bins + 1)
+
+    bin_index = np.digitize(gamma_energy, energy_bins)
+
+    counter = 0
+    if 'label' in kwargs:
+        kwargs.remove('label')
+
+    for ii in np.arange(1, len(energy_bins)):
+
+        mask = bin_index == ii
+        e = gamma_energy[mask]
+
+        if len(e) > 0:
+            masked_types = np.concatenate([simu_type[simu_type != gamma_label],
+                                           simu_type[simu_type == gamma_label][mask]]
+                                          )
+            masked_gammaness = np.concatenate([gammaness[simu_type != gamma_label],
+                                               gammaness[simu_type == gamma_label][mask]]
+                                              )
+
+            ax = plot_roc_curve_gammaness(masked_types, masked_gammaness, gamma_label=gamma_label, ax=ax, **kwargs)
+
+            children = ax.get_children()[counter]
+            label = "[{:.2f}:{:.2f}]TeV - ".format(energy_bins[ii - 1], energy_bins[ii]) + children.get_label()
+            children.set_label(label)
+            counter += 2
+
+    ax.legend(loc=4)
+    ax.grid()
 
     return ax

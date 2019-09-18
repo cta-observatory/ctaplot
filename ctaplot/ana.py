@@ -412,6 +412,7 @@ def resolution_per_bin(x, y_true, y_reco,
 
     return x_bins, np.array(res)
 
+
 def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Parameters
@@ -428,10 +429,10 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
 
     irf = irf_cta()
     return resolution_per_bin(simu_energy, simu, reco,
-                             percentile=percentile,
-                             confidence_level=confidence_level,
-                             bias_correction=bias_correction,
-                             bins=irf.E_bin)
+                              percentile=percentile,
+                              confidence_level=confidence_level,
+                              bias_correction=bias_correction,
+                              bins=irf.E_bin)
 
 
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
