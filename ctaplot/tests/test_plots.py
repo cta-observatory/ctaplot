@@ -193,3 +193,50 @@ def test_plot_resolution_difference():
     bins, res1 = resolution_per_bin(simu, simu, reco, bins=bin, relative_scaling_method='s1')
     bins, res2 = resolution_per_bin(simu, simu, reco2, bins=bin, relative_scaling_method='s1')
     plots.plot_resolution_difference(bins, res1, res2, ax=None, color='red', alpha=0.8, label='nice diff')
+
+
+def test_plot_roc_curve():
+    size = 1000
+    simu_type = np.random.choice(['g', 'p'], size=size)
+    reco_proba = np.random.rand(size)
+    plots.plot_roc_curve(simu_type, reco_proba,
+                         pos_label='p',
+                         ax=None, c='green')
+
+
+def test_plot_roc_curve_multiclass():
+    size = 1000
+    simu_classes = np.random.choice(['gamma', 'proton', 'electron', 'positron'], size=size)
+
+    reco_proba = {
+        'gamma': np.random.rand(size),
+        'proton': np.random.rand(size),
+        'electron': np.random.rand(size),
+        'positron': np.array(simu_classes == 'positron', dtype=int),
+    }
+
+    plots.plot_roc_curve_multiclass(simu_classes, reco_proba, alpha=0.6, lw=3)
+
+    plots.plot_roc_curve_multiclass(simu_classes, reco_proba, pos_label='gamma')
+
+
+def test_plot_roc_curve_gammaness():
+    size = 1000
+    simu_classes = np.random.choice(['gamma', 'proton', 'electron', 'positron'], size=size)
+    gamma_reco_proba = np.random.rand(size)
+
+    plots.plot_roc_curve_gammaness(simu_classes, gamma_reco_proba, gamma_label='gamma', alpha=0.6, lw=3)
+
+
+def test_plot_roc_curve_gammaness_per_energy():
+    size = 1000
+    simu_classes = np.random.choice(['gamma', 'proton', 'electron', 'positron'], size=size)
+    gamma_reco_proba = np.random.rand(size)
+    simu_energy = 10**(np.random.rand(size)*4 - 2)
+
+    plots.plot_roc_curve_gammaness_per_energy(simu_classes, gamma_reco_proba, simu_energy,
+                                              gamma_label='gamma',
+                                              energy_bins=np.array([1e-2, 1e-1, 1, 10, 100]),
+                                              alpha=0.6, lw=3,
+                                              )
+
