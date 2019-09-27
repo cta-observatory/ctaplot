@@ -13,6 +13,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from .. import plots
 from .. import ana
 from .. dataset import get
+from ..io import read_lst_dl2_data
 
 __all__ = ['open_dashboard',
            'load_data_from_h5',
@@ -39,7 +40,7 @@ def load_data_from_h5(experiment, experiments_directory):
         data = pd.read_hdf(filename, key='data')
     except KeyError:
         try:
-            data = pd.read_hdf(filename, key='data')
+            data = read_lst_dl2_data(filename)
         except Exception as e:
             print(e)
             return None

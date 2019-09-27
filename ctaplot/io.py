@@ -105,13 +105,25 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
     """
 
     data = pd.read_hdf(filename, key=key)
+
     data = data.rename(columns={
         "mc_alt": "mc_altitude",
         "mc_az": "mc_azimuth",
         "reco_alt": "reco_altitude",
         "reco_az": "reco_azimuth",
         "gammaness": "reco_gammaness",
+        "mc_type": "mc_particle",
     })
-    data['reco_energy'] = 10**(data['reco_energy']-3)
-    data['mc_energy'] = 10 **(data['mc_energy'] - 3)
+
+    try:
+        data['reco_energy'] = 10**(data['reco_energy'] - 3)
+        data['mc_energy'] = 10**(data['mc_energy'] - 3)
+    except:
+        pass
+
+    if 'reco_particle' not in data.columns and 'reco_gammaness' in data.columns:
+        data['reco_particle'] = pd.Series(data['reco_gammaness'], index=data.index)
+        data['reco_particle'][data['reco_gammaness'] > 0.5] = 1
+        data['reco_particle'][data['reco_gammaness'] <= 0.5] = 0
+
     return data
