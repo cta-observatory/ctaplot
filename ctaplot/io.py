@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import pandas as pd
 
 
 class mc_run_header():
@@ -67,3 +68,50 @@ class mc_run_header():
         return self.data['n_showers'] * self.data['n_use']
 
 
+
+def read_lst_dl1_data(filename, key='dl1/event/telescope/parameters/LST_LSTCam'):
+    """
+    Read lst dl1 data and return a dataframe with right keys for gammaboard
+
+    Parameters
+    ----------
+    filename: path
+    key: dataset path in file
+
+    Returns
+    -------
+    `pandas.DataFrame`
+    """
+
+    data = pd.read_hdf(filename, key=key)
+    # data.rename({
+    #
+    # })
+    return data
+
+
+def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam'):
+    """
+    Read lst dl1 data and return a dataframe with right keys for gammaboard
+
+    Parameters
+    ----------
+    filename: path
+    key: dataset path in file
+
+    Returns
+    -------
+    `pandas.DataFrame`
+    """
+
+    data = pd.read_hdf(filename, key=key)
+    data = data.rename(columns={
+        "mc_alt": "mc_altitude",
+        "mc_az": "mc_azimuth",
+        "reco_alt": "reco_altitude",
+        "reco_az": "reco_azimuth",
+        "gammaness": "reco_gammaness",
+    })
+    data['reco_energy'] = 10**(data['reco_energy']-3)
+    data['mc_energy'] = 10 **(data['mc_energy'] - 3)
+    return data
