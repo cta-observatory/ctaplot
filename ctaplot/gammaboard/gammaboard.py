@@ -10,7 +10,6 @@ from matplotlib.lines import Line2D
 from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
-# from scipy.special import softmax
 from .. import plots
 from .. import ana
 from .. dataset import get
@@ -392,7 +391,6 @@ class Experiment(object):
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
             # for i, thres in enumerate(threshold):
             #     if i % round(len(threshold) / 10) == 0:
-            #
             #         self.ax_pr.annotate(thres, (recall[i], precision[i]), c=self.color)
             self.set_plotted(True)
 
@@ -625,8 +623,8 @@ def create_resolution_fig(site='south', ref=None):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    ax_legend = axes[2][1]
-    ax_pr = axes[3][0]
+    ax_legend = axes[3][0]
+    ax_pr = axes[2][1]
 
     if ref == 'performances':
         plots.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
@@ -682,7 +680,7 @@ def plot_exp_on_fig(exp, fig):
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
     ax_roc = axes[4]
-    ax_pr = axes[6]
+    ax_pr = axes[5]
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
@@ -816,7 +814,7 @@ class GammaBoard(object):
     def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
-        ax_legend = self._axes_resolution[2][1]
+        ax_legend = self._axes_resolution[3][0]
         ax_roc = self._axes_resolution[2][0]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
