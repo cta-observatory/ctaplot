@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -197,6 +197,7 @@ class Experiment(object):
         self.auc = None
         self.rocness = None
         self.classif_resolution = classif_resolution
+        self.threshold = None
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -210,10 +211,12 @@ class Experiment(object):
                     self.rocness = 'Hadroness'
                     self.gamma_data = self.data[self.data.mc_particle == 0]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                    self.threshold = 0.5
                 elif 'reco_gammaness' in self.data:
                     self.rocness = 'Gammaness'
                     self.gamma_data = self.data[self.data.mc_particle == 1]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
+                    self.threshold = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -246,6 +249,10 @@ class Experiment(object):
                                                                        label=self.name,
                                                                        color=self.color)
 
+            self.set_plotted(True)
+
+    def plot_angular_resolution_reco(self, ax=None):
+        if self.get_loaded():
             if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
                                                                            self.reco_gamma_data.reco_azimuth,
@@ -259,8 +266,6 @@ class Experiment(object):
                                                                            **post_classification_opt,
                                                                            )
 
-            self.set_plotted(True)
-
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
             self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
@@ -269,6 +274,10 @@ class Experiment(object):
                                                            ax=ax,
                                                            label=self.name,
                                                            color=self.color)
+            self.set_plotted(True)
+
+    def plot_energy_resolution_reco(self, ax=None):
+        if self.get_loaded():
             if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                self.reco_gamma_data.reco_energy,
@@ -278,8 +287,6 @@ class Experiment(object):
                                                                color=self.color,
                                                                **post_classification_opt
                                                                )
-
-            self.set_plotted(True)
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
@@ -293,6 +300,13 @@ class Experiment(object):
                                                                       label=self.name,
                                                                       color=self.color
                                                                       )
+            self.ax_imp_res.set_xscale('log')
+            self.ax_imp_res.set_xlabel('Energy [TeV]')
+            self.ax_imp_res.set_ylabel('Impact resolution [km]')
+            self.set_plotted(True)
+
+    def plot_impact_resolution_reco(self, ax=None):
+        if self.get_loaded():
             if self.reco_gamma_data is not None and self.classif_resolution:
                 self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
                                                                           self.reco_gamma_data.reco_impact_y,
@@ -305,10 +319,6 @@ class Experiment(object):
                                                                           color=self.color,
                                                                           **post_classification_opt
                                                                           )
-            self.ax_imp_res.set_xscale('log')
-            self.ax_imp_res.set_xlabel('Energy [TeV]')
-            self.ax_imp_res.set_ylabel('Impact resolution [km]')
-            self.set_plotted(True)
 
     def plot_effective_area(self, ax=None):
         if self.get_loaded():
@@ -333,6 +343,14 @@ class Experiment(object):
                                                                self.run_config['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
+            else:
+                print('Cannot evaluate the effective area for experiment {}'.format(self.name))
+
+    def plot_effective_area_reco(self, ax=None):
+        if self.get_loaded():
+            self.ax_eff_area = ax if ax is not None else plt.gca()
+
+            if self.run_config is not None:
                 if self.reco_gamma_data is not None:
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
                                                                              self.run_config['energy_range_max'],
@@ -684,15 +702,19 @@ def plot_exp_on_fig(exp, fig):
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
+        exp.plot_angular_resolution_reco(ax=ax_ang_res)
     if 'reco_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
+        exp.plot_energy_resolution_reco(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
+        exp.plot_impact_resolution_reco(ax=ax_imp_res)
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
+        exp.plot_effective_area_reco(ax=ax_eff_area)
 
 
 def update_legend(visible_experiments, ax):
@@ -735,7 +757,12 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if not exp.get_loaded():
                 exp.load_data()
             if exp_name not in tabs.keys():
-                tabs[exp_name] = Output()
+                if exp.threshold is not None:
+                    slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
+                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution), names='value')
+                    tabs[exp_name] = VBox([slider, Output()])
+                else:
+                    tabs[exp_name] = VBox([Output()])
 
             experiment_info_box.children = [value for _, value in tabs.items()]
             for i, key, in enumerate(tabs.keys()):
@@ -743,11 +770,14 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                 if key == exp_name:
                     experiment_info_box.selected_index = i
 
-            with tabs[exp_name]:
-                try:
-                    print_dict(exp.info)
-                except:
-                    print('Sorry, I have no info on the experiment {}'.format(exp_name))
+            for widget in tabs[exp_name].children:
+                if isinstance(widget, Output):
+                    with widget:
+                        try:
+                            print_dict(exp.info)
+                        except:
+                            print('Sorry, I have no info on the experiment {}'.format(exp_name))
+
             visible_experiments.add(exp)
         else:
             sender.button_style = 'warning'
@@ -764,6 +794,63 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
         update_auc_legend(visible_experiments, ax_auc)
 
     return plot_on_click
+
+
+def create_update_threslhold(experiments_dict, fig_resolution):
+    def update_threshold(change):
+        """
+        Function to be called when a `ipywidgets.Button` is clicked
+
+        Args
+            sender: the object received by `ipywidgets.Button().on_click()`
+        """
+        exp_name = change['owner'].description
+        if exp_name not in experiments_dict:
+            pass
+
+        exp = experiments_dict[exp_name]
+        exp.threshold = change['new']
+
+        if 'reco_hadroness' in exp.data:
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.threshold]
+        elif 'reco_gammaness' in exp.data:
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.threshold]
+
+        axes = fig_resolution.get_axes()
+        ax_ang_res = axes[0]
+        ax_ene_res = axes[1]
+        ax_imp_res = axes[2]
+        ax_eff_area = axes[3]
+
+        for c in ax_ang_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_ang_res.containers.remove(c)
+
+        for c in ax_ene_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_ene_res.containers.remove(c)
+
+        for c in ax_imp_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_imp_res.containers.remove(c)
+
+        for c in ax_eff_area.lines:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                # exp.ax_eff_area.lines.remove(c)
+        if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
+            exp.plot_angular_resolution_reco(ax=ax_ang_res)
+        if 'reco_energy' in exp.data:
+            exp.plot_energy_resolution_reco(ax=ax_ene_res)
+        if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
+            exp.plot_impact_resolution_reco(ax=ax_imp_res)
+        if 'mc_energy' in exp.data:
+            exp.plot_effective_area_reco(ax=ax_eff_area)
+
+    return update_threshold
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
@@ -803,6 +890,41 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
     return VBox(children=items, layout=box_layout)
 
 
+# def make_threshold_tab(experiments_dic, fig_resolution):
+#     """
+#     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
+#     the list of experiments in experiments_dic
+#     Args
+#         experiments_dic (dict): dictionary of experiment class
+#         experiment_info_box (Tab): the tab container
+#         tabs (dict): dictionary of active tabs
+#         fig_resolution
+#         visible_experiments
+#         ax_legend
+#         ax_auc
+#
+#     Returns
+#         `ipywidgets.VBox()`
+#     """
+#     from ipywidgets import Layout, FloatSlider, VBox
+#
+#     # item_layout = Layout(min_height='30px', width='auto')
+#     sliders = [FloatSlider(value=0.5, min=0, max=1, step=0.01, description=exp_name)
+#              for exp_name in np.sort(list(experiments_dic))[::-1]]
+#
+#     for s in sliders:
+#         s.observe(create_update_threslhold(experiments_dic, fig_resolution), names='value')
+#
+#     box_layout = Layout(overflow_y='scroll',
+#                         border='3px solid black',
+#                         width='300px',
+#                         height='600px',
+#                         flex_flow='columns',
+#                         display='flex')
+#
+#     return VBox(children=sliders, layout=box_layout)
+
+
 class GammaBoard(object):
     '''
     Args
@@ -840,8 +962,10 @@ class GammaBoard(object):
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              self._fig_resolution, visible_experiments, ax_legend, ax_roc)
+        # threshold = make_threshold_tab(self.experiments_dict, self._fig_resolution)
 
         self.exp_box = HBox([carousel, experiment_info_box])
+        # self.thresbox = HBox([threshold])
 
 
 
