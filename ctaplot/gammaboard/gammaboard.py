@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output, VBox, FloatSlider
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, HTML
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -635,13 +635,13 @@ def create_resolution_fig(site='south', ref=None):
     Returns
         fig, axes
     """
-    fig, axes = plt.subplots(4, 2, figsize=(12, 16))
+    fig, axes = plt.subplots(3, 2, figsize=(12, 16))
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    ax_legend = axes[3][0]
+    # ax_legend = axes[3][0]
     ax_pr = axes[2][1]
 
     if ref == 'performances':
@@ -671,9 +671,11 @@ def create_resolution_fig(site='south', ref=None):
 
     ax_pr.set_xlabel('Recall')
     ax_pr.set_ylabel('Precision')
-    ax_legend.set_axis_off()
-
-    axes[3][1].set_axis_off()
+    # ax_legend.set_axis_off()
+    # ax_legend.set_aspect(0.2)
+    # axes[3][1].set_aspect(0.2)
+    #
+    # axes[3][1].set_axis_off()
 
     fig.tight_layout()
 
@@ -717,11 +719,11 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_effective_area_reco(ax=ax_eff_area)
 
 
-def update_legend(visible_experiments, ax):
+def update_legend(visible_experiments):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    ax.legend(handles=legend_elements, loc='best', ncol=2)
+    plt.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.5, -0.3), ncol=6)
 
 
 def update_auc_legend(visible_experiments, ax):
@@ -737,7 +739,7 @@ def update_auc_legend(visible_experiments, ax):
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_exp, ax_auc):
+                         fig_resolution, visible_experiments, ax_auc):
     def plot_on_click(sender):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -790,7 +792,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             plot_exp_on_fig(exp, fig_resolution)
 
         exp.visibility_all_plot(visible)
-        update_legend(visible_experiments, ax_exp)
+        update_legend(visible_experiments)
         update_auc_legend(visible_experiments, ax_auc)
 
     return plot_on_click
@@ -854,7 +856,7 @@ def create_update_threslhold(experiments_dict, fig_resolution):
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_legend, ax_auc):
+                              visible_experiments, ax_auc):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -878,7 +880,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_legend, ax_auc))
+                                        fig_resolution, visible_experiments, ax_auc))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -936,7 +938,7 @@ class GammaBoard(object):
     def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
-        ax_legend = self._axes_resolution[3][0]
+        # ax_legend = self._axes_resolution[3][0]
         ax_roc = self._axes_resolution[2][0]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
@@ -961,7 +963,7 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_legend, ax_roc)
+                                             self._fig_resolution, visible_experiments, ax_roc)
         # threshold = make_threshold_tab(self.experiments_dict, self._fig_resolution)
 
         self.exp_box = HBox([carousel, experiment_info_box])
