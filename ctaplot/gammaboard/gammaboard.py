@@ -618,7 +618,7 @@ def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
         fig, axes
     """
 
-    fig, axes = plt.subplots(3, 2, figsize=figsize)
+    fig, axes = plt.subplots(4, 2, figsize=figsize)
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
