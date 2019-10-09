@@ -1,7 +1,9 @@
 import json
 import numpy as np
+import pandas as pd
+from astropy.utils import deprecated
 
-
+@deprecated("08/10/2019", "The mc_run_header should be in the data file. Under `/simulation/run_config` for HDF5 files")
 class mc_run_header():
 
     def __init__(self):
@@ -66,4 +68,70 @@ class mc_run_header():
         """
         return self.data['n_showers'] * self.data['n_use']
 
+
+
+
+def read_lst_dl1_data(filename, key='dl1/event/telescope/parameters/LST_LSTCam'):
+    """
+    Read lst dl1 data and return a dataframe with right keys for gammaboard
+
+    Parameters
+    ----------
+    filename: path
+    key: dataset path in file
+
+    Returns
+    -------
+    `pandas.DataFrame`
+    """
+
+    data = pd.read_hdf(filename, key=key)
+    # data.rename({
+    #
+    # })
+    return data
+
+
+def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam'):
+    """
+    Read lst dl1 data and return a dataframe with right keys for gammaboard
+
+    Parameters
+    ----------
+    filename: path
+    key: dataset path in file
+
+    Returns
+    -------
+    `pandas.DataFrame`
+    """
+
+    data = pd.read_hdf(filename, key=key)
+
+    data = data.rename(columns={
+        "mc_alt": "mc_altitude",
+        "mc_az": "mc_azimuth",
+        "reco_alt": "reco_altitude",
+        "reco_az": "reco_azimuth",
+        "gammaness": "reco_gammaness",
+    })
+
+    # in lstchain the MC id is used
+    data['mc_particle'] = pd.Series(-np.ones(len(data)), index=data.index)
+    data['mc_particle'][data['mc_type'] == 0] = 1
+    data['mc_particle'][data['mc_type'] == 101] = 0
+
+
+    if data['mc_energy'].min() > 0.1 and data['mc_energy'].max() < 10:
+        # energy is probably in log(GeV)
+        data['reco_energy'] = 10 ** (data['reco_energy'] - 3)
+        data['mc_energy'] = 10**(data['mc_energy'] - 3)
+
+
+    if 'reco_particle' not in data.columns and 'reco_gammaness' in data.columns:
+        data['reco_particle'] = pd.Series(-np.ones(len(data)), index=data.index)
+        data['reco_particle'][data['reco_gammaness'] > 0.5] = 1
+        data['reco_particle'][data['reco_gammaness'] <= 0.5] = 0
+
+    return data
 
