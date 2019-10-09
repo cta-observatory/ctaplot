@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
 from .. dataset import get
@@ -377,6 +377,23 @@ class Experiment(object):
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
+    def plot_pr_curve(self, ax=None):
+        if self.get_loaded():
+            self.ax_pr = plt.gca() if ax is None else ax
+            if 'reco_hadroness' in self.data:
+                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                                                                      self.data.reco_hadroness)
+            elif 'reco_gammaness' in self.data:
+                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                                                                      self.data.reco_gammaness)
+            else:
+                raise ValueError
+            self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
+            # for i, thres in enumerate(threshold):
+            #     if i % round(len(threshold) / 10) == 0:
+            #         self.ax_pr.annotate(thres, (recall[i], precision[i]), c=self.color)
+            self.set_plotted(True)
+
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
@@ -407,6 +424,12 @@ class Experiment(object):
                 if l.get_label() == self.name:
                     l.set_visible(visible)
 
+    def visibility_pr_curve_plot(self, visible: bool):
+        if self.get_plotted():
+            for l in self.ax_pr.lines:
+                if l.get_label() == self.name:
+                    l.set_visible(visible)
+
     def visibility_all_plot(self, visible: bool):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
@@ -416,6 +439,7 @@ class Experiment(object):
             self.visibility_impact_resolution_plot(visible)
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
+            self.visibility_pr_curve_plot(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
 
@@ -593,13 +617,14 @@ def create_resolution_fig(site='south', ref=None):
     Returns
         fig, axes
     """
-    fig, axes = plt.subplots(3, 2, figsize=(12, 12))
+    fig, axes = plt.subplots(4, 2, figsize=(12, 16))
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    ax_legend = axes[2][1]
+    ax_legend = axes[3][0]
+    ax_pr = axes[2][1]
 
     if ref == 'performances':
         plots.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
@@ -626,7 +651,11 @@ def create_resolution_fig(site='south', ref=None):
     ax_roc.set_title('Receiver Operating Characteristic')
     # ax_roc.axis('equal')
 
+    ax_pr.set_xlabel('Recall')
+    ax_pr.set_ylabel('Precision')
     ax_legend.set_axis_off()
+
+    axes[3][1].set_axis_off()
 
     fig.tight_layout()
 
@@ -651,6 +680,7 @@ def plot_exp_on_fig(exp, fig):
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
     ax_roc = axes[4]
+    ax_pr = axes[5]
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
@@ -660,6 +690,7 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_impact_resolution(ax=ax_imp_res)
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
+        exp.plot_pr_curve(ax=ax_pr)
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
 
@@ -783,7 +814,7 @@ class GammaBoard(object):
     def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
-        ax_legend = self._axes_resolution[2][1]
+        ax_legend = self._axes_resolution[3][0]
         ax_roc = self._axes_resolution[2][0]
 
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
