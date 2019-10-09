@@ -198,6 +198,12 @@ class Experiment(object):
         self.rocness = None
         self.classif_resolution = classif_resolution
         self.threshold = None
+        self.ax_ang_res = None
+        self.ax_ene_res = None
+        self.ax_imp_res = None
+        self.ax_eff_area = None
+        self.ax_roc = None
+        self.ax_pr = None
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -374,24 +380,24 @@ class Experiment(object):
                                         self.data.reco_hadroness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_hadroness)
-                true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
-                proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[self.data.reco_particle == 0]
+                # true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
+                # proton = self.data[self.data.mc_particle == 1]
+                # false_positive = proton[self.data.reco_particle == 0]
             elif 'reco_gammaness' in self.data:
                 fpr, tpr, _ = roc_curve(self.data.mc_particle,
                                         self.data.reco_gammaness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_gammaness)
-                true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
-                proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[self.data.reco_particle == 1]
+                # true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
+                # proton = self.data[self.data.mc_particle == 0]
+                # false_positive = proton[self.data.reco_particle == 1]
             else:
                 raise ValueError
 
-            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
-            self.recall = len(true_positive) / len(self.gamma_data)
-            correct = len(self.data[self.data.mc_particle == self.data.reco_particle])
-            self.accuracy = correct / len(self.data)
+            # self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+            # self.recall = len(true_positive) / len(self.gamma_data)
+            # correct = len(self.data[self.data.mc_particle == self.data.reco_particle])
+            # self.accuracy = correct / len(self.data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
@@ -407,10 +413,24 @@ class Experiment(object):
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
-            # for i, thres in enumerate(threshold):
-            #     if i % round(len(threshold) / 10) == 0:
-            #         self.ax_pr.annotate(thres, (recall[i], precision[i]), c=self.color)
             self.set_plotted(True)
+
+    def plot_threshold(self):
+        if self.get_loaded() and self.threshold is not None and self.ax_pr is not None:
+            if 'reco_hadroness' in self.data:
+                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.threshold]
+                proton = self.data[self.data.mc_particle == 1]
+                false_positive = proton[self.data.reco_hadroness < self.threshold]
+            elif 'reco_gammaness' in self.data:
+                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.threshold]
+                proton = self.data[self.data.mc_particle == 0]
+                false_positive = proton[self.data.reco_gammaness >= self.threshold]
+            else:
+                raise ValueError
+
+            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+            self.recall = len(true_positive) / len(self.gamma_data)
+            self.ax_pr.scatter(self.recall, self.precision, c=[self.color], label=self.name)
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
@@ -641,7 +661,6 @@ def create_resolution_fig(site='south', ref=None):
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    # ax_legend = axes[3][0]
     ax_pr = axes[2][1]
 
     if ref == 'performances':
@@ -667,15 +686,9 @@ def create_resolution_fig(site='south', ref=None):
     ax_roc.set_xlabel('False Positive Rate')
     ax_roc.set_ylabel('True Positive Rate')
     ax_roc.set_title('Receiver Operating Characteristic')
-    # ax_roc.axis('equal')
 
     ax_pr.set_xlabel('Recall')
     ax_pr.set_ylabel('Precision')
-    # ax_legend.set_axis_off()
-    # ax_legend.set_aspect(0.2)
-    # axes[3][1].set_aspect(0.2)
-    #
-    # axes[3][1].set_axis_off()
 
     fig.tight_layout()
 
@@ -714,6 +727,7 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
+        exp.plot_threshold()
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
@@ -729,17 +743,23 @@ def update_legend(visible_experiments):
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, Acc = {:.4f}'.format(exp.auc,
-                                                                                                 exp.precision,
-                                                                                                 exp.recall,
-                                                                                                 exp.accuracy
-                                                                                                 ))
+                              label='AUC = {:.4f}'.format(exp.auc))
                        for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
     ax.legend(handles=legend_elements, loc='lower right')
 
 
+def update_pr_legend(visible_experiments, ax):
+    experiments = {exp.name: exp for exp in visible_experiments}
+    legend_elements = [Line2D([0], [0], color=exp.color,
+                              label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
+                                                                     exp.recall,
+                                                                     ))
+                       for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
+    ax.legend(handles=legend_elements, loc='lower left')
+
+
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_auc):
+                         fig_resolution, visible_experiments):
     def plot_on_click(sender):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -761,7 +781,8 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if exp_name not in tabs.keys():
                 if exp.threshold is not None:
                     slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
-                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution), names='value')
+                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution, visible_experiments),
+                                   names='value')
                     tabs[exp_name] = VBox([slider, Output()])
                 else:
                     tabs[exp_name] = VBox([Output()])
@@ -791,14 +812,19 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
         if not exp.get_plotted() and visible and exp.data is not None:
             plot_exp_on_fig(exp, fig_resolution)
 
+        axes = fig_resolution.get_axes()
+        ax_auc = axes[4]
+        ax_pr = axes[5]
+
         exp.visibility_all_plot(visible)
         update_legend(visible_experiments)
         update_auc_legend(visible_experiments, ax_auc)
+        update_pr_legend(visible_experiments, ax_pr)
 
     return plot_on_click
 
 
-def create_update_threslhold(experiments_dict, fig_resolution):
+def create_update_threslhold(experiments_dict, fig_resolution, visible_experiments):
     def update_threshold(change):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -823,6 +849,7 @@ def create_update_threslhold(experiments_dict, fig_resolution):
         ax_ene_res = axes[1]
         ax_imp_res = axes[2]
         ax_eff_area = axes[3]
+        ax_pr = axes[5]
 
         for c in ax_ang_res.containers:
             if exp.name + '_reco' == c.get_label():
@@ -842,7 +869,11 @@ def create_update_threslhold(experiments_dict, fig_resolution):
         for c in ax_eff_area.lines:
             if exp.name + '_reco' == c.get_label():
                 c.remove()
-                # exp.ax_eff_area.lines.remove(c)
+
+        for c in ax_pr.collections:
+            if exp.name == c.get_label():
+                c.remove()
+
         if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
             exp.plot_angular_resolution_reco(ax=ax_ang_res)
         if 'reco_energy' in exp.data:
@@ -851,12 +882,15 @@ def create_update_threslhold(experiments_dict, fig_resolution):
             exp.plot_impact_resolution_reco(ax=ax_imp_res)
         if 'mc_energy' in exp.data:
             exp.plot_effective_area_reco(ax=ax_eff_area)
+        if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
+            exp.plot_threshold()
+        update_pr_legend(visible_experiments, ax_pr)
 
     return update_threshold
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_auc):
+                              visible_experiments):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -880,7 +914,7 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_auc))
+                                        fig_resolution, visible_experiments))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -890,41 +924,6 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
                         display='flex')
 
     return VBox(children=items, layout=box_layout)
-
-
-# def make_threshold_tab(experiments_dic, fig_resolution):
-#     """
-#     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
-#     the list of experiments in experiments_dic
-#     Args
-#         experiments_dic (dict): dictionary of experiment class
-#         experiment_info_box (Tab): the tab container
-#         tabs (dict): dictionary of active tabs
-#         fig_resolution
-#         visible_experiments
-#         ax_legend
-#         ax_auc
-#
-#     Returns
-#         `ipywidgets.VBox()`
-#     """
-#     from ipywidgets import Layout, FloatSlider, VBox
-#
-#     # item_layout = Layout(min_height='30px', width='auto')
-#     sliders = [FloatSlider(value=0.5, min=0, max=1, step=0.01, description=exp_name)
-#              for exp_name in np.sort(list(experiments_dic))[::-1]]
-#
-#     for s in sliders:
-#         s.observe(create_update_threslhold(experiments_dic, fig_resolution), names='value')
-#
-#     box_layout = Layout(overflow_y='scroll',
-#                         border='3px solid black',
-#                         width='300px',
-#                         height='600px',
-#                         flex_flow='columns',
-#                         display='flex')
-#
-#     return VBox(children=sliders, layout=box_layout)
 
 
 class GammaBoard(object):
@@ -963,12 +962,9 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_roc)
-        # threshold = make_threshold_tab(self.experiments_dict, self._fig_resolution)
+                                             self._fig_resolution, visible_experiments)
 
         self.exp_box = HBox([carousel, experiment_info_box])
-        # self.thresbox = HBox([threshold])
-
 
 
 def open_dashboard():
