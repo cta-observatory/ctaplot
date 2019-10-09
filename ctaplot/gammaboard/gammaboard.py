@@ -369,8 +369,6 @@ class Experiment(object):
                                           label=self.name + '_reco',
                                           color=self.color,
                                           linestyle=':')
-            else:
-                print('Cannot evaluate the effective area for experiment {}'.format(self.name))
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
@@ -380,24 +378,14 @@ class Experiment(object):
                                         self.data.reco_hadroness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_hadroness)
-                # true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
-                # proton = self.data[self.data.mc_particle == 1]
-                # false_positive = proton[self.data.reco_particle == 0]
             elif 'reco_gammaness' in self.data:
                 fpr, tpr, _ = roc_curve(self.data.mc_particle,
                                         self.data.reco_gammaness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_gammaness)
-                # true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
-                # proton = self.data[self.data.mc_particle == 0]
-                # false_positive = proton[self.data.reco_particle == 1]
             else:
                 raise ValueError
 
-            # self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
-            # self.recall = len(true_positive) / len(self.gamma_data)
-            # correct = len(self.data[self.data.mc_particle == self.data.reco_particle])
-            # self.accuracy = correct / len(self.data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
@@ -468,6 +456,12 @@ class Experiment(object):
                 if l.get_label() == self.name:
                     l.set_visible(visible)
 
+    def visibility_threshold(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_pr.collections:
+                if c.get_label() == self.name:
+                    c.set_visible(visible)
+
     def visibility_all_plot(self, visible: bool):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
@@ -478,6 +472,7 @@ class Experiment(object):
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
+            self.visibility_threshold(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
 
@@ -733,29 +728,31 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_effective_area_reco(ax=ax_eff_area)
 
 
-def update_legend(visible_experiments):
+def update_legend(visible_experiments, fig):
+    for l in fig.legends:
+        l.remove()
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    plt.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.5, -0.3), ncol=6)
+    fig.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.9, 0.1), ncol=6)
 
 
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
-    legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='AUC = {:.4f}'.format(exp.auc))
-                       for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
-    ax.legend(handles=legend_elements, loc='lower right')
+    auc_legend_elements = [Line2D([0], [0], color=exp.color,
+                                  label='AUC = {:.4f}'.format(exp.auc))
+                           for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
+    ax.legend(handles=auc_legend_elements, loc='lower right')
 
 
 def update_pr_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
-    legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
-                                                                     exp.recall,
-                                                                     ))
-                       for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
-    ax.legend(handles=legend_elements, loc='lower left')
+    pr_legend_elements = [Line2D([0], [0], color=exp.color,
+                                 label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
+                                                                        exp.recall,
+                                                                        ))
+                          for (name, exp) in sorted(experiments.items()) if exp.threshold is not None]
+    ax.legend(handles=pr_legend_elements, loc='lower left')
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
@@ -817,9 +814,9 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
         ax_pr = axes[5]
 
         exp.visibility_all_plot(visible)
-        update_legend(visible_experiments)
         update_auc_legend(visible_experiments, ax_auc)
         update_pr_legend(visible_experiments, ax_pr)
+        update_legend(visible_experiments, fig_resolution)
 
     return plot_on_click
 
@@ -937,9 +934,6 @@ class GammaBoard(object):
     def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
-        # ax_legend = self._axes_resolution[3][0]
-        ax_roc = self._axes_resolution[2][0]
-
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
