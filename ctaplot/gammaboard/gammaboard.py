@@ -366,7 +366,7 @@ class Experiment(object):
                                          self.data.reco_gammaness)
                 true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
                 proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[self.data.reco_particle == 1]
+                false_positive = proton[proton.reco_particle == 1]
             else:
                 raise ValueError
 
