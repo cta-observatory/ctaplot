@@ -408,11 +408,11 @@ class Experiment(object):
             if 'reco_hadroness' in self.data:
                 true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.threshold]
                 proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[self.data.reco_hadroness < self.threshold]
+                false_positive = proton[proton.reco_hadroness < self.threshold]
             elif 'reco_gammaness' in self.data:
                 true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.threshold]
                 proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[self.data.reco_gammaness >= self.threshold]
+                false_positive = proton[proton.reco_gammaness >= self.threshold]
             else:
                 raise ValueError
 
