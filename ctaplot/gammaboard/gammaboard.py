@@ -8,7 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown
+from IPython import display
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -663,12 +664,11 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(site='south', ref=None):
+def create_resolution_fig():
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
     Args
-        site (string)
 
     Returns
         fig, axes
@@ -681,22 +681,10 @@ def create_resolution_fig(site='south', ref=None):
     ax_roc = axes[2][0]
     ax_pr = axes[2][1]
 
-    if ref == 'performances':
-        plots.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
-        plots.plot_energy_resolution_cta_performance(site, ax=ax_ene_res, color='black')
-        plots.plot_effective_area_cta_performance(site, ax=ax_eff_area, color='black')
-    elif ref == 'requirements':
-        plots.plot_angular_resolution_cta_requirement(site, ax=ax_ang_res, color='black')
-        plots.plot_energy_resolution_cta_requirement(site, ax=ax_ene_res, color='black')
-        plots.plot_effective_area_cta_requirement(site, ax=ax_eff_area, color='black')
-    else:
-        ax_eff_area.set_xscale('log')
-        ax_eff_area.set_yscale('log')
-        ax_eff_area.set_xlabel('Energy [TeV]')
-    if ref is not None:
-        ax_ang_res.legend()
-        ax_ene_res.legend()
-        ax_eff_area.legend()
+    ax_eff_area.set_xscale('log')
+    ax_eff_area.set_yscale('log')
+    ax_eff_area.set_xlabel('Energy [TeV]')
+    ax_eff_area.set_ylim([100, 1e7])
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
@@ -950,6 +938,50 @@ def create_display_res(experiment):
     return display_on_click
 
 
+def create_update_site(gb):
+    def update_site(change):
+        gb.site = change['new'].lower()
+        update_reference_plot(gb)
+    return update_site
+
+
+def create_update_reference(gb):
+    def update_reference(change):
+        gb.ref = change['new'].lower()
+        update_reference_plot(gb)
+    return update_reference
+
+
+def update_reference_plot(gb):
+    axes = gb._fig_resolution.get_axes()
+    ax_ang_res = axes[0]
+    ax_ene_res = axes[1]
+    ax_eff_area = axes[3]
+
+    for l in ax_ang_res.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+    for l in ax_ene_res.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+    for l in ax_eff_area.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+
+    if gb.ref == 'performances':
+        plots.plot_angular_resolution_cta_performance(gb.site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_performance(gb.site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_performance(gb.site, ax=ax_eff_area, color='black')
+    elif gb.ref == 'requirements':
+        plots.plot_angular_resolution_cta_requirement(gb.site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_requirement(gb.site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_requirement(gb.site, ax=ax_eff_area, color='black')
+
+    ax_ang_res.legend()
+    ax_ene_res.legend()
+    ax_eff_area.legend()
+
+
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
                               visible_experiments):
     """
@@ -993,17 +1025,15 @@ class GammaBoard(object):
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
 
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False):
-        self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
-        ax_eff_area = self._axes_resolution[1][1]
-        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        self._fig_resolution.subplots_adjust(bottom=0.2)
+    def __init__(self, experiments_directory, bias_correction=False):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
+        self.site = 'north'
+        self.ref = 'none'
 
         colors = np.arange(0, 1, 1 / len(self.experiments_dict.keys()), dtype=np.float32)
         np.random.seed(1)
@@ -1017,10 +1047,21 @@ class GammaBoard(object):
         experiment_info_box = Tab()
         tabs = {}
 
+        self._fig_resolution, self._axes_resolution = create_resolution_fig()
+        ax_eff_area = self._axes_resolution[1][1]
+        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
+        self._fig_resolution.subplots_adjust(bottom=0.2)
+
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              self._fig_resolution, visible_experiments)
+        site_selector = Dropdown(options=['North', 'South'], value='North', description='Site')
+        site_selector.observe(create_update_site(self), names='value')
 
-        self.exp_box = HBox([carousel, experiment_info_box])
+        reference_selector = Dropdown(options=['None', 'performances', 'requirements'],
+                                      value='None', description='Reference')
+        reference_selector.observe(create_update_reference(self), names='value')
+
+        self.exp_box = VBox([HBox([site_selector, reference_selector]), HBox([carousel, experiment_info_box])])
 
 
 def open_dashboard():
