@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, HTML
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -199,7 +199,6 @@ class Experiment(object):
         self.accuracy = None
         self.auc = None
         self.rocness = None
-        self.classif_resolution = classif_resolution
         self.threshold = None
         self.ax_ang_res = None
         self.ax_ene_res = None
@@ -262,7 +261,7 @@ class Experiment(object):
 
     def plot_angular_resolution_reco(self, ax=None):
         if self.get_loaded():
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            if self.reco_gamma_data is not None:
                 self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
                                                                            self.reco_gamma_data.reco_azimuth,
                                                                            self.reco_gamma_data.mc_altitude,
@@ -287,7 +286,7 @@ class Experiment(object):
 
     def plot_energy_resolution_reco(self, ax=None):
         if self.get_loaded():
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            if self.reco_gamma_data is not None:
                 self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                self.reco_gamma_data.reco_energy,
                                                                bias_correction=self.bias_correction,
@@ -316,7 +315,7 @@ class Experiment(object):
 
     def plot_impact_resolution_reco(self, ax=None):
         if self.get_loaded():
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            if self.reco_gamma_data is not None:
                 self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
                                                                           self.reco_gamma_data.reco_impact_y,
                                                                           self.reco_gamma_data.mc_impact_x,
@@ -426,19 +425,37 @@ class Experiment(object):
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_energy_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ene_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_impact_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_imp_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_angular_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_ang_res.containers:
+                if self.name + '_reco' == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_energy_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_ene_res.containers:
+                if self.name + '_reco' == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_impact_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_imp_res.containers:
+                if self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_effective_area_plot(self, visible: bool):
@@ -468,10 +485,13 @@ class Experiment(object):
     def visibility_all_plot(self, visible: bool):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
+            self.visibility_angular_resolution_reco_plot(visible)
         if 'reco_energy' in self.data:
             self.visibility_energy_resolution_plot(visible)
+            self.visibility_energy_resolution_reco_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
+            self.visibility_impact_resolution_reco_plot(visible)
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
@@ -783,7 +803,13 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                     slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
                     slider.observe(create_update_threslhold(experiments_dict, fig_resolution, visible_experiments),
                                    names='value')
-                    tabs[exp_name] = VBox([slider, Output()])
+                    item_layout = Layout(min_height='30px', width='200px')
+                    b_res = Button(layout=item_layout, description='gamma_resolution', button_style='success')
+                    b_res.on_click(create_display_res(exp))
+                    b_reco_res = Button(layout=item_layout, description='reco_resolution', button_style='success')
+                    b_reco_res.on_click(create_display_res(exp))
+
+                    tabs[exp_name] = VBox([slider, b_res, b_reco_res, Output()])
                 else:
                     tabs[exp_name] = VBox([Output()])
 
@@ -889,6 +915,41 @@ def create_update_threslhold(experiments_dict, fig_resolution, visible_experimen
     return update_threshold
 
 
+def create_display_res(experiment):
+    def display_on_click(sender):
+        """
+        Function to be called when a `ipywidgets.Button` is clicked
+
+        Args
+            sender: the object received by `ipywidgets.Button().on_click()`
+        """
+        res_type = sender.description
+
+        if sender.button_style == 'warning':
+            sender.button_style = 'success'
+            visible = True
+        elif sender.button_style == 'success':
+            sender.button_style = 'warning'
+            visible = False
+        else:
+            raise ValueError
+        if 'reco' in res_type:
+            if experiment.ax_ang_res is not None:
+                experiment.visibility_angular_resolution_reco_plot(visible)
+            if experiment.ax_ene_res is not None:
+                experiment.visibility_energy_resolution_reco_plot(visible)
+            if experiment.ax_imp_res is not None:
+                experiment.visibility_impact_resolution_reco_plot(visible)
+        else:
+            if experiment.ax_ang_res is not None:
+                experiment.visibility_angular_resolution_plot(visible)
+            if experiment.ax_ene_res is not None:
+                experiment.visibility_energy_resolution_plot(visible)
+            if experiment.ax_imp_res is not None:
+                experiment.visibility_impact_resolution_plot(visible)
+    return display_on_click
+
+
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
                               visible_experiments):
     """
@@ -906,8 +967,6 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
     Returns
         `ipywidgets.VBox()`
     """
-    from ipywidgets import Layout, Button, VBox
-
     item_layout = Layout(min_height='30px', width='auto')
     items = [Button(layout=item_layout, description=exp_name, button_style='warning')
              for exp_name in np.sort(list(experiments_dic))[::-1]]
