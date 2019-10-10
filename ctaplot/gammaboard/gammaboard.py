@@ -180,7 +180,7 @@ class Experiment(object):
 
     """
 
-    def __init__(self, experiment_name, experiments_directory, bias_correction, classif_resolution):
+    def __init__(self, experiment_name, experiments_directory, bias_correction):
 
         self.name = experiment_name
         self.experiments_directory = experiments_directory
@@ -993,14 +993,14 @@ class GammaBoard(object):
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
 
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
+    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
         ax_eff_area = self._axes_resolution[1][1]
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
-                                                      bias_correction, classif_resolution)
+                                                      bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
