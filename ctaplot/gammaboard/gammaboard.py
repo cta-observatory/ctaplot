@@ -977,10 +977,6 @@ def update_reference_plot(gb):
         plots.plot_energy_resolution_cta_requirement(gb.site, ax=ax_ene_res, color='black')
         plots.plot_effective_area_cta_requirement(gb.site, ax=ax_eff_area, color='black')
 
-    ax_ang_res.legend()
-    ax_ene_res.legend()
-    ax_eff_area.legend()
-
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
                               visible_experiments):
