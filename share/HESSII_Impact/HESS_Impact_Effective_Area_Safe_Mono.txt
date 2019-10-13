@@ -1,5 +1,5 @@
 # HESS II Impact Effective Area (m2) Safe Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Effective Area (m2)
+# Energy (TeV)	Effective Area (m2)
 4.97e-02	3.42e+02
 5.10e-02	3.93e+02
 5.22e-02	4.54e+02

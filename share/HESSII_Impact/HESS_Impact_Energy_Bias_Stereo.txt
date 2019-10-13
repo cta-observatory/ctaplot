@@ -1,5 +1,5 @@
 # HESS II Impact Energy Bias Stereo - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Energy Bias
+# Energy (TeV)	Energy Bias
 1.06e-01	2.60e-01
 1.11e-01	2.49e-01
 1.28e-01	2.11e-01

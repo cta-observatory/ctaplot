@@ -1,5 +1,5 @@
 # HESS II Impact Effective Area (m2) Loose Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Effective Area (m2)
+# Energy (TeV)	Effective Area (m2)
 2.70e-02	5.30e+03
 2.81e-02	6.05e+03
 2.94e-02	7.11e+03

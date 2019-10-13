@@ -1,5 +1,5 @@
 # HESS II Impact Energy Resolution Safe Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Energy Resolution
+# Energy (TeV)	Energy Resolution
 7.60e-02	2.04e-01
 8.75e-02	2.12e-01
 1.05e-01	2.25e-01

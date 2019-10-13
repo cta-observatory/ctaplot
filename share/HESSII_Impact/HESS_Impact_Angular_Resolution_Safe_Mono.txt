@@ -1,5 +1,5 @@
 # HESS II Impact Angular Resolution (deg) Safe Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Angular Resolution (deg)
+# Energy (TeV)	Angular Resolution (deg)
 3.84e-02	2.78e-01
 3.97e-02	2.75e-01
 4.00e-02	2.73e-01

@@ -1,5 +1,5 @@
 # HESS II Impact Energy Bias Std Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Energy Bias
+# Energy (TeV)	Energy Bias
 4.27e-02	4.97e-01
 4.37e-02	4.82e-01
 4.47e-02	4.68e-01

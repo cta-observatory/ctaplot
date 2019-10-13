@@ -1,5 +1,5 @@
 # HESS II Impact Effective Area (m2) Stereo - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Effective Area (m2)
+# Energy (TeV)	Effective Area (m2)
 7.48e-02	1.48e+01
 7.61e-02	1.84e+01
 7.74e-02	2.14e+01

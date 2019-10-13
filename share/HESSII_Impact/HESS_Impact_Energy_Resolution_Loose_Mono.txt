@@ -1,5 +1,5 @@
 # HESS II Impact Energy Resolution Loose Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Energy Resolution
+# Energy (TeV)	Energy Resolution
 3.73e-02	3.05e-01
 4.30e-02	3.01e-01
 6.59e-02	2.92e-01

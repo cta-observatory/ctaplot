@@ -1,5 +1,5 @@
 # HESS II Impact Angular Resolution (deg) Loose Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Angular Resolution (deg)
+# Energy (TeV)	Angular Resolution (deg)
 3.83e-02	2.14e-01
 4.19e-02	2.16e-01
 4.37e-02	2.16e-01

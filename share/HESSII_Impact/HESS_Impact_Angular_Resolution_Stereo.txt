@@ -1,5 +1,5 @@
 # HESS II Impact Angular Resolution (deg) Stereo - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Angular Resolution (deg)
+# Energy (TeV)	Angular Resolution (deg)
 1.46e-01	1.08e-01
 1.55e-01	1.05e-01
 1.65e-01	1.03e-01

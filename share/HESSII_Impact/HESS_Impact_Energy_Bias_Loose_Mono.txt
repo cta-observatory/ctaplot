@@ -1,5 +1,5 @@
 # HESS II Impact Energy Bias Loose Mono - DOI: 10.22323/1.236.0826 
-Energy (TeV)	Energy Bias
+# Energy (TeV)	Energy Bias
 3.75e-02	2.15e-01
 3.90e-02	2.01e-01
 4.28e-02	1.81e-01
