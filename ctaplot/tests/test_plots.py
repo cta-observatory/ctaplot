@@ -240,3 +240,8 @@ def test_plot_roc_curve_gammaness_per_energy():
                                               alpha=0.6, lw=3,
                                               )
 
+
+def plot_any_resource():
+    from ctaplot.dataset import resources_list
+    for filename in resources_list:
+        plots.plot_any_resource(filename)

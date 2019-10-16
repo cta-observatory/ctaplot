@@ -14,6 +14,7 @@ import ctaplot.ana as ana
 from astropy.utils import deprecated
 from sklearn import metrics, preprocessing
 from sklearn.multiclass import LabelBinarizer
+from .dataset import load_any_resource
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -2079,5 +2080,33 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
 
     ax.legend(loc=4)
     ax.grid()
+
+    return ax
+
+
+def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
+    """
+    Naive plot of any resource text file that present data organised in a table after n lines of comments
+
+    Parameters
+    ----------
+    filename: path
+    columns_xy: list [x,y] : index of the data columns to plot
+    ax: `matplotlib.pyplot.axis` or None
+    kwargs: args for `matplotlib.pyplot.plot`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    data = load_any_resource(filename)
+
+    if 'label' not in kwargs:
+        kwargs['label'] = filename
+    ax.plot(data[columns_xy[0]], data[columns_xy[1]], **kwargs)
 
     return ax
