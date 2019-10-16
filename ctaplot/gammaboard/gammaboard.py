@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -180,7 +180,7 @@ class Experiment(object):
 
     """
 
-    def __init__(self, experiment_name, experiments_directory, bias_correction, classif_resolution):
+    def __init__(self, experiment_name, experiments_directory, bias_correction):
 
         self.name = experiment_name
         self.experiments_directory = experiments_directory
@@ -199,7 +199,13 @@ class Experiment(object):
         self.accuracy = None
         self.auc = None
         self.rocness = None
-        self.classif_resolution = classif_resolution
+        self.threshold = None
+        self.ax_ang_res = None
+        self.ax_ene_res = None
+        self.ax_imp_res = None
+        self.ax_eff_area = None
+        self.ax_roc = None
+        self.ax_pr = None
 
         self.cm = plt.cm.jet
         self.cm.set_under('w', 1)
@@ -213,10 +219,12 @@ class Experiment(object):
                     self.rocness = 'Hadroness'
                     self.gamma_data = self.data[self.data.mc_particle == 0]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                    self.threshold = 0.5
                 elif 'reco_gammaness' in self.data:
                     self.rocness = 'Gammaness'
                     self.gamma_data = self.data[self.data.mc_particle == 1]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
+                    self.threshold = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -249,7 +257,11 @@ class Experiment(object):
                                                                        label=self.name,
                                                                        color=self.color)
 
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            self.set_plotted(True)
+
+    def plot_angular_resolution_reco(self, ax=None):
+        if self.get_loaded():
+            if self.reco_gamma_data is not None:
                 self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
                                                                            self.reco_gamma_data.reco_azimuth,
                                                                            self.reco_gamma_data.mc_altitude,
@@ -262,8 +274,6 @@ class Experiment(object):
                                                                            **post_classification_opt,
                                                                            )
 
-            self.set_plotted(True)
-
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
             self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
@@ -272,7 +282,11 @@ class Experiment(object):
                                                            ax=ax,
                                                            label=self.name,
                                                            color=self.color)
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            self.set_plotted(True)
+
+    def plot_energy_resolution_reco(self, ax=None):
+        if self.get_loaded():
+            if self.reco_gamma_data is not None:
                 self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data.mc_energy,
                                                                self.reco_gamma_data.reco_energy,
                                                                bias_correction=self.bias_correction,
@@ -281,8 +295,6 @@ class Experiment(object):
                                                                color=self.color,
                                                                **post_classification_opt
                                                                )
-
-            self.set_plotted(True)
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
@@ -296,7 +308,14 @@ class Experiment(object):
                                                                       label=self.name,
                                                                       color=self.color
                                                                       )
-            if self.reco_gamma_data is not None and self.classif_resolution:
+            self.ax_imp_res.set_xscale('log')
+            self.ax_imp_res.set_xlabel('Energy [TeV]')
+            self.ax_imp_res.set_ylabel('Impact resolution [km]')
+            self.set_plotted(True)
+
+    def plot_impact_resolution_reco(self, ax=None):
+        if self.get_loaded():
+            if self.reco_gamma_data is not None:
                 self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
                                                                           self.reco_gamma_data.reco_impact_y,
                                                                           self.reco_gamma_data.mc_impact_x,
@@ -308,10 +327,6 @@ class Experiment(object):
                                                                           color=self.color,
                                                                           **post_classification_opt
                                                                           )
-            self.ax_imp_res.set_xscale('log')
-            self.ax_imp_res.set_xlabel('Energy [TeV]')
-            self.ax_imp_res.set_ylabel('Impact resolution [km]')
-            self.set_plotted(True)
 
     def plot_effective_area(self, ax=None):
         if self.get_loaded():
@@ -336,6 +351,14 @@ class Experiment(object):
                                                                self.run_config['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
+            else:
+                print('Cannot evaluate the effective area for experiment {}'.format(self.name))
+
+    def plot_effective_area_reco(self, ax=None):
+        if self.get_loaded():
+            self.ax_eff_area = ax if ax is not None else plt.gca()
+
+            if self.run_config is not None:
                 if self.reco_gamma_data is not None:
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
                                                                              self.run_config['energy_range_max'],
@@ -348,8 +371,6 @@ class Experiment(object):
                                           label=self.name + '_reco',
                                           color=self.color,
                                           linestyle=':')
-            else:
-                print('Cannot evaluate the effective area for experiment {}'.format(self.name))
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
@@ -359,24 +380,14 @@ class Experiment(object):
                                         self.data.reco_hadroness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_hadroness)
-                true_positive = self.gamma_data[self.gamma_data.reco_particle == 0]
-                proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[self.data.reco_particle == 0]
             elif 'reco_gammaness' in self.data:
                 fpr, tpr, _ = roc_curve(self.data.mc_particle,
                                         self.data.reco_gammaness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
                                          self.data.reco_gammaness)
-                true_positive = self.gamma_data[self.gamma_data.reco_particle == 1]
-                proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[proton.reco_particle == 1]
             else:
                 raise ValueError
 
-            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
-            self.recall = len(true_positive) / len(self.gamma_data)
-            correct = len(self.data[self.data.mc_particle == self.data.reco_particle])
-            self.accuracy = correct / len(self.data)
             self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
             self.set_plotted(True)
 
@@ -392,27 +403,59 @@ class Experiment(object):
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
-            # for i, thres in enumerate(threshold):
-            #     if i % round(len(threshold) / 10) == 0:
-            #         self.ax_pr.annotate(thres, (recall[i], precision[i]), c=self.color)
             self.set_plotted(True)
+
+    def plot_threshold(self):
+        if self.get_loaded() and self.threshold is not None and self.ax_pr is not None:
+            if 'reco_hadroness' in self.data:
+                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.threshold]
+                proton = self.data[self.data.mc_particle == 1]
+                false_positive = proton[proton.reco_hadroness < self.threshold]
+            elif 'reco_gammaness' in self.data:
+                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.threshold]
+                proton = self.data[self.data.mc_particle == 0]
+                false_positive = proton[proton.reco_gammaness >= self.threshold]
+            else:
+                raise ValueError
+
+            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+            self.recall = len(true_positive) / len(self.gamma_data)
+            self.ax_pr.scatter(self.recall, self.precision, c=[self.color], label=self.name)
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ang_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_energy_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_ene_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_impact_resolution_plot(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_imp_res.containers:
-                if self.name == c.get_label() or self.name + '_reco' == c.get_label():
+                if self.name == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_angular_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_ang_res.containers:
+                if self.name + '_reco' == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_energy_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_ene_res.containers:
+                if self.name + '_reco' == c.get_label():
+                    change_errorbar_visibility(c, visible)
+
+    def visibility_impact_resolution_reco_plot(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_imp_res.containers:
+                if self.name + '_reco' == c.get_label():
                     change_errorbar_visibility(c, visible)
 
     def visibility_effective_area_plot(self, visible: bool):
@@ -433,16 +476,26 @@ class Experiment(object):
                 if l.get_label() == self.name:
                     l.set_visible(visible)
 
+    def visibility_threshold(self, visible: bool):
+        if self.get_plotted():
+            for c in self.ax_pr.collections:
+                if c.get_label() == self.name:
+                    c.set_visible(visible)
+
     def visibility_all_plot(self, visible: bool):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
+            self.visibility_angular_resolution_reco_plot(visible)
         if 'reco_energy' in self.data:
             self.visibility_energy_resolution_plot(visible)
+            self.visibility_energy_resolution_reco_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
+            self.visibility_impact_resolution_reco_plot(visible)
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
+            self.visibility_threshold(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
 
@@ -621,13 +674,13 @@ def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
         fig, axes
     """
 
-    fig, axes = plt.subplots(4, 2, figsize=figsize)
+    fig, axes = plt.subplots(3, 2, figsize=figsize)
+
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_roc = axes[2][0]
-    ax_legend = axes[3][0]
     ax_pr = axes[2][1]
 
     if ref == 'performances':
@@ -653,13 +706,9 @@ def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
     ax_roc.set_xlabel('False Positive Rate')
     ax_roc.set_ylabel('True Positive Rate')
     ax_roc.set_title('Receiver Operating Characteristic')
-    # ax_roc.axis('equal')
 
     ax_pr.set_xlabel('Recall')
     ax_pr.set_ylabel('Precision')
-    ax_legend.set_axis_off()
-
-    axes[3][1].set_axis_off()
 
     fig.tight_layout()
 
@@ -688,38 +737,51 @@ def plot_exp_on_fig(exp, fig):
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
+        exp.plot_angular_resolution_reco(ax=ax_ang_res)
     if 'reco_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
+        exp.plot_energy_resolution_reco(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
+        exp.plot_impact_resolution_reco(ax=ax_imp_res)
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
+        exp.plot_threshold()
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
+        exp.plot_effective_area_reco(ax=ax_eff_area)
 
 
-def update_legend(visible_experiments, ax):
+def update_legend(visible_experiments, fig):
+    for l in fig.legends:
+        l.remove()
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    ax.legend(handles=legend_elements, loc='best', ncol=2)
+    fig.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.9, 0.1), ncol=6)
 
 
 def update_auc_legend(visible_experiments, ax):
     experiments = {exp.name: exp for exp in visible_experiments}
-    legend_elements = [Line2D([0], [0], color=exp.color,
-                              label='AUC = {:.4f}, Pr = {:.4f}, R = {:.4f}, Acc = {:.4f}'.format(exp.auc,
-                                                                                                 exp.precision,
-                                                                                                 exp.recall,
-                                                                                                 exp.accuracy
-                                                                                                 ))
-                       for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
-    ax.legend(handles=legend_elements, loc='lower right')
+    auc_legend_elements = [Line2D([0], [0], color=exp.color,
+                                  label='AUC = {:.4f}'.format(exp.auc))
+                           for (name, exp) in sorted(experiments.items()) if exp.auc is not None]
+    ax.legend(handles=auc_legend_elements, loc='lower right')
+
+
+def update_pr_legend(visible_experiments, ax):
+    experiments = {exp.name: exp for exp in visible_experiments}
+    pr_legend_elements = [Line2D([0], [0], color=exp.color,
+                                 label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
+                                                                        exp.recall,
+                                                                        ))
+                          for (name, exp) in sorted(experiments.items()) if exp.threshold is not None]
+    ax.legend(handles=pr_legend_elements, loc='lower left')
 
 
 def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
-                         fig_resolution, visible_experiments, ax_exp, ax_auc):
+                         fig_resolution, visible_experiments):
     def plot_on_click(sender):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -739,7 +801,19 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if not exp.get_loaded():
                 exp.load_data()
             if exp_name not in tabs.keys():
-                tabs[exp_name] = Output()
+                if exp.threshold is not None:
+                    slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
+                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution, visible_experiments),
+                                   names='value')
+                    item_layout = Layout(min_height='30px', width='200px')
+                    b_res = Button(layout=item_layout, description='gamma_resolution', button_style='success')
+                    b_res.on_click(create_display_res(exp))
+                    b_reco_res = Button(layout=item_layout, description='reco_resolution', button_style='success')
+                    b_reco_res.on_click(create_display_res(exp))
+
+                    tabs[exp_name] = VBox([slider, b_res, b_reco_res, Output()])
+                else:
+                    tabs[exp_name] = VBox([Output()])
 
             experiment_info_box.children = [value for _, value in tabs.items()]
             for i, key, in enumerate(tabs.keys()):
@@ -747,11 +821,14 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                 if key == exp_name:
                     experiment_info_box.selected_index = i
 
-            with tabs[exp_name]:
-                try:
-                    print_dict(exp.info)
-                except:
-                    print('Sorry, I have no info on the experiment {}'.format(exp_name))
+            for widget in tabs[exp_name].children:
+                if isinstance(widget, Output):
+                    with widget:
+                        try:
+                            print_dict(exp.info)
+                        except:
+                            print('Sorry, I have no info on the experiment {}'.format(exp_name))
+
             visible_experiments.add(exp)
         else:
             sender.button_style = 'warning'
@@ -763,15 +840,120 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
         if not exp.get_plotted() and visible and exp.data is not None:
             plot_exp_on_fig(exp, fig_resolution)
 
+        axes = fig_resolution.get_axes()
+        ax_auc = axes[4]
+        ax_pr = axes[5]
+
         exp.visibility_all_plot(visible)
-        update_legend(visible_experiments, ax_exp)
         update_auc_legend(visible_experiments, ax_auc)
+        update_pr_legend(visible_experiments, ax_pr)
+        update_legend(visible_experiments, fig_resolution)
 
     return plot_on_click
 
 
+def create_update_threslhold(experiments_dict, fig_resolution, visible_experiments):
+    def update_threshold(change):
+        """
+        Function to be called when a `ipywidgets.Button` is clicked
+
+        Args
+            sender: the object received by `ipywidgets.Button().on_click()`
+        """
+        exp_name = change['owner'].description
+        if exp_name not in experiments_dict:
+            pass
+
+        exp = experiments_dict[exp_name]
+        exp.threshold = change['new']
+
+        if 'reco_hadroness' in exp.data:
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.threshold]
+        elif 'reco_gammaness' in exp.data:
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.threshold]
+
+        axes = fig_resolution.get_axes()
+        ax_ang_res = axes[0]
+        ax_ene_res = axes[1]
+        ax_imp_res = axes[2]
+        ax_eff_area = axes[3]
+        ax_pr = axes[5]
+
+        for c in ax_ang_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_ang_res.containers.remove(c)
+
+        for c in ax_ene_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_ene_res.containers.remove(c)
+
+        for c in ax_imp_res.containers:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+                ax_imp_res.containers.remove(c)
+
+        for c in ax_eff_area.lines:
+            if exp.name + '_reco' == c.get_label():
+                c.remove()
+
+        for c in ax_pr.collections:
+            if exp.name == c.get_label():
+                c.remove()
+
+        if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
+            exp.plot_angular_resolution_reco(ax=ax_ang_res)
+        if 'reco_energy' in exp.data:
+            exp.plot_energy_resolution_reco(ax=ax_ene_res)
+        if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
+            exp.plot_impact_resolution_reco(ax=ax_imp_res)
+        if 'mc_energy' in exp.data:
+            exp.plot_effective_area_reco(ax=ax_eff_area)
+        if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
+            exp.plot_threshold()
+        update_pr_legend(visible_experiments, ax_pr)
+
+    return update_threshold
+
+
+def create_display_res(experiment):
+    def display_on_click(sender):
+        """
+        Function to be called when a `ipywidgets.Button` is clicked
+
+        Args
+            sender: the object received by `ipywidgets.Button().on_click()`
+        """
+        res_type = sender.description
+
+        if sender.button_style == 'warning':
+            sender.button_style = 'success'
+            visible = True
+        elif sender.button_style == 'success':
+            sender.button_style = 'warning'
+            visible = False
+        else:
+            raise ValueError
+        if 'reco' in res_type:
+            if experiment.ax_ang_res is not None:
+                experiment.visibility_angular_resolution_reco_plot(visible)
+            if experiment.ax_ene_res is not None:
+                experiment.visibility_energy_resolution_reco_plot(visible)
+            if experiment.ax_imp_res is not None:
+                experiment.visibility_impact_resolution_reco_plot(visible)
+        else:
+            if experiment.ax_ang_res is not None:
+                experiment.visibility_angular_resolution_plot(visible)
+            if experiment.ax_ene_res is not None:
+                experiment.visibility_energy_resolution_plot(visible)
+            if experiment.ax_imp_res is not None:
+                experiment.visibility_impact_resolution_plot(visible)
+    return display_on_click
+
+
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
-                              visible_experiments, ax_legend, ax_auc):
+                              visible_experiments):
     """
     Make an ipywidget carousel holding a series of `ipywidget.Button` corresponding to
     the list of experiments in experiments_dic
@@ -787,15 +969,13 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
     Returns
         `ipywidgets.VBox()`
     """
-    from ipywidgets import Layout, Button, VBox
-
     item_layout = Layout(min_height='30px', width='auto')
     items = [Button(layout=item_layout, description=exp_name, button_style='warning')
              for exp_name in np.sort(list(experiments_dic))[::-1]]
 
     for b in items:
         b.on_click(create_plot_on_click(experiments_dic, experiment_info_box, tabs,
-                                        fig_resolution, visible_experiments, ax_legend, ax_auc))
+                                        fig_resolution, visible_experiments))
 
     box_layout = Layout(overflow_y='scroll',
                         border='3px solid black',
@@ -815,23 +995,15 @@ class GammaBoard(object):
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
 
-    def __init__(self, experiments_directory,
-                 site='south',
-                 ref=None,
-                 bias_correction=False,
-                 classif_resolution=True,
-                 figsize=(12,16),
-                 ):
+    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, figsize=(12,16)):
         self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref, figsize=figsize)
-        ax_eff_area = self._axes_resolution[1][1]
-        ax_legend = self._axes_resolution[3][0]
-        ax_roc = self._axes_resolution[2][0]
 
+        ax_eff_area = self._axes_resolution[1][1]
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
-                                                      bias_correction, classif_resolution)
+                                                      bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
@@ -849,10 +1021,9 @@ class GammaBoard(object):
         tabs = {}
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
-                                             self._fig_resolution, visible_experiments, ax_legend, ax_roc)
+                                             self._fig_resolution, visible_experiments)
 
         self.exp_box = HBox([carousel, experiment_info_box])
-
 
 
 def open_dashboard():
