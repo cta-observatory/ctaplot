@@ -798,19 +798,17 @@ def angular_separation_altaz(alt1, az1, alt2, az2, unit='rad'):
     -------
     1d `numpy.ndarray` or float, angular separation
     """
-    if unit=='deg':
+    if unit == 'deg':
         alt1 = np.radians(alt1)
         az1 = np.radians(az1)
         alt2 = np.radians(alt2)
         az2 = np.radians(az2)
 
-    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2) \
-                + np.sin(alt1) * np.sin(alt2)
+    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1-az2) + np.sin(alt1) * np.sin(alt2)
     cosdelta[cosdelta > 1] = 1.
     cosdelta[cosdelta < -1] = -1.
 
-    ang_sep = np.degrees(np.arccos(cosdelta)) if unit=='deg' \
-                else np.arccos(cosdelta)
+    ang_sep = np.degrees(np.arccos(cosdelta)) if unit == 'deg' else np.arccos(cosdelta)
 
     return ang_sep
 
