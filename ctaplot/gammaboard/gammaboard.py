@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -199,7 +199,7 @@ class Experiment(object):
         self.accuracy = None
         self.auc = None
         self.rocness = None
-        self.threshold = None
+        self.gammaness_cut = None
         self.ax_ang_res = None
         self.ax_ene_res = None
         self.ax_imp_res = None
@@ -219,12 +219,12 @@ class Experiment(object):
                     self.rocness = 'Hadroness'
                     self.gamma_data = self.data[self.data.mc_particle == 0]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
-                    self.threshold = 0.5
+                    self.gammaness_cut = 0.5
                 elif 'reco_gammaness' in self.data:
                     self.rocness = 'Gammaness'
                     self.gamma_data = self.data[self.data.mc_particle == 1]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
-                    self.threshold = 0.5
+                    self.gammaness_cut = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -395,26 +395,26 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_pr = plt.gca() if ax is None else ax
             if 'reco_hadroness' in self.data:
-                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
                                                                       self.data.reco_hadroness)
             elif 'reco_gammaness' in self.data:
-                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
                                                                       self.data.reco_gammaness)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
             self.set_plotted(True)
 
-    def plot_threshold(self):
-        if self.get_loaded() and self.threshold is not None and self.ax_pr is not None:
+    def plot_gammaness_cut(self):
+        if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
             if 'reco_hadroness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.threshold]
+                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
                 proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[proton.reco_hadroness < self.threshold]
+                false_positive = proton[proton.reco_hadroness < self.gammaness_cut]
             elif 'reco_gammaness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.threshold]
+                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
                 proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[proton.reco_gammaness >= self.threshold]
+                false_positive = proton[proton.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
 
@@ -476,7 +476,7 @@ class Experiment(object):
                 if l.get_label() == self.name:
                     l.set_visible(visible)
 
-    def visibility_threshold(self, visible: bool):
+    def visibility_gammaness_cut(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_pr.collections:
                 if c.get_label() == self.name:
@@ -495,7 +495,7 @@ class Experiment(object):
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
-            self.visibility_threshold(visible)
+            self.visibility_gammaness_cut(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
 
@@ -663,12 +663,11 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
+def create_resolution_fig(figsize=(12, 16)):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
     Args
-        site (string)
 
     Returns
         fig, axes
@@ -683,22 +682,10 @@ def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
     ax_roc = axes[2][0]
     ax_pr = axes[2][1]
 
-    if ref == 'performances':
-        plots.plot_angular_resolution_cta_performance(site, ax=ax_ang_res, color='black')
-        plots.plot_energy_resolution_cta_performance(site, ax=ax_ene_res, color='black')
-        plots.plot_effective_area_cta_performance(site, ax=ax_eff_area, color='black')
-    elif ref == 'requirements':
-        plots.plot_angular_resolution_cta_requirement(site, ax=ax_ang_res, color='black')
-        plots.plot_energy_resolution_cta_requirement(site, ax=ax_ene_res, color='black')
-        plots.plot_effective_area_cta_requirement(site, ax=ax_eff_area, color='black')
-    else:
-        ax_eff_area.set_xscale('log')
-        ax_eff_area.set_yscale('log')
-        ax_eff_area.set_xlabel('Energy [TeV]')
-    if ref is not None:
-        ax_ang_res.legend()
-        ax_ene_res.legend()
-        ax_eff_area.legend()
+    ax_eff_area.set_xscale('log')
+    ax_eff_area.set_yscale('log')
+    ax_eff_area.set_xlabel('Energy [TeV]')
+    ax_eff_area.set_ylim([100, 1e7])
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
@@ -747,7 +734,7 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
-        exp.plot_threshold()
+        exp.plot_gammaness_cut()
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
@@ -776,7 +763,7 @@ def update_pr_legend(visible_experiments, ax):
                                  label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
                                                                         exp.recall,
                                                                         ))
-                          for (name, exp) in sorted(experiments.items()) if exp.threshold is not None]
+                          for (name, exp) in sorted(experiments.items()) if exp.gammaness_cut is not None]
     ax.legend(handles=pr_legend_elements, loc='lower left')
 
 
@@ -801,9 +788,9 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if not exp.get_loaded():
                 exp.load_data()
             if exp_name not in tabs.keys():
-                if exp.threshold is not None:
-                    slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
-                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution, visible_experiments),
+                if exp.gammaness_cut is not None:
+                    slider = FloatSlider(value=exp.gammaness_cut, min=0, max=1, step=0.01, description=exp_name)
+                    slider.observe(create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experiments),
                                    names='value')
                     item_layout = Layout(min_height='30px', width='200px')
                     b_res = Button(layout=item_layout, description='gamma_resolution', button_style='success')
@@ -852,8 +839,8 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
     return plot_on_click
 
 
-def create_update_threslhold(experiments_dict, fig_resolution, visible_experiments):
-    def update_threshold(change):
+def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experiments):
+    def update_gammaness_cut(change):
         """
         Function to be called when a `ipywidgets.Button` is clicked
 
@@ -865,12 +852,12 @@ def create_update_threslhold(experiments_dict, fig_resolution, visible_experimen
             pass
 
         exp = experiments_dict[exp_name]
-        exp.threshold = change['new']
+        exp.gammaness_cut = change['new']
 
         if 'reco_hadroness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.threshold]
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.gammaness_cut]
         elif 'reco_gammaness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.threshold]
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.gammaness_cut]
 
         axes = fig_resolution.get_axes()
         ax_ang_res = axes[0]
@@ -911,10 +898,10 @@ def create_update_threslhold(experiments_dict, fig_resolution, visible_experimen
         if 'mc_energy' in exp.data:
             exp.plot_effective_area_reco(ax=ax_eff_area)
         if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
-            exp.plot_threshold()
+            exp.plot_gammaness_cut()
         update_pr_legend(visible_experiments, ax_pr)
 
-    return update_threshold
+    return update_gammaness_cut
 
 
 def create_display_res(experiment):
@@ -950,6 +937,46 @@ def create_display_res(experiment):
             if experiment.ax_imp_res is not None:
                 experiment.visibility_impact_resolution_plot(visible)
     return display_on_click
+
+
+def create_update_site(gb):
+    def update_site(change):
+        gb.site = change['new'].lower()
+        update_reference_plot(gb)
+    return update_site
+
+
+def create_update_reference(gb):
+    def update_reference(change):
+        gb.ref = change['new'].lower()
+        update_reference_plot(gb)
+    return update_reference
+
+
+def update_reference_plot(gb):
+    axes = gb._fig_resolution.get_axes()
+    ax_ang_res = axes[0]
+    ax_ene_res = axes[1]
+    ax_eff_area = axes[3]
+
+    for l in ax_ang_res.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+    for l in ax_ene_res.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+    for l in ax_eff_area.lines:
+        if 'CTA' in l.get_label():
+            l.remove()
+
+    if gb.ref == 'performances':
+        plots.plot_angular_resolution_cta_performance(gb.site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_performance(gb.site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_performance(gb.site, ax=ax_eff_area, color='black')
+    elif gb.ref == 'requirements':
+        plots.plot_angular_resolution_cta_requirement(gb.site, ax=ax_ang_res, color='black')
+        plots.plot_energy_resolution_cta_requirement(gb.site, ax=ax_ene_res, color='black')
+        plots.plot_effective_area_cta_requirement(gb.site, ax=ax_eff_area, color='black')
 
 
 def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_resolution,
@@ -988,25 +1015,21 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
 
 class GammaBoard(object):
-    '''
-    Args
-        experiments_directory (string)
-        site (string): 'south' for Paranal and 'north' for LaPalma
-        ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
-    '''
-
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, figsize=(12,16)):
-        self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref, figsize=figsize)
-
-        ax_eff_area = self._axes_resolution[1][1]
-        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        self._fig_resolution.subplots_adjust(bottom=0.2)
+    """
+        Args
+            experiments_directory (string)
+            site (string): 'south' for Paranal and 'north' for LaPalma
+            ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
+    """
+    def __init__(self, experiments_directory, bias_correction=False, figsize=(12,16)):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
                                  exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
+        self.site = 'north'
+        self.ref = 'none'
 
         colors = np.arange(0, 1, 1 / len(self.experiments_dict.keys()), dtype=np.float32)
         np.random.seed(1)
@@ -1020,10 +1043,21 @@ class GammaBoard(object):
         experiment_info_box = Tab()
         tabs = {}
 
+        self._fig_resolution, self._axes_resolution = create_resolution_fig(figsize=figsize)
+        ax_eff_area = self._axes_resolution[1][1]
+        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
+        self._fig_resolution.subplots_adjust(bottom=0.2)
+
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              self._fig_resolution, visible_experiments)
+        site_selector = Dropdown(options=['North', 'South'], value='North', description='Site')
+        site_selector.observe(create_update_site(self), names='value')
 
-        self.exp_box = HBox([carousel, experiment_info_box])
+        reference_selector = Dropdown(options=['None', 'performances', 'requirements'],
+                                      value='None', description='Reference')
+        reference_selector.observe(create_update_reference(self), names='value')
+
+        self.exp_box = VBox([HBox([site_selector, reference_selector]), HBox([carousel, experiment_info_box])])
 
 
 def open_dashboard():
