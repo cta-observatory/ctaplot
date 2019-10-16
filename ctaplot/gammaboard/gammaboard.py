@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown
-from IPython import display
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -200,7 +199,7 @@ class Experiment(object):
         self.accuracy = None
         self.auc = None
         self.rocness = None
-        self.threshold = None
+        self.gammaness_cut = None
         self.ax_ang_res = None
         self.ax_ene_res = None
         self.ax_imp_res = None
@@ -220,12 +219,12 @@ class Experiment(object):
                     self.rocness = 'Hadroness'
                     self.gamma_data = self.data[self.data.mc_particle == 0]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
-                    self.threshold = 0.5
+                    self.gammaness_cut = 0.5
                 elif 'reco_gammaness' in self.data:
                     self.rocness = 'Gammaness'
                     self.gamma_data = self.data[self.data.mc_particle == 1]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
-                    self.threshold = 0.5
+                    self.gammaness_cut = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -396,26 +395,26 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_pr = plt.gca() if ax is None else ax
             if 'reco_hadroness' in self.data:
-                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
                                                                       self.data.reco_hadroness)
             elif 'reco_gammaness' in self.data:
-                precision, recall, threshold = precision_recall_curve(self.data.mc_particle,
+                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
                                                                       self.data.reco_gammaness)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
             self.set_plotted(True)
 
-    def plot_threshold(self):
-        if self.get_loaded() and self.threshold is not None and self.ax_pr is not None:
+    def plot_gammaness_cut(self):
+        if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
             if 'reco_hadroness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.threshold]
+                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
                 proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[proton.reco_hadroness < self.threshold]
+                false_positive = proton[proton.reco_hadroness < self.gammaness_cut]
             elif 'reco_gammaness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.threshold]
+                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
                 proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[proton.reco_gammaness >= self.threshold]
+                false_positive = proton[proton.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
 
@@ -477,7 +476,7 @@ class Experiment(object):
                 if l.get_label() == self.name:
                     l.set_visible(visible)
 
-    def visibility_threshold(self, visible: bool):
+    def visibility_gammaness_cut(self, visible: bool):
         if self.get_plotted():
             for c in self.ax_pr.collections:
                 if c.get_label() == self.name:
@@ -496,7 +495,7 @@ class Experiment(object):
         if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
-            self.visibility_threshold(visible)
+            self.visibility_gammaness_cut(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
 
@@ -735,7 +734,7 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
-        exp.plot_threshold()
+        exp.plot_gammaness_cut()
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
@@ -764,7 +763,7 @@ def update_pr_legend(visible_experiments, ax):
                                  label='Pr = {:.4f}, R = {:.4f}'.format(exp.precision,
                                                                         exp.recall,
                                                                         ))
-                          for (name, exp) in sorted(experiments.items()) if exp.threshold is not None]
+                          for (name, exp) in sorted(experiments.items()) if exp.gammaness_cut is not None]
     ax.legend(handles=pr_legend_elements, loc='lower left')
 
 
@@ -789,9 +788,9 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if not exp.get_loaded():
                 exp.load_data()
             if exp_name not in tabs.keys():
-                if exp.threshold is not None:
-                    slider = FloatSlider(value=exp.threshold, min=0, max=1, step=0.01, description=exp_name)
-                    slider.observe(create_update_threslhold(experiments_dict, fig_resolution, visible_experiments),
+                if exp.gammaness_cut is not None:
+                    slider = FloatSlider(value=exp.gammaness_cut, min=0, max=1, step=0.01, description=exp_name)
+                    slider.observe(create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experiments),
                                    names='value')
                     item_layout = Layout(min_height='30px', width='200px')
                     b_res = Button(layout=item_layout, description='gamma_resolution', button_style='success')
@@ -840,8 +839,8 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
     return plot_on_click
 
 
-def create_update_threslhold(experiments_dict, fig_resolution, visible_experiments):
-    def update_threshold(change):
+def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experiments):
+    def update_gammaness_cut(change):
         """
         Function to be called when a `ipywidgets.Button` is clicked
 
@@ -853,12 +852,12 @@ def create_update_threslhold(experiments_dict, fig_resolution, visible_experimen
             pass
 
         exp = experiments_dict[exp_name]
-        exp.threshold = change['new']
+        exp.gammaness_cut = change['new']
 
         if 'reco_hadroness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.threshold]
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.gammaness_cut]
         elif 'reco_gammaness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.threshold]
+            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.gammaness_cut]
 
         axes = fig_resolution.get_axes()
         ax_ang_res = axes[0]
@@ -899,10 +898,10 @@ def create_update_threslhold(experiments_dict, fig_resolution, visible_experimen
         if 'mc_energy' in exp.data:
             exp.plot_effective_area_reco(ax=ax_eff_area)
         if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
-            exp.plot_threshold()
+            exp.plot_gammaness_cut()
         update_pr_legend(visible_experiments, ax_pr)
 
-    return update_threshold
+    return update_gammaness_cut
 
 
 def create_display_res(experiment):
