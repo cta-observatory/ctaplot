@@ -2091,7 +2091,9 @@ def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
     Parameters
     ----------
     filename: path
+    columns_xy: list [x,y] : index of the data columns to plot
     ax: `matplotlib.pyplot.axis` or None
+    kwargs: args for `matplotlib.pyplot.plot`
 
     Returns
     -------
