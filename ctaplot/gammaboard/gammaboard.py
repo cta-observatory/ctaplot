@@ -664,7 +664,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig():
+def create_resolution_fig(figsize=(12, 16)):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
@@ -673,7 +673,9 @@ def create_resolution_fig():
     Returns
         fig, axes
     """
-    fig, axes = plt.subplots(3, 2, figsize=(12, 16))
+
+    fig, axes = plt.subplots(3, 2, figsize=figsize)
+
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
@@ -1014,14 +1016,13 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
 
 
 class GammaBoard(object):
-    '''
-    Args
-        experiments_directory (string)
-        site (string): 'south' for Paranal and 'north' for LaPalma
-        ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
-    '''
-
-    def __init__(self, experiments_directory, bias_correction=False):
+    """
+        Args
+            experiments_directory (string)
+            site (string): 'south' for Paranal and 'north' for LaPalma
+            ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
+    """
+    def __init__(self, experiments_directory, bias_correction=False, figsize=(12,16)):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
@@ -1043,7 +1044,7 @@ class GammaBoard(object):
         experiment_info_box = Tab()
         tabs = {}
 
-        self._fig_resolution, self._axes_resolution = create_resolution_fig()
+        self._fig_resolution, self._axes_resolution = create_resolution_fig(figsize=figsize)
         ax_eff_area = self._axes_resolution[1][1]
         ax_eff_area.set_ylim(ax_eff_area.get_ylim())
         self._fig_resolution.subplots_adjust(bottom=0.2)

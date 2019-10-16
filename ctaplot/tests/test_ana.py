@@ -78,7 +78,7 @@ def test_resolution():
 
 def test_resolution_per_bin():
     # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
-    size = 100000
+    size = 1000000
     loc = np.random.rand() * 100
     scale = np.random.rand() * 10
     x = np.linspace(0, 10, size)
