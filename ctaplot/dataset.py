@@ -1,6 +1,7 @@
 import pkg_resources
 import os
 import sys
+import numpy as np
 
 __all__ = ['get']
 
@@ -132,3 +133,29 @@ def find_resource(resource_name):
         raise FileNotFoundError("Couldn't find resource: '{}'".format(resource_name))
     else:
         return os.path.join(sys_dir, resource_name)
+
+
+def load_any_resource(filename):
+    """
+    Naive load of any resource text file that present data organised in a table after n lines of comments
+
+    Parameters
+    ----------
+    filename: path
+
+    Returns
+    -------
+    data: tuple of `numpy.ndarray`
+    """
+    sr = 0
+    with open(get(filename)) as file:
+        n_lines = len(file.readlines())
+
+    while sr < n_lines:
+        try:
+            data = np.loadtxt(get(filename), skiprows=sr, unpack=True)
+            break
+        except:
+            sr += 1
+
+    return data
