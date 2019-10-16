@@ -610,7 +610,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(site='south', ref=None):
+def create_resolution_fig(site='south', ref=None, figsize=(12, 16)):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
@@ -620,7 +620,8 @@ def create_resolution_fig(site='south', ref=None):
     Returns
         fig, axes
     """
-    fig, axes = plt.subplots(4, 2, figsize=(12, 16))
+
+    fig, axes = plt.subplots(4, 2, figsize=figsize)
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
@@ -814,8 +815,14 @@ class GammaBoard(object):
         ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     '''
 
-    def __init__(self, experiments_directory, site='south', ref=None, bias_correction=False, classif_resolution=True):
-        self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref)
+    def __init__(self, experiments_directory,
+                 site='south',
+                 ref=None,
+                 bias_correction=False,
+                 classif_resolution=True,
+                 figsize=(12,16),
+                 ):
+        self._fig_resolution, self._axes_resolution = create_resolution_fig(site, ref, figsize=figsize)
         ax_eff_area = self._axes_resolution[1][1]
         ax_legend = self._axes_resolution[3][0]
         ax_roc = self._axes_resolution[2][0]
