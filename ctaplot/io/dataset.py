@@ -119,8 +119,8 @@ def find_resource(resource_name):
     str - absolute path to the resource
     """
     # If ctaplot is installed via python setup.py develop, data files stay in share
-    share_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), '../../share/')
-    gammaboard_dir = os.path.join(pkg_resources.resource_filename(__name__, ''), 'gammaboard/')
+    share_dir = os.path.join(pkg_resources.resource_filename('ctaplot', ''), '../share/')
+    gammaboard_dir = os.path.join(pkg_resources.resource_filename('ctaplot', ''), 'gammaboard/')
     resources_dirs = [share_dir, gammaboard_dir]
     for res_dir in resources_dirs:
         for root, dirs, files in os.walk(res_dir):
