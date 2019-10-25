@@ -5,7 +5,7 @@ Contain mathematical functions to make results analysis
 (compute angular resolution, effective surface, energy resolution... )
 """
 import numpy as np
-import ctaplot.dataset as ds
+from ..io import dataset as ds
 from scipy.stats import binned_statistic, norm
 
 _relative_scaling_method = 's1'

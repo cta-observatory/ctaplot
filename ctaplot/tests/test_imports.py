@@ -12,7 +12,7 @@ def test_import_ana():
 
 def test_import_dataset():
     try:
-        from ctaplot import dataset
+        from ctaplot.io import dataset
     except:
         raise ()
 

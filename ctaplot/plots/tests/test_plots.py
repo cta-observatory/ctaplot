@@ -1,4 +1,4 @@
-from ctaplot import plots
+from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,7 +14,7 @@ def plot_energy_distribution():
 def test_plot_energy_resolution():
     plt.close('all')
     E = np.logspace(-2, 2, 10)
-    plots.plot_energy_resolution(E, E**2, color='red')
+    plots.plot_energy_resolution(E, E ** 2, color='red')
 
 
 def test_plot_energy_resolution_cta_requirements():
@@ -138,13 +138,13 @@ def test_plot_effective_area_per_energy_power_law():
     simu_area = 1e7
 
     plots.plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
-                                             reco_energy, simu_area, color='black')
+                                                   reco_energy, simu_area, color='black')
 
 def test_plot_resolution():
     x = np.linspace(0, 10, 1000)
     y_true = 0.5 + np.random.rand(1000)
     y_reco = np.random.normal(loc=1, size=1000)
-    from ctaplot.ana import resolution_per_bin
+    from ctaplot.ana.ana import resolution_per_bin
     bins, res = resolution_per_bin(x, y_true, y_reco)
     plots.plot_resolution(bins, res, color='black')
 
@@ -158,8 +158,8 @@ def test_plot_angular_resolution_per_off_pointing_angle():
     az_p = np.ones(n)
 
     plots.plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az, alt_p, az_p,
-                                                        bins=4, color='red', alpha=0.5
-                                                        )
+                                                         bins=4, color='red', alpha=0.5
+                                                         )
 
 
 def test_plot_multiplicity_hist():
@@ -183,7 +183,7 @@ def test_plot_angular_res_per_energy():
 
 
 def test_plot_resolution_difference():
-    from ctaplot.ana import resolution_per_bin, irf_cta
+    from ctaplot.ana.ana import resolution_per_bin, irf_cta
     size = 1000
     simu = np.logspace(-2, 2, size)
     reco = 2 * simu
@@ -242,6 +242,6 @@ def test_plot_roc_curve_gammaness_per_energy():
 
 
 def plot_any_resource():
-    from ctaplot.dataset import resources_list
+    from ctaplot.io.dataset import resources_list
     for filename in resources_list:
         plots.plot_any_resource(filename)

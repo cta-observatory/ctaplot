@@ -1,4 +1,4 @@
-import ctaplot.ana as ana
+import ctaplot.ana.ana as ana
 import numpy as np
 
 def test_logspace_decades_nbin():
@@ -86,12 +86,12 @@ def test_resolution_per_bin():
     y_reco = np.random.normal(loc=loc, scale=scale, size=size)
     for scaling in ['s0', 's1', 's2', 's3', 's4']:
         bins, res = ana.resolution_per_bin(x, y_true, y_reco, bins=6, relative_scaling_method=scaling)
-        np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco, scaling).mean(), rtol=1e-1)
+        np.testing.assert_allclose(res[:, 0], scale / ana.relative_scaling(y_true, y_reco, scaling).mean(), rtol=1e-1)
 
     bias = 50
     y_reco = np.random.normal(loc=loc+bias, scale=scale, size=size)
     bins, res = ana.resolution_per_bin(x, y_true, y_reco, bias_correction=True)
-    np.testing.assert_allclose(res[:, 0], scale/ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
+    np.testing.assert_allclose(res[:, 0], scale / ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
 
 
 def test_resolution_per_bin_empty():
@@ -121,11 +121,11 @@ def test_resolution_per_energy():
     y = 10 * np.ones(x.shape[0])
     E = 10 ** (-3 + 6 * np.random.rand(x.shape[0]))
     e_bin, res_e = ana.resolution_per_energy(y, x, E)
-    assert np.isclose(res_e, 1./ana.relative_scaling(y, x).mean(), rtol=1e-1).all()
+    assert np.isclose(res_e, 1. / ana.relative_scaling(y, x).mean(), rtol=1e-1).all()
 
 
 def test_power_law_integrated_distribution():
-    from ctaplot.ana import power_law_integrated_distribution
+    from ctaplot.ana.ana import power_law_integrated_distribution
     emin = 50.  # u.GeV
     emax = 500.e3  # u.GeV
     Nevents = 1e6
