@@ -1,12 +1,12 @@
 def test_import_plots():
     try:
-        from ctaplot.plots import plots
+        from ctaplot import plots
     except:
         raise()
 
 def test_import_ana():
     try:
-        from ctaplot.ana import ana
+        from ctaplot import ana
     except:
         raise ()
 
