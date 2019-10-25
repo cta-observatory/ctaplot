@@ -1562,7 +1562,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     yy = bin_stat[bin_with_data]
 
     if line:
-        ax.plot(xx, yy, **kwargs)
+        sc = ax.plot(xx, yy, **kwargs)
 
         if errorbar:
             err = np.array([np.percentile(np.abs(y[binnumber == i + 1] - bin_stat[i]), percentile)
@@ -1570,12 +1570,8 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
             yy_h = yy + err
             yy_l = yy - err
 
-            # poping label from kwargs so it does not appear twice
-            if 'label' in kwargs:
-                kwargs.pop('label')
-
-            kwargs['alpha'] = 0.2
-            ax.fill_between(xx, yy_l, yy_h, **kwargs)
+            err_kwargs = dict(alpha=0.2, color=sc[0].get_color())
+            ax.fill_between(xx, yy_l, yy_h, **err_kwargs)
 
     else:
         sc = ax.scatter(xx, yy, **kwargs)
