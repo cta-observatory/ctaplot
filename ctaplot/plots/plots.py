@@ -14,7 +14,7 @@ import ctaplot.ana.ana as ana
 from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
-from ctaplot.io.dataset import load_any_resource
+from ..io.dataset import load_any_resource
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
