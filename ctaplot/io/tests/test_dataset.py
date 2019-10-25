@@ -1,4 +1,4 @@
-from ctaplot.dataset import get, resources_list, load_any_resource
+from ctaplot.io.dataset import get, resources_list, load_any_resource
 
 
 def test_get_datasets():

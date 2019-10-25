@@ -10,11 +10,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
-import ctaplot.ana as ana
+import ctaplot.ana.ana as ana
 from astropy.utils import deprecated
-from sklearn import metrics, preprocessing
+from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
-from .dataset import load_any_resource
+from ctaplot.io.dataset import load_any_resource
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -1658,7 +1658,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
     ax: `matplotlib.pyplot.axes`
     """
     res_bins, res = ana.angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
-                                                              alt_pointing, az_pointing, bins=bins)
+                                                                  alt_pointing, az_pointing, bins=bins)
     res_unit='rad'
     if res_degree:
         res = np.rad2deg(res)
