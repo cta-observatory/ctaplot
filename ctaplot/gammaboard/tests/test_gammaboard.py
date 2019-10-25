@@ -1,6 +1,6 @@
 
 def test_find_dashboard():
-    from ctaplot import get
+    from ctaplot.io import get
     get('dashboard.ipynb')
 
 def test_open_dashboard():
