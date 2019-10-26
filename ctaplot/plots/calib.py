@@ -8,6 +8,7 @@ __all__ = ['plot_photoelectron_true_reco']
 def plot_photoelectron_true_reco(true_pe, reco_pe, bins=200, stat='median', errorbar=True, percentile=68.27,
                                  ax=None, hist_args={}, stat_args={}, xy_args={}):
     """
+    Plot the number of reconstructed photo-electrons as a function of the number of true photo-electron
 
     Parameters
     ----------
