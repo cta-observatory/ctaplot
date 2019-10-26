@@ -10,7 +10,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
-import ctaplot.ana.ana as ana
+from ..ana import ana
 from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
@@ -1518,10 +1518,11 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     return ax
 
 
-def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile=68.27, ax=None, **kwargs):
+def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile=68.27, line=True,
+                     ax=None, **kwargs):
     """
     Plot statistics on the quantity y binned following the quantity x.
-    The statistic can be given by a string (￿'mean￿', ￿'sum', ￿'max￿'...) or a function. See `scipy.stats.binned_statistic`.
+    The statistic can be given by a string ('mean', 'sum', 'max'...) or a function. See `scipy.stats.binned_statistic`.
     Errorbars may be added and represents the dispersion (given by the percentile option) of the y distribution
     around the measured value in a bin. These error bars might not make sense for some statistics,
     it is left to the user to use the function responsibly.
@@ -1546,7 +1547,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     >>> import numpy as np
     >>> x = np.random.rand(1000)
     >>> y = x**2
-    >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95, marker='o', linestyle='')
+    >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95, line=False, color='red', errorbar=True, s=0)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -1555,27 +1556,37 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     bin_width = (bin_edges[1] - bin_edges[0])
     bin_centers = bin_edges[1:] - bin_width / 2
 
-    bin_with_data = np.unique(binnumber) - 1
-    bin_r68 = np.array([np.percentile(np.abs(y[binnumber == i] - bin_stat[i - 1]), percentile)
-                        for i in set(binnumber)])
+    bin_with_data = np.setdiff1d(binnumber, len(bin_edges)) - 1
 
-    if errorbar:
-        ax.hlines(bin_stat, bin_edges[:-1], bin_edges[1:], **kwargs)
+    xx = bin_centers[bin_with_data]
+    yy = bin_stat[bin_with_data]
 
-        # poping label from kwargs so it does not appear twice
-        if 'label' in kwargs:
-            kwargs.pop('label')
+    if line:
+        sc = ax.plot(xx, yy, **kwargs)
 
-        ax.vlines(bin_centers[bin_with_data],
-                  bin_stat[bin_with_data] - bin_r68,
-                  bin_stat[bin_with_data] + bin_r68,
-                  **kwargs,
-                  )
+        if errorbar:
+            err = np.array([np.percentile(np.abs(y[binnumber == i + 1] - bin_stat[i]), percentile)
+                            for i in bin_with_data])
+            yy_h = yy + err
+            yy_l = yy - err
+
+            err_kwargs = dict(alpha=0.2, color=sc[0].get_color())
+            ax.fill_between(xx, yy_l, yy_h, **err_kwargs)
+
     else:
-        ax.plot(bin_centers[bin_with_data],
-                   bin_stat[bin_with_data],
-                   **kwargs,
-                   )
+        sc = ax.scatter(xx, yy, **kwargs)
+
+        if errorbar:
+            err = np.array([np.percentile(np.abs(y[binnumber == i + 1] - bin_stat[i]), percentile)
+                            for i in bin_with_data])
+            yy_h = yy + err
+            yy_l = yy - err
+
+            err_kwargs = dict(color=sc.get_facecolors()[0].tolist())
+
+            ax.hlines(bin_stat, bin_edges[:-1], bin_edges[1:], **err_kwargs)
+            ax.vlines(xx, yy_l, yy_h, **err_kwargs)
+
     return ax
 
 

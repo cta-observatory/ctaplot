@@ -105,8 +105,10 @@ def test_plot_binned_stat():
     x = np.random.rand(100)
     y = np.random.rand(100)
     for stat in ['min', 'median', 'mean']:
-        plots.plot_binned_stat(x, y, statistic=stat, percentile=95, errorbar=True, color='red', linestyles='dashed')
-        plots.plot_binned_stat(x, y, statistic=stat, errorbar=False, color='blue', marker='o', lw=3)
+        for errorbar in [False, True]:
+            plots.plot_binned_stat(x, y, statistic=stat, percentile=95, errorbar=errorbar, color='red', line=True,
+                                   linestyle='dashed')
+            plots.plot_binned_stat(x, y, statistic=stat, errorbar=errorbar, line=False, color='blue', marker='o', lw=3)
 
 
 
