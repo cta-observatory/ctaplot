@@ -129,8 +129,8 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
         shape: (n,)
     reco_pe: `numpy.ndarray`
         shape: (n,)
-    xlim_bias: tuple
-        (xmin, xmax)
+    xlim_bias: tuple (xmin, xmax)
+        unused if `bias_correction=False`
     bias_correction: bool
     bins: int
     ax: `matplotlib.pyplot.axis` or None
@@ -149,8 +149,8 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     x = np.log10(true_pe[mask])
     y = reco_pe[mask] / true_pe[mask]
 
-    mask_bias = (x > np.log10(xlim_bias[0])) & (x < np.log10(xlim_bias[1]))
     if bias_correction:
+        mask_bias = (x > np.log10(xlim_bias[0])) & (x < np.log10(xlim_bias[1]))
         b = bias(np.ones_like(y[mask_bias]), y[mask_bias])
         ylabel = "(reco # pe / true # pe) - ({:.3f})".format(b)
     else:
@@ -164,7 +164,10 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     plt.colorbar(im, ax=ax)
 
     ax.hlines(1, x.min(), x.max(), color='black')
-    ax.axvspan(np.log10(xlim_bias[0]), np.log10(xlim_bias[1]), alpha=0.05, color='black', label='bias computed there')
+
+    if bias_correction:
+        ax.axvspan(np.log10(xlim_bias[0]), np.log10(xlim_bias[1]), alpha=0.05, color='black',
+                   label='bias computed there')
 
     if 'errorbar' not in bin_stat_args:
         bin_stat_args['errorbar'] = True
@@ -174,6 +177,7 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     bin_stat_args['statistic'] = 'median'
 
     plot_binned_stat(x, y - b, **bin_stat_args)
+
     ax.set_ylim(-2, 6)
     ax.set_xlabel('log10(# true pe)', fontsize=18)
     ax.set_ylabel(ylabel, fontsize=18)
