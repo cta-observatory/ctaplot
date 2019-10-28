@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import numpy as np
 from ..plots import plot_binned_stat
+from ..ana import bias
 
 __all__ = ['plot_photoelectron_true_reco']
 
@@ -68,3 +69,114 @@ def plot_photoelectron_true_reco(true_pe, reco_pe, bins=200, stat='median', erro
     ax.legend(fontsize=16)
     return ax
 
+
+def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
+    """
+    Plot the pixels spectrum (reconstructed photo-electrons as a function of true photo-electrons)
+
+    Parameters
+    ----------
+    true_pe: `numpy.ndarray`
+        true photo-electron values
+        shape: (n,)
+    reco_pe: `numpy.ndarray`
+        reconstructed photo-electron values
+        shape: (n, )
+    ax: `matplotlib.pyplot.axis` or None
+    kwargs: args for `matplotlib.pyplot.hist`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    mask = (reco_pe > 0)
+    y = np.log10(reco_pe[mask])
+    x = true_pe[mask]
+
+    kwargs['cumulative'] = -1
+    kwargs['histtype'] = 'step'
+    kwargs['density'] = False
+    kwargs['log'] = True
+    if 'bins' not in kwargs:
+        kwargs['bins'] = 300
+    if 'linewidth' not in kwargs:
+        kwargs['linewidth'] = 3
+    if 'label' in kwargs:
+        kwargs.pop('label')
+
+    ax.hist(y, **kwargs, label='all pixels')
+    ax.hist(y[x > 0], **kwargs, label='pixels with signal')
+    ax.hist(y[x == 0], **kwargs, label='pixels with no signal')
+    ax.hist(np.log10(true_pe[true_pe > 0]), **kwargs, label='true signal pixels', alpha=0.4)
+    ax.set_xlim(-1, 5)
+    ax.set_xlabel('log10(# true pe)')
+    ax.set_ylabel('# reco pe')
+    ax.legend(fontsize=16)
+    ax.grid()
+    return ax
+
+
+def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correction=True, bins=400, ax=None, hist_args={},
+                           bin_stat_args={}):
+    """
+    Plot the charge resolution
+    
+    Parameters
+    ----------
+    true_pe: `numpy.ndarray`
+        shape: (n,)
+    reco_pe: `numpy.ndarray`
+        shape: (n,)
+    xlim_bias: tuple
+        (xmin, xmax)
+    bias_correction: bool
+    bins: int
+    ax: `matplotlib.pyplot.axis` or None
+    hist_args: dict
+        args for `matplotlib.pyplot.hist2d`
+    bin_stat_args: dict
+        args for `ctaplot.plots.plot_binned_stat`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axis`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    mask = (true_pe > 0)
+    x = np.log10(true_pe[mask])
+    y = reco_pe[mask] / true_pe[mask]
+
+    mask_bias = (x > np.log10(xlim_bias[0])) & (x < np.log10(xlim_bias[1]))
+    if bias_correction:
+        b = bias(np.ones_like(y[mask_bias]), y[mask_bias])
+        ylabel = "(reco # pe / true # pe) - ({:.3f})".format(b)
+    else:
+        b = 0
+        ylabel = "(reco # pe / true # pe)"
+
+    hist_args['bins'] = bins
+    hist_args['norm'] = LogNorm()
+
+    h, xedges, yedges, im = ax.hist2d(x, y - b, label='reco pe', **hist_args)
+    plt.colorbar(im, ax=ax)
+
+    ax.hlines(1, x.min(), x.max(), color='black')
+    ax.axvspan(np.log10(xlim_bias[0]), np.log10(xlim_bias[1]), alpha=0.05, color='black', label='bias computed there')
+
+    if 'errorbar' not in bin_stat_args:
+        bin_stat_args['errorbar'] = True
+    if 'color' not in bin_stat_args:
+        bin_stat_args['color'] = 'red'
+    bin_stat_args['label'] = 'median'
+    bin_stat_args['statistic'] = 'median'
+
+    plot_binned_stat(x, y - b, **bin_stat_args)
+    ax.set_ylim(-2, 6)
+    ax.set_xlabel('log10(# true pe)', fontsize=18)
+    ax.set_ylabel(ylabel, fontsize=18)
+    ax.grid()
+    ax.legend(fontsize=18)
+    return ax
