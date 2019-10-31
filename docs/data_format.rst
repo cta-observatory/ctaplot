@@ -11,7 +11,9 @@ GammaBoard file format
 
 Datasets in the HDF5 file are tables that can be opened with
 ::
-`pandas.read_hdf(filename, key=dataset_name)`
+
+    pandas.read_hdf(filename, key=dataset_name)
+
 
 * `data` - mandatory
 
@@ -19,6 +21,7 @@ Contains the reconstructed values
 
 Columns names:
 ::
+
     `mc_energy`: float
     `reco_energy`: float
     `mc_impact_x`: float
@@ -42,8 +45,10 @@ Columns names:
 
 * `triggered_events` - optional
 Single column table containing the list of triggered events energies:
+
 Column name:
 ::
+
     `mc_trig_energies`
 
 
@@ -53,6 +58,7 @@ Contains the simulation information from each simulation file used (1 file per l
 
 Column names:
 ::
+
     `energy_range_max`
     `energy_range_min`
     `max_alt`
@@ -111,3 +117,39 @@ Column names:
 
 
 Note: in the future, ctaplot will support the official CTA DL1 and DL2 file formats.
+
+
+GammaBoard experiments directory structure
+------------------------------------------
+
+GammaBoard loads experiments data from a single directory where all experiments are stored
+You may want to export the path to this directory as:
+
+::
+
+    GAMMABOARD_DATA=path_to_the_data_directory
+
+
+In this directory, each sub-directory is an experiment containing:
+
+* experiment_name.h5 : Mandatory - file containing the reconstructed quantities as described above.
+
+* experiment_name.json : Optional - file containing information regarding the experiment. It can be anything compliant with the json format.
+
+
+Example of GAMMABOARD_DATA directory
+************************************
+
+::
+
+    GAMMABOARD_DATA
+        ├── exp_01
+        |    ├── exp_01.h5
+        |    └── exp_01.json
+        └── the_awesome_exp
+             ├── the_awesome_exp.h5
+             └── the_awesome_exp.json
+
+
+
+
