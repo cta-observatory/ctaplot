@@ -9,6 +9,6 @@ Contents
    README
    license
    modules
-   data_format
+   data_format.rst
    examples
 
