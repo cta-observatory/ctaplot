@@ -2,20 +2,28 @@ Modules
 =======
 
 
-.. automodule:: ctaplot.plots
+.. automodule:: ctaplot.plots.plots
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-
-.. automodule:: ctaplot.ana
+.. automodule:: ctaplot.plots.calib
     :members:
     :undoc-members:
     :show-inheritance:
 
-
-.. automodule:: ctaplot.gammaboard
+.. automodule:: ctaplot.ana.ana
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: ctaplot.io.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: ctaplot.io.dataset
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
