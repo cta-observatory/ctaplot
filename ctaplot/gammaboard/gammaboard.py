@@ -12,8 +12,9 @@ from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dro
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
-from .. dataset import get
+from ..io.dataset import get
 from ..io import read_lst_dl2_data
+
 
 __all__ = ['open_dashboard',
            'load_data_from_h5',
@@ -1104,7 +1105,7 @@ class GammaBoard(object):
         self.exp_box = VBox([HBox([site_selector, reference_selector]), HBox([carousel, experiment_info_box])])
 
 
-def open_dashboard():
+def open_dashboard(name='dashboard.ipynb'):
     """
     Open a temporary copy of the dashboard.
     All changes made in the dashboard by the user will be discarded when closed.
@@ -1113,9 +1114,9 @@ def open_dashboard():
     -------
 
     """
-    original_dashboard_path = get('dashboard.ipynb')
+    original_dashboard_path = get(name)
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_dashboard = os.path.join(tmpdir, 'dashboard.ipynb')
+        tmp_dashboard = os.path.join(tmpdir, name)
         copyfile(original_dashboard_path, tmp_dashboard)
         command = 'jupyter notebook {}'.format(tmp_dashboard)
         os.system(command)

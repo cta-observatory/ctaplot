@@ -2,7 +2,7 @@
 # Licensed under a MIT license - see LICENSE.rst
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 import re
 
 def package_files(directory):
@@ -41,7 +41,7 @@ setup(name='ctaplot',
           'jupyter',
           'ipywidgets',
       ],
-      packages=['ctaplot', 'ctaplot/gammaboard'],
+      packages=find_packages(),
       tests_require=['pytest'],
       author='Thomas Vuillaume, Mikael Jacquemont',
       author_email='thomas.vuillaume@lapp.in2p3.fr',
