@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
-from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown
+from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown, Text, Label
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
 from .. import plots
 from .. import ana
@@ -165,7 +165,7 @@ def change_errorbar_visibility(err_container, visible: bool):
 
 post_classification_opt = dict(ms=0,
                                elinewidth=0.001,
-                               linestyle=':',
+                               linestyle='--',
                                fmt='v',
                                )
 
@@ -271,7 +271,8 @@ class Experiment(object):
                                                                            ax=ax,
                                                                            label=self.name + '_reco',
                                                                            color=self.color,
-                                                                           **post_classification_opt,
+                                                                           # linewidth=2.0,
+                                                                           # **post_classification_opt,
                                                                            )
 
     def plot_energy_resolution(self, ax=None):
@@ -293,7 +294,8 @@ class Experiment(object):
                                                                ax=ax,
                                                                label=self.name + '_reco',
                                                                color=self.color,
-                                                               **post_classification_opt
+                                                               # linewidth=2.0,
+                                                               # **post_classification_opt
                                                                )
 
     def plot_impact_resolution(self, ax=None):
@@ -325,7 +327,8 @@ class Experiment(object):
                                                                           ax=ax,
                                                                           label=self.name + '_reco',
                                                                           color=self.color,
-                                                                          **post_classification_opt
+                                                                          # linewidth=2.0,
+                                                                          # **post_classification_opt
                                                                           )
 
     def plot_effective_area(self, ax=None):
@@ -788,6 +791,8 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
             if not exp.get_loaded():
                 exp.load_data()
             if exp_name not in tabs.keys():
+                color = Text(description=exp.name, continuous_update=False)
+                color.observe(create_update_color(experiments_dict, fig_resolution, visible_experiments), names='value')
                 if exp.gammaness_cut is not None:
                     slider = FloatSlider(value=exp.gammaness_cut, min=0, max=1, step=0.01, description=exp_name)
                     slider.observe(create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experiments),
@@ -798,9 +803,10 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
                     b_reco_res = Button(layout=item_layout, description='reco_resolution', button_style='success')
                     b_reco_res.on_click(create_display_res(exp))
 
-                    tabs[exp_name] = VBox([slider, b_res, b_reco_res, Output()])
+                    tabs[exp_name] = VBox([HBox([slider, VBox([b_res, b_reco_res]), HBox([Label('Color'), color])]),
+                                           Output()])
                 else:
-                    tabs[exp_name] = VBox([Output()])
+                    tabs[exp_name] = VBox([HBox([Label('Color'), color]), Output()])
 
             experiment_info_box.children = [value for _, value in tabs.items()]
             for i, key, in enumerate(tabs.keys()):
@@ -902,6 +908,44 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
         update_pr_legend(visible_experiments, ax_pr)
 
     return update_gammaness_cut
+
+
+def create_update_color(experiments_dict, fig_resolution, visible_experiments):
+    def update_color(change):
+        """
+        Function to be called when a `ipywidgets.Button` is clicked
+
+        Args
+            sender: the object received by `ipywidgets.Button().on_click()`
+        """
+        exp_name = change['owner'].description
+        if exp_name not in experiments_dict:
+            pass
+
+        exp = experiments_dict[exp_name]
+        exp.color = change['new']
+
+        axes = fig_resolution.get_axes()
+
+        for ax in axes:
+            for c in ax.containers:
+                if exp.name in c.get_label():
+                    c.remove()
+                    ax.containers.remove(c)
+
+            for l in ax.lines:
+                if exp.name in l.get_label():
+                    l.remove()
+
+            for c in ax.collections:
+                if exp.name in c.get_label():
+                    c.remove()
+
+        plot_exp_on_fig(exp, fig_resolution)
+        update_legend(visible_experiments, fig_resolution)
+        update_auc_legend(visible_experiments, axes[4])
+
+    return update_color
 
 
 def create_display_res(experiment):
