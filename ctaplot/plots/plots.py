@@ -1418,7 +1418,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
         xerr=(E - E_bin[:-1], E_bin[1:] - E),
         yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
         **kwargs,
-    )
+        )
 
     return ax
 
