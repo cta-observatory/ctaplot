@@ -3,7 +3,9 @@ Gridded plots
 """
 
 import matplotlib.pyplot as plt
-from .. import plot_binned_stat
+from .plots import plot_binned_stat
+
+__all__ = ['plot_binned_stat_grid']
 
 def plot_binned_stat_grid(data, x_col, **binned_stat_args):
     """
@@ -44,7 +46,7 @@ def plot_binned_stat_grid(data, x_col, **binned_stat_args):
         ax.set_title(f'{k}', fontsize=15)
         ax.grid('on')
 
-    for ii in range(len(data.columns), len(axes.ravel())):
+    for ii in range(cols, len(axes.ravel())):
         raxes[ii].remove()
 
     fig.suptitle(rf"{binned_stat_args['statistic']} as a function of {x_col}", fontsize=20, y=1.02)
