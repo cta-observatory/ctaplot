@@ -13,4 +13,4 @@ dependencies:
   - scikit-learn
   - scipy
   - nbsphinx
-  - tables
+  - pytables
