@@ -299,7 +299,7 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
         reco_alt = reco_alt - bias_alt
         reco_az = reco_az - bias_az
 
-    theta2 = np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az))) ** 2
+    theta2 = (np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az))))** 2
     ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az))
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
@@ -1418,7 +1418,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
         xerr=(E - E_bin[:-1], E_bin[1:] - E),
         yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
         **kwargs,
-    )
+        )
 
     return ax
 

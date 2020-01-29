@@ -31,7 +31,7 @@ setup(name='ctaplot',
       version=get_property('__version__', 'ctaplot'),
       description="compute and plot cta IRF",
       install_requires=[
-          'numpy',
+          'numpy>1.16',
           'matplotlib>=2.0',
           'scipy>=0.19',
           'astropy',
