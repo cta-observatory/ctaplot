@@ -1,0 +1,17 @@
+name: ctaplot
+channels:
+  - conda-forge
+
+dependencies:
+  - astropy
+  - ipywidgets
+  - jupyter
+  - matplotlib
+  - nbsphinx
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - nbsphinx
+  - pytables
+  - pytest
