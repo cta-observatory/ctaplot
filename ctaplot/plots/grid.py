@@ -7,7 +7,7 @@ from .plots import plot_binned_stat
 
 __all__ = ['plot_binned_stat_grid']
 
-def plot_binned_stat_grid(data, x_col, **binned_stat_args):
+def plot_binned_stat_grid(data, x_col, n_col=4, **binned_stat_args):
     """
     Make a figure with a grid of binned stat plots
 
@@ -15,6 +15,8 @@ def plot_binned_stat_grid(data, x_col, **binned_stat_args):
     ----------
     data: `pandas.dataframe`
     x_col: str
+    n_col: int
+        number of columns in the plot grid. The number of rows in determined automatically.
     binned_stat_args: args for `ctaplot.plot.plot_binned_stat`
 
     Returns
@@ -53,4 +55,3 @@ def plot_binned_stat_grid(data, x_col, **binned_stat_args):
     fig.tight_layout()
 
     return fig
-
