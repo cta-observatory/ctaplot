@@ -1,7 +1,9 @@
 language: python
 
 python:
+  - 3.6
   - 3.7
+  - 3.8
 
 os:
   - linux
@@ -15,7 +17,7 @@ before_install:
 
 install:
   - conda env create -f environement.yml
-  - conda activate protopipe
+  - conda activate ctaplot
   - pip install .
 
 script:
