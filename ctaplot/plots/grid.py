@@ -7,14 +7,16 @@ from .plots import plot_binned_stat
 
 __all__ = ['plot_binned_stat_grid']
 
-def plot_binned_stat_grid(data, x_col, n_col=4, **binned_stat_args):
+def plot_binned_stat_grid(data, x_col, n_cols=4, **binned_stat_args):
     """
-    Make a figure with a grid of binned stat plots
+    Make a figure with a grid of binned stat plots. All variable in `data` are
+    plotted versus the `x_col` variable.
 
     Parameters
     ----------
     data: `pandas.dataframe`
     x_col: str
+        name of the column in the data to consider as X variable.
     n_col: int
         number of columns in the plot grid. The number of rows in determined automatically.
     binned_stat_args: args for `ctaplot.plot.plot_binned_stat`
@@ -25,10 +27,9 @@ def plot_binned_stat_grid(data, x_col, n_col=4, **binned_stat_args):
     """
 
     n = len(data.columns)
-    ncol = 4
-    nrows = n // ncol + 1 * (n % ncol > 0)
+    n_rows = n // n_cols + 1 * (n % n_cols > 0)
 
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncol, figsize=(20, 20 * 0.66 * (nrows / ncol)), sharex=False)
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(20, 20 * 0.66 * (n_rows / n_cols)), sharex=False)
 
     raxes = axes.ravel()
     cols = list(data.columns)
