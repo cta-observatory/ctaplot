@@ -1,12 +1,16 @@
+astropy
+ipywidgets
+jupyter
 matplotlib
-numpy
+numpy>1.16
 scipy
 astropy
 tables
 pandas
-jupyter
-ipywidgets
 scikit-learn
+scipy
+tables
+
 
 # documentation:
 sphinx>=1.4
