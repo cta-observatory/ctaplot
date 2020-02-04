@@ -15,6 +15,7 @@ from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
+from sklearn.preprocessing import label_binarize
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -2052,10 +2053,12 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     -------
     ax: `matplotlib.pyplot.axis`
     """
-
     ax = plt.gca() if ax is None else ax
 
-    gamma_energy = simu_energy[simu_type == gamma_label]
+    gammas = simu_type == gamma_label
+    non_gammas = simu_type != gamma_label
+    gamma_energy = simu_energy[gammas]
+    binarized_label = label_binarize(simu_type, [gamma_label]).ravel()  # binarize in a gamma vs all fashion
 
     if energy_bins is None:
         irf = ana.irf_cta()
@@ -2075,14 +2078,10 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
         e = gamma_energy[mask]
 
         if len(e) > 0:
-            masked_types = np.concatenate([simu_type[simu_type != gamma_label],
-                                           simu_type[simu_type == gamma_label][mask]]
-                                          )
-            masked_gammaness = np.concatenate([gammaness[simu_type != gamma_label],
-                                               gammaness[simu_type == gamma_label][mask]]
-                                              )
+            masked_types = np.concatenate([binarized_label[non_gammas], binarized_label[gammas][mask]])
+            masked_gammaness = np.concatenate([gammaness[non_gammas], gammaness[gammas][mask]])
 
-            ax = plot_roc_curve_gammaness(masked_types, masked_gammaness, gamma_label=gamma_label, ax=ax, **kwargs)
+            ax = plot_roc_curve_gammaness(masked_types, masked_gammaness, gamma_label=1, ax=ax, **kwargs)
 
             children = ax.get_children()[counter]
             label = "[{:.2f}:{:.2f}]TeV - ".format(energy_bins[ii - 1], energy_bins[ii]) + children.get_label()
