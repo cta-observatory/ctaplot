@@ -12,6 +12,11 @@ Modules
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: ctaplot.plots.grid
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: ctaplot.ana.ana
     :members:
     :undoc-members:
