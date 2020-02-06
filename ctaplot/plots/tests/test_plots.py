@@ -255,6 +255,6 @@ def test_plot_any_resource():
 
 def test_plot_gammaness_distribution():
     nb_events = 1000
-    mc_type = np.random.choice([0,1,2,3], size=nb_events)
+    mc_type = np.random.choice([0, 1, 2, 3], size=nb_events)
     gammaness = np.random.rand(nb_events)
-    plots.test_plot_gammaness_distribution(mc_type, gammaness)
+    plots.plot_gammaness_distribution(mc_type, gammaness)
