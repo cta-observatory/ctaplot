@@ -251,3 +251,10 @@ def test_plot_any_resource():
     from ctaplot.io.dataset import resources_list
     for filename in resources_list:
         plots.plot_any_resource(filename)
+
+
+def test_plot_gammaness_distribution():
+    nb_events = 1000
+    mc_type = np.random.choice([0, 1, 2, 3], size=nb_events)
+    gammaness = np.random.rand(nb_events)
+    plots.plot_gammaness_distribution(mc_type, gammaness)

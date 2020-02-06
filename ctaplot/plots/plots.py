@@ -91,7 +91,8 @@ __all__ = ['plot_resolution',
            'plot_roc_curve',
            'plot_roc_curve_gammaness',
            'plot_roc_curve_multiclass',
-           'plot_roc_curve_gammaness_per_energy'
+           'plot_roc_curve_gammaness_per_energy',
+           'plot_gammaness_distribution',
            ]
 
 
@@ -2178,4 +2179,39 @@ def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
         kwargs['label'] = filename
     ax.plot(data[columns_xy[0]], data[columns_xy[1]], **kwargs)
 
+    return ax
+
+
+def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
+    """
+    Plot the distribution of gammaness based on `mc_type`
+
+    Parameters
+    ----------
+    mc_type: `numpy.ndarray`
+        true labeling
+    gammaness: `numpy.ndarray`
+        reconstructed gammaness
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.hist`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    if 'histtype' not in kwargs:
+        kwargs['histtype'] = 'step'
+    if 'linewidth' not in kwargs:
+        kwargs['linewidth'] = 3
+
+    is_label = 'label' in kwargs
+
+    for particle in set(mc_type):
+        if not is_label:
+            kwargs['label'] = particle
+        ax.hist(gammaness[mc_type == particle], **kwargs)
+
+    ax.legend()
     return ax
