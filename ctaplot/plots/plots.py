@@ -1954,7 +1954,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ----------
     simu_type: `numpy.ndarray`
         true labels: int, float or str
-    reco_proba: `dict` of `numpy.ndarray`
+    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), )`
         reconstruction probability for each class in `simu_type`, values must be between 0 and 1
     pos_label : int or str, default=None
         The label of the positive class.
@@ -1980,7 +1980,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
 
     if pos_label is not None:
         if pos_label not in set(simu_type) or pos_label not in reco_proba:
-            raise ValueError(f"simu_type and reco_proba must containe pos_label {pos_label}")
+            raise ValueError(f"simu_type and reco_proba must contain pos_label {pos_label}")
         ii = np.where(label_binarizer.classes_ == pos_label)[0][0]
 
         auc_score = metrics.roc_auc_score(binarized_classes[:, ii], reco_proba[pos_label])
@@ -2000,7 +2000,6 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
                 raise ValueError("the class {} is not in reco_proba".format(st))
 
         for ii, cls in enumerate(label_binarizer.classes_):
-            print(cls)
             rp = reco_proba[cls]
             auc_score = metrics.roc_auc_score(binarized_classes[:, ii], rp)
 
@@ -2213,5 +2212,7 @@ def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
             kwargs['label'] = particle
         ax.hist(gammaness[mc_type == particle], **kwargs)
 
-    ax.legend()
+    ax.set_title('Gammaness distribution per particle type', fontsize=18)
+    ax.set_xlabel('gammaness')
+    ax.legend(fontsize=15)
     return ax
