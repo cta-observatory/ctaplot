@@ -257,4 +257,4 @@ def test_plot_gammaness_distribution():
     nb_events = 1000
     mc_type = np.random.choice([0,1,2,3], size=nb_events)
     gammaness = np.random.rand(nb_events)
-    test_plot_gammaness_distribution(mc_type, gammaness)
+    plots.test_plot_gammaness_distribution(mc_type, gammaness)
