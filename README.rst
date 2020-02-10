@@ -36,13 +36,13 @@ In cases for which the CTA instrument response functions are used in a research 
 
 ----
 
+.. image:: https://github.com/vuillaut/ctaplot/workflows/CI/badge.svg
+   :target: https://github.com/vuillaut/ctaplot/actions?query=workflow%3ACI
+   :alt: Continuous Integration Action
 
 .. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
    :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
-    
-.. image:: https://travis-ci.org/vuillaut/ctaplot.svg?branch=master
-    :target: https://travis-ci.org/vuillaut/ctaplot
     
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target: https://opensource.org/licenses/MIT
@@ -123,6 +123,6 @@ As many experiments results can be overlaid.
 When an experiment is deselected, it simply is removed from the plots.
 
 
-.. image:: share/gammaboard.gif
+.. image:: /share/gammaboard.gif
    :alt: gammaboard_demo
 

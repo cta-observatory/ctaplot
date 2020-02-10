@@ -15,6 +15,7 @@ from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
+from sklearn.preprocessing import label_binarize
 
 # plt.style.use('seaborn-colorblind')
 plt.style.use('seaborn-paper')
@@ -90,7 +91,8 @@ __all__ = ['plot_resolution',
            'plot_roc_curve',
            'plot_roc_curve_gammaness',
            'plot_roc_curve_multiclass',
-           'plot_roc_curve_gammaness_per_energy'
+           'plot_roc_curve_gammaness_per_energy',
+           'plot_gammaness_distribution',
            ]
 
 
@@ -103,11 +105,15 @@ def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask
 
     Parameters
     ----------
-    mc_energy: Numpy 1d array of simulated energies
-    reco_energy: Numpy 1d array of reconstructed energies
+    mc_energy: `numpy.ndarray`
+        simulated energies
+    reco_energy: `numpy.ndarray`
+        reconstructed energies
     ax: `matplotlib.pyplot.axes`
-    outfile: string - output file path
-    mask_mc_detected: Numpy 1d array - mask of detected particles for the SimuE array
+    outfile: string
+        output file path
+    mask_mc_detected: `numpy.ndarray`
+        mask of detected particles for the SimuE array
     """
 
     ax = plt.gca() if ax is None else ax
@@ -139,9 +145,12 @@ def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     Parameters
     ----------
     multiplicity: `numpy.ndarray`
+        telescope multiplcity
     energies: `numpy.ndarray`
+        event energies
     ax: `matplotlib.pyplot.axes`
     outfile: string
+        path to the output file to save the figure
     """
 
     assert len(multiplicity) == len(energies), "arrays should have same length"
@@ -179,12 +188,18 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, color_scale
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
+        reconstructed altitudes
     reco_az: `numpy.ndarray`
+        reconstructed azimuths
     source_alt: float, source Altitude
+        altitude of the source
     source_az: float, source Azimuth
-    color_scale: `numpy.ndarray` - if given, set the colorbar
+        azimuth of the source
+    color_scale: `numpy.ndarray`
+        if given, set the colorbar
     ax: `matplotlib.pyplot.axes`
-    outfile: string - if None, the plot is not saved
+    outfile: string
+        path to the output figure file. if None, the plot is not saved
 
     Returns
     -------
@@ -226,14 +241,19 @@ def plot_angles_distribution(reco_alt, reco_az, source_alt, source_az, outfile=N
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
+        reconstructed altitudes
     reco_az: `numpy.ndarray`
+        reconstructed azimuths
     source_alt: `float`
+        altitude of the source
     source_az: `float`
+        azimiuth of the source
     outfile: `string`
+        path of the output file. If None, the figure is not saved.
 
     Returns
     -------
-    `matplotlib.pyplot.figure`
+    fig: `matplotlib.pyplot.figure`
     """
 
     dx = 1
@@ -279,12 +299,17 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray` - reconstructed altitude angle in radians
-    reco_az: `numpy.ndarray` - reconstructed azimuth angle in radians
-    simu_alt: `numpy.ndarray` - true altitude angle in radians
-    simu_az: `numpy.ndarray` - true azimuth angle in radians
+    reco_alt: `numpy.ndarray`
+        reconstructed altitude angle in radians
+    reco_az: `numpy.ndarray`
+        reconstructed azimuth angle in radians
+    simu_alt: `numpy.ndarray`
+        true altitude angle in radians
+    simu_az: `numpy.ndarray`
+        true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
-    **kwargs: options for `matplotlib.pyplot.hist`
+    **kwargs:
+        options for `matplotlib.pyplot.hist`
 
     Returns
     -------
@@ -318,11 +343,17 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
+        reconstructed altitudes
     reco_az: `numpy.ndarray`
+        reconstructed azimuths
     source_alt: float
+        altitude of the source
     source_az: float
+        azimuth of the source
     energies: `numpy.ndarray`
+        events energies
     outfile: str
+        path to the output file. If None, no figure is saved.
 
     Returns
     -------
@@ -388,13 +419,17 @@ def plot_impact_point_map_distri(reco_x, reco_y, tel_x, tel_y, fit=False, outfil
     Parameters
     ----------
     reco_x: `numpy.ndarray`
+        reconstructed x positions
     reco_y: `numpy.ndarray`
+        reconstructed y positions
     tel_x: `numpy.ndarray`
         X positions of the telescopes
     tel_y: `numpy.ndarray`
         Y positions of the telescopes
-    kde: bool - if True, makes a gaussian fit of the point density
-    outfile: 'str' - save a png image of the plot under 'string.png'
+    kde: bool
+        if True, makes a gaussian fit of the point density
+    outfile: str
+        save a png image of the plot under 'string.png'
 
     Returns
     -------
@@ -454,9 +489,12 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None):
     Parameters
     ----------
     reco_x: `numpy.ndarray`
+        reconstructed x positions
     reco_y: `numpy.ndarray`
+        reconstructed y positions
     ax: `matplotlib.pyplot.axes`
     outfile: string
+        path to the output file. If None, the figure is not saved.
     """
 
     ax = plt.gca() if ax is None else ax
@@ -532,7 +570,8 @@ def plot_multiplicity_per_telescope_type(multiplicity, telescope_type, ax=None, 
     telescope_type: `numpy.ndarray`
         same shape as `multiplicity`
     ax: `matplotlib.pyplot.axes`
-    outfile: path
+    outfile: str
+        path to the output figure. If None, the figure is not saved.
     quartils: bool - True to plot 50% and 90% quartil mark
     kwargs: args for `matplotlib.pyplot.hist`
 
@@ -627,8 +666,10 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
 
     Parameters
     ----------
-    simu_energy: `numpy.ndarray` - all simulated event energies
-    reco_energy: `numpy.ndarray` - all reconstructed event energies
+    simu_energy: `numpy.ndarray`
+        all simulated event energies
+    reco_energy: `numpy.ndarray`
+        all reconstructed event energies
     simulated_area: float
     ax: `matplotlib.pyplot.axes`
     kwargs: options for `maplotlib.pyplot.errorbar`
@@ -741,8 +782,10 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     Plot the CTA requirement for the sensitivity
     Parameters
     ----------
-    cta_site: string - see `ctaplot.ana.cta_requirement`
-    ax: `matplotlib.pyplot.axes`, optional
+    cta_site: string
+        see `ctaplot.ana.cta_requirement`
+    ax: `matplotlib.pyplot.axes`
+        optional
 
     Returns
     -------
@@ -773,8 +816,10 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     Parameters
     ----------
-    cta_site: string - see `ctaplot.ana.cta_requirement`
-    ax: `matplotlib.pyplot.axes`, optional
+    cta_site: string
+        see `ctaplot.ana.cta_requirement`
+    ax: `matplotlib.pyplot.axes`
+        optional
 
     Returns
     -------
@@ -806,17 +851,20 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
     Parameters
     ----------
     tel_x: `numpy.ndarray`
+        telescopes x positions
     tel_y: `numpy.ndarray`
-    TelId: `numpy.ndarray`
+        telescopes y positions
     tel_type: `numpy.ndarray`
-    LayoutId: `numpy.ndarray`
-    Outfile: string
+        telescopes types
+    ax: `matplotlib.pyplot.axes`
+        optional
+    kwargs:
+        options for `matplotlib.pyplot.scatter`
 
     Returns
     -------
-
+    ax: `matplotlib.pyplot.axes`
     """
-
     ax = plt.gca() if ax is None else ax
     ax.axis('equal')
 
@@ -835,8 +883,11 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     Parameters
     ----------
     reco: `numpy.ndarray`
+        reconstructed values of a variable
     simu: `numpy.ndarray`
+        true values of the variable
     energy: `numpy.ndarray`
+        event energies in TeV
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -878,9 +929,13 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
+        reconstructed altitudes
     reco_az: `numpy.ndarray`
+        reconstructed azimuths
     mc_alt: `numpy.ndarray`
+        true altitudes
     mc_az: `numpy.ndarray`
+        true azimuths
     energy: `numpy.ndarray`
         energies in TeV
     ax: `matplotlib.pyplot.axes`
@@ -960,7 +1015,8 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
 
     Parameters
     ----------
-    cta_site: string, see `ana.cta_performance`
+    cta_site: string
+        see `ana.cta_performance`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -1017,6 +1073,7 @@ def hist_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwarg
 def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
     """
     plot the impact parameter error distance as a function of energy and save the plot as Outfile
+    
     Parameters
     ----------
     reco_x: `numpy.ndarray`
@@ -1470,18 +1527,22 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
 
 def plot_dispersion(simu_x, reco_x, x_log=False, ax=None, **kwargs):
     """
-    Plot the dispersion around an expected value X_true
+    Plot the dispersion around an expected value X_true: `(simu_x-reco_x)` as a function of `simu_x`
 
     Parameters
     ----------
     simu_x: `numpy.ndarray`
+        true value of a variable x
     reco_x: `numpy.ndarray`
+        reconstructed value of a variable x
+    x_log: bool
+        if True, the dispersion is plotted as a function of `log10(simu_x)`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.hist2d`
 
     Returns
     -------
-    `maptlotlib.pyplot.axes`
+    ax: `maptlotlib.pyplot.axes`
     """
 
     ax = plt.gca() if ax is None else ax
@@ -1893,7 +1954,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ----------
     simu_type: `numpy.ndarray`
         true labels: int, float or str
-    reco_proba: `dict` of `numpy.ndarray`
+    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), )`
         reconstruction probability for each class in `simu_type`, values must be between 0 and 1
     pos_label : int or str, default=None
         The label of the positive class.
@@ -1919,7 +1980,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
 
     if pos_label is not None:
         if pos_label not in set(simu_type) or pos_label not in reco_proba:
-            raise ValueError(f"simu_type and reco_proba must containe pos_label {pos_label}")
+            raise ValueError(f"simu_type and reco_proba must contain pos_label {pos_label}")
         ii = np.where(label_binarizer.classes_ == pos_label)[0][0]
 
         auc_score = metrics.roc_auc_score(binarized_classes[:, ii], reco_proba[pos_label])
@@ -1939,7 +2000,6 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
                 raise ValueError("the class {} is not in reco_proba".format(st))
 
         for ii, cls in enumerate(label_binarizer.classes_):
-            print(cls)
             rp = reco_proba[cls]
             auc_score = metrics.roc_auc_score(binarized_classes[:, ii], rp)
 
@@ -2052,10 +2112,12 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     -------
     ax: `matplotlib.pyplot.axis`
     """
-
     ax = plt.gca() if ax is None else ax
 
-    gamma_energy = simu_energy[simu_type == gamma_label]
+    gammas = simu_type == gamma_label
+    non_gammas = simu_type != gamma_label
+    gamma_energy = simu_energy[gammas]
+    binarized_label = label_binarize(simu_type, [gamma_label]).ravel()  # binarize in a gamma vs all fashion
 
     if energy_bins is None:
         irf = ana.irf_cta()
@@ -2075,14 +2137,10 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
         e = gamma_energy[mask]
 
         if len(e) > 0:
-            masked_types = np.concatenate([simu_type[simu_type != gamma_label],
-                                           simu_type[simu_type == gamma_label][mask]]
-                                          )
-            masked_gammaness = np.concatenate([gammaness[simu_type != gamma_label],
-                                               gammaness[simu_type == gamma_label][mask]]
-                                              )
+            masked_types = np.concatenate([binarized_label[non_gammas], binarized_label[gammas][mask]])
+            masked_gammaness = np.concatenate([gammaness[non_gammas], gammaness[gammas][mask]])
 
-            ax = plot_roc_curve_gammaness(masked_types, masked_gammaness, gamma_label=gamma_label, ax=ax, **kwargs)
+            ax = plot_roc_curve_gammaness(masked_types, masked_gammaness, gamma_label=1, ax=ax, **kwargs)
 
             children = ax.get_children()[counter]
             label = "[{:.2f}:{:.2f}]TeV - ".format(energy_bins[ii - 1], energy_bins[ii]) + children.get_label()
@@ -2120,4 +2178,41 @@ def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
         kwargs['label'] = filename
     ax.plot(data[columns_xy[0]], data[columns_xy[1]], **kwargs)
 
+    return ax
+
+
+def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
+    """
+    Plot the distribution of gammaness based on `mc_type`
+
+    Parameters
+    ----------
+    mc_type: `numpy.ndarray`
+        true labeling
+    gammaness: `numpy.ndarray`
+        reconstructed gammaness
+    ax: `matplotlib.pyplot.axes`
+    kwargs: args for `matplotlib.pyplot.hist`
+
+    Returns
+    -------
+    ax: `matplotlib.pyplot.axes`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    if 'histtype' not in kwargs:
+        kwargs['histtype'] = 'step'
+    if 'linewidth' not in kwargs:
+        kwargs['linewidth'] = 3
+
+    is_label = 'label' in kwargs
+
+    for particle in set(mc_type):
+        if not is_label:
+            kwargs['label'] = particle
+        ax.hist(gammaness[mc_type == particle], **kwargs)
+
+    ax.set_title('Gammaness distribution per particle type', fontsize=18)
+    ax.set_xlabel('gammaness')
+    ax.legend(fontsize=15)
     return ax
