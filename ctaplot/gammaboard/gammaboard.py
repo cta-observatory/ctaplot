@@ -164,13 +164,6 @@ def change_errorbar_visibility(err_container, visible: bool):
         pass
 
 
-post_classification_opt = dict(ms=0,
-                               elinewidth=0.001,
-                               linestyle='--',
-                               fmt='v',
-                               )
-
-
 class Experiment(object):
     r"""Class to deal with an experiment
 
@@ -272,8 +265,6 @@ class Experiment(object):
                                                                            ax=ax,
                                                                            label=self.name + '_reco',
                                                                            color=self.color,
-                                                                           # linewidth=2.0,
-                                                                           # **post_classification_opt,
                                                                            )
 
     def plot_energy_resolution(self, ax=None):
@@ -295,8 +286,6 @@ class Experiment(object):
                                                                ax=ax,
                                                                label=self.name + '_reco',
                                                                color=self.color,
-                                                               # linewidth=2.0,
-                                                               # **post_classification_opt
                                                                )
 
     def plot_impact_resolution(self, ax=None):
@@ -328,8 +317,6 @@ class Experiment(object):
                                                                           ax=ax,
                                                                           label=self.name + '_reco',
                                                                           color=self.color,
-                                                                          # linewidth=2.0,
-                                                                          # **post_classification_opt
                                                                           )
 
     def plot_effective_area(self, ax=None):
@@ -912,6 +899,13 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
 
 
 def create_update_color(experiments_dict, fig_resolution, visible_experiments):
+    """
+    Function that creates the callback to update curve color.
+    Args
+        experiments_dict: the dictionary of loaded experiments
+        fig_resolution: the figure containing the plots
+        visible_experiments: the set of plotted experiments
+    """
     def update_color(change):
         """
         Function to be called when a `ipywidgets.Button` is clicked
