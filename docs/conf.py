@@ -19,10 +19,13 @@ import re
 
 sys.path.insert(0, os.path.abspath('..'))
 notebooks_dir = '../examples/notebooks/'
+gammaboard_dir = '../ctaplot/gammaboard/'
 if not os.path.exists('notebooks'):
     os.mkdir('notebooks')
 [shutil.copy(notebooks_dir + file, 'notebooks')
  for file in os.listdir(notebooks_dir) if file.endswith('.ipynb')]
+[shutil.copy(gammaboard_dir + file, 'notebooks')
+ for file in os.listdir(gammaboard_dir) if file.endswith('.ipynb')]
 
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())

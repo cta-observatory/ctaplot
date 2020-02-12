@@ -4,11 +4,11 @@ Welcome to ctaplot's documentation!
 Contents
 --------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    README
    license
    modules
-   data_format.rst
+   data_format
    examples
 
