@@ -21,7 +21,7 @@ Or you can run a simple one here:
 ----
 
 
-* Code : https://github.com/vuillaut/ctaplot
+* Code : https://github.com/cta-observatory/ctaplot
 * Documentation : https://ctaplot.readthedocs.io/en/latest/
 * Author contact: Thomas Vuillaume - thomas.vuillaume@lapp.in2p3.fr
 * License: MIT
@@ -36,8 +36,8 @@ In cases for which the CTA instrument response functions are used in a research 
 
 ----
 
-.. image:: https://github.com/vuillaut/ctaplot/workflows/CI/badge.svg
-   :target: https://github.com/vuillaut/ctaplot/actions?query=workflow%3ACI
+.. image:: https://github.com/cta-observatory/ctaplot/workflows/CI/badge.svg
+   :target: https://github.com/cta-observatory/ctaplot/actions?query=workflow%3ACI
    :alt: Continuous Integration Action
 
 .. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
@@ -47,6 +47,9 @@ In cases for which the CTA instrument response functions are used in a research 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target: https://opensource.org/licenses/MIT
    :alt: License: MIT
+
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/cta-observatory/ctaplot/master?filepath=examples%2Fnotebooks
 
 
 Install
