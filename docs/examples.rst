@@ -8,4 +8,4 @@ Examples
    notebooks/resolution_definition.ipynb
    notebooks/resolution_examples.ipynb
    notebooks/ROC curves.ipynb
-   gammaboard/dashboard.ipynb
+   notebooks/dashboard.ipynb
