@@ -2,9 +2,10 @@ Examples
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 0
 
    notebooks/plot_cta_irf.ipynb
    notebooks/resolution_definition.ipynb
-   notebooks/ROC\ curves.ipynb
-   gammaboard/dashboard.ipynb
+   notebooks/resolution_examples.ipynb
+   notebooks/ROC curves.ipynb
+   notebooks/dashboard.ipynb
