@@ -15,7 +15,7 @@ before install:
   - source $HOME/miniconda/etc/profile.d/conda.sh
 
 install:
-  - conda env create -f environement.yml
+  - conda env create -f environment.yml
   - conda activate ctaplot
   - pip install .
 
