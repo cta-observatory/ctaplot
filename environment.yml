@@ -9,6 +9,7 @@ dependencies:
   - matplotlib
   - nbsphinx
   - numpy
+  - python >= 3.6
   - pandas
   - scikit-learn
   - scipy
