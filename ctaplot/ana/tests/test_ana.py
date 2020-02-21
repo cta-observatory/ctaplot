@@ -1,6 +1,8 @@
 import ctaplot.ana.ana as ana
 import numpy as np
 
+np.random.seed(42)
+
 def test_logspace_decades_nbin():
     ca = ana.logspace_decades_nbin(0.1, 10, n=9)
     assert len(ca) == 19

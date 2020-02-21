@@ -1,6 +1,8 @@
 from ctaplot.plots import calib
 import numpy as np
 
+np.random.seed(42)
+
 def test_plot_photoelectron_true_reco():
     true_pe = 100 * np.random.rand(1000)
     reco_pe = true_pe * np.random.rand(len(true_pe))
