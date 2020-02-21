@@ -36,9 +36,9 @@ In cases for which the CTA instrument response functions are used in a research 
 
 ----
 
-.. image:: https://github.com/cta-observatory/ctaplot/workflows/CI/badge.svg
-   :target: https://github.com/cta-observatory/ctaplot/actions?query=workflow%3ACI
-   :alt: Continuous Integration Action
+.. image:: https://travis-ci.org/cta-observatory/ctaplot.svg?branch=master
+    :target: https://travis-ci.org/cta-observatory/ctaplot
+    :alt: Travis CI
 
 .. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
    :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
