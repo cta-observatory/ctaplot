@@ -2,6 +2,7 @@ from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
 
+np.random.seed(42)
 
 def plot_energy_distribution():
     SimuE = np.random.rand(100)
