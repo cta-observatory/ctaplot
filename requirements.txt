@@ -7,7 +7,6 @@ pandas
 scikit-learn
 jupyter
 ipywidgets
-python>=3.6
 recommonmark
 sphinx>=1.4
 nbsphinx
