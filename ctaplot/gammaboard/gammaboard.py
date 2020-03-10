@@ -183,6 +183,7 @@ class Experiment(object):
         self.data = None
         self.gamma_data = None
         self.reco_gamma_data = None
+        self.proton_reco_gamma = None
         self.mc_trig_events = None
         self.run_config = None
         self.loaded = False
@@ -213,16 +214,33 @@ class Experiment(object):
                     self.rocness = 'Hadroness'
                     self.gamma_data = self.data[self.data.mc_particle == 0]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                    proton_mask = (self.data.mc_particle == 1) & (self.data.reco_particle == 0)
+                    self.proton_reco_gamma = self.data[proton_mask]
                     self.gammaness_cut = 0.5
                 elif 'reco_gammaness' in self.data:
                     self.rocness = 'Gammaness'
                     self.gamma_data = self.data[self.data.mc_particle == 1]
                     self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
+                    proton_mask = (self.data.mc_particle == 0) & (self.data.reco_particle == 1)
+                    self.proton_reco_gamma = self.data[proton_mask]
                     self.gammaness_cut = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
         self.run_config = load_run_config(self.name, self.experiments_directory)
+
+    def update_gammaness_cut(self, new_cut):
+
+        self.gammaness_cut = new_cut
+
+        if 'reco_hadroness' in self.data:
+            self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
+            proton_mask = (self.data.mc_particle == 1) & (self.data.reco_hadroness < self.gammaness_cut)
+            self.proton_reco_gamma = self.data[proton_mask]
+        elif 'reco_gammaness' in self.data:
+            self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
+            proton_mask = (self.data.mc_particle == 0) & (self.data.reco_gammaness >= self.gammaness_cut)
+            self.proton_reco_gamma = self.data[proton_mask]
 
     def get_data(self):
         return self.data
@@ -267,6 +285,13 @@ class Experiment(object):
                                                                            color=self.color,
                                                                            )
 
+    def update_angular_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_angular_resolution_reco(ax)
+
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
             self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
@@ -287,6 +312,13 @@ class Experiment(object):
                                                                label=self.name + '_reco',
                                                                color=self.color,
                                                                )
+
+    def update_energy_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_energy_resolution_reco(ax)
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
@@ -319,6 +351,13 @@ class Experiment(object):
                                                                           color=self.color,
                                                                           )
 
+    def update_impact_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_impact_resolution_reco(ax)
+
     def plot_effective_area(self, ax=None):
         if self.get_loaded():
             self.ax_eff_area = ax if ax is not None else plt.gca()
@@ -338,7 +377,7 @@ class Experiment(object):
                                                                self.run_config['energy_range_max'],
                                                                self.run_config['num_events'],
                                                                self.run_config['spectral_index'],
-                                                               self.gamma_data.mc_energy,
+                                                               self.gamma_data.reco_energy,
                                                                self.run_config['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
@@ -355,13 +394,33 @@ class Experiment(object):
                                                                              self.run_config['energy_range_max'],
                                                                              self.run_config['num_events'],
                                                                              self.run_config['spectral_index'],
-                                                                             self.reco_gamma_data.mc_energy,
+                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.run_config['scattering_surface']
+                                                                             )
+                    E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
+                                                                             self.run_config['energy_range_max'],
+                                                                             self.run_config['num_events'],
+                                                                             self.run_config['spectral_index'],
+                                                                             self.proton_reco_gamma.reco_energy,
                                                                              self.run_config['scattering_surface']
                                                                              )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
                                           label=self.name + '_reco',
                                           color=self.color,
                                           linestyle=':')
+                    self.ax_eff_area.plot(E_reco_prot[:-1], S_reco_prot,
+                                          label=self.name + '_reco_proton',
+                                          color=self.color,
+                                          linestyle='--')
+
+    def update_effective_area_reco(self, ax):
+        to_remove = []
+        for l in ax.lines:
+            if l.get_label() in [self.name + '_reco', self.name + '_reco_proton']:
+                to_remove.append(l)
+        while len(to_remove) > 0:
+            to_remove.pop().remove()
+        self.plot_effective_area_reco(ax)
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
@@ -408,10 +467,19 @@ class Experiment(object):
                 false_positive = proton[proton.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
+            try:
+                self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+                self.recall = len(true_positive) / len(self.gamma_data)
+            except Exception as e:
+                print('Gammaness cut ', e)
+            else:
+                self.ax_pr.scatter(self.recall, self.precision, c=[self.color], label=self.name)
 
-            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
-            self.recall = len(true_positive) / len(self.gamma_data)
-            self.ax_pr.scatter(self.recall, self.precision, c=[self.color], label=self.name)
+    def update_pr_cut(self, ax):
+        for c in ax.collections:
+            if self.name == c.get_label():
+                c.remove()
+        self.plot_gammaness_cut()
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
@@ -452,7 +520,8 @@ class Experiment(object):
     def visibility_effective_area_plot(self, visible: bool):
         if self.get_plotted():
             for l in self.ax_eff_area.lines:
-                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered']:
+                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered',
+                                     self.name + '_reco_proton']:
                     l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
@@ -675,7 +744,9 @@ def create_resolution_fig(figsize=(12, 16)):
 
     ax_eff_area.set_xscale('log')
     ax_eff_area.set_yscale('log')
-    ax_eff_area.set_xlabel('Energy [TeV]')
+    ax_eff_area.set_xlabel('Reco Energy [TeV]')
+    ax_eff_area.set_ylabel(r'Effective Area $[m^2]$')
+    ax_eff_area.set_title('Effective area')
     ax_eff_area.set_ylim([100, 1e7])
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
@@ -846,12 +917,7 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
             pass
 
         exp = experiments_dict[exp_name]
-        exp.gammaness_cut = change['new']
-
-        if 'reco_hadroness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.gammaness_cut]
-        elif 'reco_gammaness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.gammaness_cut]
+        exp.update_gammaness_cut(change['new'])
 
         axes = fig_resolution.get_axes()
         ax_ang_res = axes[0]
@@ -860,39 +926,16 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
         ax_eff_area = axes[3]
         ax_pr = axes[5]
 
-        for c in ax_ang_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_ang_res.containers.remove(c)
-
-        for c in ax_ene_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_ene_res.containers.remove(c)
-
-        for c in ax_imp_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_imp_res.containers.remove(c)
-
-        for c in ax_eff_area.lines:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-
-        for c in ax_pr.collections:
-            if exp.name == c.get_label():
-                c.remove()
-
         if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
-            exp.plot_angular_resolution_reco(ax=ax_ang_res)
+            exp.update_angular_resolution_reco(ax_ang_res)
         if 'reco_energy' in exp.data:
-            exp.plot_energy_resolution_reco(ax=ax_ene_res)
+            exp.update_energy_resolution_reco(ax_ene_res)
         if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
-            exp.plot_impact_resolution_reco(ax=ax_imp_res)
+            exp.update_impact_resolution_reco(ax_imp_res)
         if 'mc_energy' in exp.data:
-            exp.plot_effective_area_reco(ax=ax_eff_area)
+            exp.update_effective_area_reco(ax_eff_area)
         if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
-            exp.plot_gammaness_cut()
+            exp.update_pr_cut(ax_pr)
         update_pr_legend(visible_experiments, ax_pr)
 
     return update_gammaness_cut
@@ -938,6 +981,7 @@ def create_update_color(experiments_dict, fig_resolution, visible_experiments):
 
         plot_exp_on_fig(exp, fig_resolution)
         update_legend(visible_experiments, fig_resolution)
+        update_pr_legend(visible_experiments, axes[5])
         update_auc_legend(visible_experiments, axes[4])
 
     return update_color
