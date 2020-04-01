@@ -23,6 +23,27 @@ __all__ = ['open_dashboard',
            ]
 
 
+def find_data_files(experiment, experiments_directory):
+    """
+    Find in the experiment folder all the hdf5 files containing results
+
+    Args
+        experiment (str): the name of the experiment
+        experiments_directory (str): the path to the folder containing the experiment folders
+
+    Returns
+        List of files
+    """
+    data_folder = experiments_directory + '/' + experiment
+    file_set = set()
+    for dirname, dirnames, filenames in os.walk(data_folder):
+        for file in filenames:
+            filename, ext = os.path.splitext(file)
+            if ext in 'h5':
+                file_set.add(dirname + '/' + file)
+    return tuple(file_set)
+
+
 def load_data_from_h5(experiment, experiments_directory):
     """
     Load an hdf5 file containing results from an experiment
@@ -36,16 +57,21 @@ def load_data_from_h5(experiment, experiments_directory):
     """
     assert experiment in os.listdir(experiments_directory)
 
-    filename = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
-    try:
-        data = pd.read_hdf(filename, key='data')
-    except KeyError:
+    result_files = find_data_files(experiment, experiments_directory)
+
+    # filename = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
+    result_data = []
+    for r_file in result_files:
         try:
-            data = read_lst_dl2_data(filename)
-        except Exception as e:
-            print(e)
-            return None
-    return data
+            data = pd.read_hdf(r_file, key='data')
+        except KeyError:
+            try:
+                data = read_lst_dl2_data(r_file)
+            except Exception as e:
+                print(e)
+                continue
+        result_data.append(data)
+    return pd.concat(result_data)
 
 
 # TODO Find a more suitable naming
@@ -54,67 +80,51 @@ def load_trig_events(experiment, experiments_directory):
 
     try:
         trig_events = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
-                                  key='triggered_events',
-                                  )
+                                  key='triggered_events')
     except:
         print("Cannot load the number of triggered events for experiment {} file".format(experiment))
         return None
     return trig_events
 
 
-def load_run_config(experiment, experiments_directory):
+def load_run_configs(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
-    file = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
-    num_events = 0
-    spectral_index = []
-    max_scatter_range = []
-    energy_range_max = []
-    energy_range_min = []
-    min_alt = []
-    max_alt = []
+    result_files = find_data_files(experiment, experiments_directory)
 
-    result_file = None
+    run_configs = {}
 
-    try:
-        # result_file = pd.HDFStore(file)
-        result_file = tables.open_file(file)
-        run_config = result_file.root.simulation.run_config
-        for row in run_config:
-            num_events += row['num_showers'] * row['shower_reuse']
-            spectral_index.extend([row['spectral_index']])
-            max_scatter_range.extend([row['max_scatter_range']])
-            energy_range_max.extend([row['energy_range_max']])
-            energy_range_min.extend([row['energy_range_min']])
-            min_alt.extend([row['min_alt']])
-            max_alt.extend([row['max_alt']])
-        assert np.alltrue(np.array(spectral_index) == spectral_index[0]), \
-            'Cannot deal with different spectral index for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(max_scatter_range) == max_scatter_range[0]), \
-            'Cannot deal with different max_scatter_range for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(energy_range_min) == energy_range_min[0]), \
-            'Cannot deal with different energy_range_min for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(energy_range_max) == energy_range_max[0]), \
-            'Cannot deal with different energy_range_max for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(min_alt) == min_alt[0]), \
-            'Cannot deal with different min_alt for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(max_alt) == max_alt[0]), \
-            'Cannot deal with different max_alt for the experiment ({})'.format(experiment)
-        assert min_alt[0] == max_alt[0], 'Cant deal with different shower altitude for the experiment ({})'.format(
-            experiment)
-        scattering_surface = max_scatter_range[0] ** 2 * np.pi * np.sin(max_alt[0])
-        result_file.close()
-    except Exception as e:
-        print("Cannot load the configuration of the simulation for experiment {} file".format(experiment))
-        if result_file is not None:
-            result_file.close()
-        return None
-    return {
-        'num_events': num_events,
-        'spectral_index': spectral_index[0],
-        'energy_range_min': energy_range_min[0],
-        'energy_range_max': energy_range_max[0],
-        'scattering_surface': scattering_surface
-    }
+    for file in result_files:
+
+        num_showers = 0
+        try:
+            result_file = tables.open_file(file)
+        except Exception as e:
+            print('Could not open data file {}'.format(file))
+            print(e)
+        else:
+            try:
+                mc_type = result_file.root.simulation._v_attrs['mc_type']
+                run_config = result_file.root.simulation.run_config
+                r_config = {}
+                for row in run_config:
+                    num_showers += row['num_showers'] * row['shower_reuse']
+                r_config['num_showers'] = num_showers
+                for col in run_config.colnames:
+                    if col not in ['num_showers', 'detector_prog_start', 'shower_prog_start']:
+                        try:
+                            assert len(np.unique(run_config[:][col])) == 1
+                        except AssertionError:
+                            print('Cannot deal with different {} for particle {} '
+                                  'in the experiment ({})'.format(col, mc_type, experiment))
+                            r_config[col] = None
+                        else:
+                            r_config[col] = np.unique(run_config[:][col])
+                r_config['scattering_surface'] = r_config['max_scatter_range']**2 * np.pi * np.sin(r_config['max_alt'])
+            except:
+                print('Could not load run config info from file {}'.format(file))
+            else:
+                run_configs[mc_type] = r_config
+    return run_configs
 
 
 def load_info(experiment, experiments_directory):
@@ -185,7 +195,7 @@ class Experiment(object):
         self.reco_gamma_data = None
         self.proton_reco_gamma = None
         self.mc_trig_events = None
-        self.run_config = None
+        self.run_configs = None
         self.loaded = False
         self.plotted = False
         self.color = None
@@ -210,37 +220,22 @@ class Experiment(object):
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_particle' in self.data:
-                if 'reco_hadroness' in self.data:
-                    self.rocness = 'Hadroness'
-                    self.gamma_data = self.data[self.data.mc_particle == 0]
-                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
-                    proton_mask = (self.data.mc_particle == 1) & (self.data.reco_particle == 0)
-                    self.proton_reco_gamma = self.data[proton_mask]
-                    self.gammaness_cut = 0.5
-                elif 'reco_gammaness' in self.data:
-                    self.rocness = 'Gammaness'
-                    self.gamma_data = self.data[self.data.mc_particle == 1]
-                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
-                    proton_mask = (self.data.mc_particle == 0) & (self.data.reco_particle == 1)
-                    self.proton_reco_gamma = self.data[proton_mask]
-                    self.gammaness_cut = 0.5
+                self.gamma_data = self.data[self.data.mc_particle == 0]
+                self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
+                proton_mask = (self.data.mc_particle == 101) & (self.data.reco_particle == 0)
+                self.proton_reco_gamma = self.data[proton_mask]
+                self.gammaness_cut = 0.5
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
-        self.run_config = load_run_config(self.name, self.experiments_directory)
+        self.run_configs = load_run_configs(self.name, self.experiments_directory)
 
     def update_gammaness_cut(self, new_cut):
 
         self.gammaness_cut = new_cut
-
-        if 'reco_hadroness' in self.data:
-            self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
-            proton_mask = (self.data.mc_particle == 1) & (self.data.reco_hadroness < self.gammaness_cut)
-            self.proton_reco_gamma = self.data[proton_mask]
-        elif 'reco_gammaness' in self.data:
-            self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-            proton_mask = (self.data.mc_particle == 0) & (self.data.reco_gammaness >= self.gammaness_cut)
-            self.proton_reco_gamma = self.data[proton_mask]
+        self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
+        proton_mask = (self.data.mc_particle == 101) & (self.data.reco_gammaness >= self.gammaness_cut)
+        self.proton_reco_gamma = self.data[proton_mask]
 
     def get_data(self):
         return self.data
@@ -425,12 +420,7 @@ class Experiment(object):
     def plot_roc_curve(self, ax=None):
         if self.get_loaded():
             self.ax_roc = plt.gca() if ax is None else ax
-            if 'reco_hadroness' in self.data:
-                fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                        self.data.reco_hadroness, pos_label=1)
-                self.auc = roc_auc_score(self.data.mc_particle,
-                                         self.data.reco_hadroness)
-            elif 'reco_gammaness' in self.data:
+            if 'reco_gammaness' in self.data:
                 fpr, tpr, _ = roc_curve(self.data.mc_particle,
                                         self.data.reco_gammaness, pos_label=1)
                 self.auc = roc_auc_score(self.data.mc_particle,
@@ -444,10 +434,7 @@ class Experiment(object):
     def plot_pr_curve(self, ax=None):
         if self.get_loaded():
             self.ax_pr = plt.gca() if ax is None else ax
-            if 'reco_hadroness' in self.data:
-                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
-                                                                      self.data.reco_hadroness)
-            elif 'reco_gammaness' in self.data:
+            if 'reco_gammaness' in self.data:
                 precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
                                                                       self.data.reco_gammaness)
             else:
@@ -457,13 +444,9 @@ class Experiment(object):
 
     def plot_gammaness_cut(self):
         if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
-            if 'reco_hadroness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
-                proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[proton.reco_hadroness < self.gammaness_cut]
-            elif 'reco_gammaness' in self.data:
+            if 'reco_gammaness' in self.data:
                 true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-                proton = self.data[self.data.mc_particle == 0]
+                proton = self.data[self.data.mc_particle == 101]
                 false_positive = proton[proton.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
