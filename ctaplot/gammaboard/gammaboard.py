@@ -235,8 +235,7 @@ class Experiment(object):
                 self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == GAMMA_ID]
                 noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
                 self.noise_reco_gamma = self.data[noise_mask]
-                self.gammaness_cut = 1 / len([col for col in self.data.columns if 'reco_proba' in col])
-                # self.gammaness_cut = 1 / len(np.unique(self.data.mc_particle))
+                self.gammaness_cut = 1 / len(np.unique(self.data.mc_particle))
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
