@@ -235,7 +235,7 @@ class Experiment(object):
                 self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == GAMMA_ID]
                 noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
                 self.noise_reco_gamma = self.data[noise_mask]
-                self.gammaness_cut = 1 / len(np.unique(self.data.mc_particle))
+                self.gammaness_cut = 1/len(np.unique(self.data.mc_particle)) if 'reco_gammaness' in self.data else None
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -436,10 +436,9 @@ class Experiment(object):
                                                          label=self.name,
                                                          ax=ax,
                                                          color=self.color)
-            label_binarizer = LabelBinarizer()
-            binarized_classes = label_binarizer.fit_transform(self.data.mc_particle)
-            ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
-            self.auc = roc_auc_score(binarized_classes[:, ii], self.data.reco_gammaness)
+            binarized_class = np.ones_like(self.data.mc_particle)
+            binarized_class[self.data.mc_particle != GAMMA_ID] = 0
+            self.auc = roc_auc_score(binarized_class, self.data.reco_gammaness,)
             self.set_plotted(True)
 
     def plot_pr_curve(self, ax=None):
@@ -551,7 +550,7 @@ class Experiment(object):
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
             self.visibility_impact_resolution_reco_plot(visible)
-        if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
+        if 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
             self.visibility_gammaness_cut(visible)
@@ -792,7 +791,7 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
         exp.plot_impact_resolution_reco(ax=ax_imp_res)
-    if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
+    if 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
         exp.plot_gammaness_cut()
@@ -933,7 +932,7 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
             exp.update_impact_resolution_reco(ax_imp_res)
         if 'mc_energy' in exp.data:
             exp.update_effective_area_reco(ax_eff_area)
-        if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
+        if 'reco_gammaness' in exp.data:
             exp.update_pr_cut(ax_pr)
         update_pr_legend(visible_experiments, ax_pr)
 
