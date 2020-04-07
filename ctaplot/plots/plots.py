@@ -1556,15 +1556,16 @@ def plot_dispersion(simu_x, reco_x, x_log=False, ax=None, **kwargs):
     return ax
 
 
-def plot_feature_importance(feature_keys, feature_importances, ax=None):
+def plot_feature_importance(feature_keys, feature_importances, ax=None, **kwargs):
     """
     Plot features importance after model training (typically from scikit-learn)
 
     Parameters
     ----------
     feature_keys: list of string
-    feature_importances: `numpy.ndarray`
+    feature_importances: `numpy.ndarray` or list
     ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.bar`
 
     Returns
     -------
@@ -1572,9 +1573,11 @@ def plot_feature_importance(feature_keys, feature_importances, ax=None):
     """
     ax = plt.gca() if ax is None else ax
 
-    ax.bar(feature_keys, feature_importances, ax=ax)
-    ax.set_xticks(rotation='vertical')
-    ax.title("Feature importances")
+    sort_mask = np.argsort(feature_importances)[::-1]
+    ax.bar(np.array(feature_keys)[sort_mask], np.array(feature_importances)[sort_mask], **kwargs)
+    for t in ax.get_xticklabels():
+        t.set_rotation(45)
+    ax.set_title("Features importance")
 
     return ax
 
