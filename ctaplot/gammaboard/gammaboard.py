@@ -423,7 +423,7 @@ class Experiment(object):
     def update_effective_area_reco(self, ax):
         to_remove = []
         for l in ax.lines:
-            if l.get_label() in [self.name + '_reco', self.name + '_reco_proton']:
+            if l.get_label() in [self.name + '_reco', self.name + '_reco_noise']:
                 to_remove.append(l)
         while len(to_remove) > 0:
             to_remove.pop().remove()
@@ -519,7 +519,7 @@ class Experiment(object):
         if self.get_plotted():
             for l in self.ax_eff_area.lines:
                 if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered',
-                                     self.name + '_reco_proton']:
+                                     self.name + '_reco_noise']:
                     l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
