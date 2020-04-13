@@ -220,6 +220,7 @@ class Experiment(object):
         self.ax_ene_res = None
         self.ax_imp_res = None
         self.ax_eff_area = None
+        self.ax_eff_area_ratio = None
         self.ax_roc = None
         self.ax_pr = None
 
@@ -429,6 +430,54 @@ class Experiment(object):
             to_remove.pop().remove()
         self.plot_effective_area_reco(ax)
 
+    def plot_effective_area_ratio(self, ax=None):
+        if self.get_loaded():
+            self.ax_eff_area_ratio = ax if ax is not None else plt.gca()
+
+            if self.run_configs is not None and GAMMA_ID in self.run_configs:
+                if self.mc_trig_events is not None:
+                    E_max, S_max = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                           self.run_configs[0]['energy_range_max'],
+                                                                           self.run_configs[0]['num_showers'],
+                                                                           self.run_configs[0]['spectral_index'],
+                                                                           self.mc_trig_events.mc_trig_energies,
+                                                                           self.run_configs[0]['scattering_surface'])
+                    E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                             self.run_configs[0]['energy_range_max'],
+                                                                             self.run_configs[0]['num_showers'],
+                                                                             self.run_configs[0]['spectral_index'],
+                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.run_configs[0]['scattering_surface']
+                                                                             )
+                    E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
+                        self.run_configs[0]['energy_range_min'],
+                        self.run_configs[0]['energy_range_max'],
+                        self.run_configs[0]['num_showers'],
+                        self.run_configs[0]['spectral_index'],
+                        self.noise_reco_gamma.reco_energy,
+                        self.run_configs[0]['scattering_surface']
+                    )
+                    assert np.all(E_reco_prot == E_max) and np.all(E_reco == E_max), \
+                        'To compute effective area ratio, the energy bins must be the same'
+
+                    self.ax_eff_area_ratio.plot(E_reco[:-1], S_reco / S_max,
+                                                label=self.name + '_ratio_gamma',
+                                                color=self.color,
+                                                linestyle=':')
+                    self.ax_eff_area_ratio.plot(E_reco_prot[:-1], S_reco_prot / S_max,
+                                                label=self.name + '_ratio_noise',
+                                                color=self.color,
+                                                linestyle='--')
+
+    def update_effective_area_ratio(self, ax):
+        to_remove = []
+        for l in ax.lines:
+            if l.get_label() in [self.name + '_ratio_gamma', self.name + '_ratio_noise']:
+                to_remove.append(l)
+        while len(to_remove) > 0:
+            to_remove.pop().remove()
+        self.plot_effective_area_ratio(ax)
+
     def plot_roc_curve(self, ax=None):
         if self.get_loaded() and 'reco_gammaness' in self.data:
             self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
@@ -449,8 +498,8 @@ class Experiment(object):
                 binarized_classes = label_binarizer.fit_transform(self.data.mc_particle)
                 ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
                 precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
-                                                                          self.data.reco_gammaness,
-                                                                          pos_label=GAMMA_ID)
+                                                              self.data.reco_gammaness,
+                                                              pos_label=GAMMA_ID)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
@@ -721,7 +770,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(figsize=(12, 16)):
+def create_resolution_fig(figsize=(12, 20)):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
@@ -731,14 +780,15 @@ def create_resolution_fig(figsize=(12, 16)):
         fig, axes
     """
 
-    fig, axes = plt.subplots(3, 2, figsize=figsize)
+    fig, axes = plt.subplots(4, 2, figsize=figsize)
 
     ax_ang_res = axes[0][0]
     ax_ene_res = axes[0][1]
     ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
+    ax_eff_area_ratio = axes[2][1]
     ax_roc = axes[2][0]
-    ax_pr = axes[2][1]
+    ax_pr = axes[3][0]
 
     ax_eff_area.set_xscale('log')
     ax_eff_area.set_yscale('log')
@@ -746,6 +796,23 @@ def create_resolution_fig(figsize=(12, 16)):
     ax_eff_area.set_ylabel(r'Effective Area $[m^2]$')
     ax_eff_area.set_title('Effective area')
     ax_eff_area.set_ylim([100, 1e7])
+    ax_eff_area_legend_elements = [
+        Line2D([0], [0], color='black', label='max', ls='-.'),
+        Line2D([0], [0], color='black', label='gamma'),
+        Line2D([0], [0], color='black', label='gamma reco gamma', ls=':'),
+        Line2D([0], [0], color='black', label='noise reco gamma', ls='--')
+    ]
+    ax_eff_area.legend(handles=ax_eff_area_legend_elements, loc='upper left')
+
+    ax_eff_area_ratio.set_xscale('log')
+    ax_eff_area_ratio.set_xlabel('Reco Energy [TeV]')
+    ax_eff_area_ratio.set_ylabel(r'Effective Area / Effective Area Max $[m^2]$')
+    ax_eff_area_ratio.set_title('Effective area ratio over max')
+    ax_eff_area_ratio_legend_elements = [
+        Line2D([0], [0], color='black', label='gamma reco gamma', ls=':'),
+        Line2D([0], [0], color='black', label='noise reco gamma', ls='--'),
+    ]
+    ax_eff_area_ratio.legend(handles=ax_eff_area_ratio_legend_elements, loc='upper left')
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
@@ -780,7 +847,8 @@ def plot_exp_on_fig(exp, fig):
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
     ax_roc = axes[4]
-    ax_pr = axes[5]
+    ax_eff_area_ratio = axes[5]
+    ax_pr = axes[6]
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
@@ -798,6 +866,7 @@ def plot_exp_on_fig(exp, fig):
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
+        exp.plot_effective_area_ratio(ax=ax_eff_area_ratio)
 
 
 def update_legend(visible_experiments, fig):
@@ -892,7 +961,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
 
         axes = fig_resolution.get_axes()
         ax_auc = axes[4]
-        ax_pr = axes[5]
+        ax_pr = axes[6]
 
         exp.visibility_all_plot(visible)
         update_auc_legend(visible_experiments, ax_auc)
@@ -922,7 +991,8 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
         ax_ene_res = axes[1]
         ax_imp_res = axes[2]
         ax_eff_area = axes[3]
-        ax_pr = axes[5]
+        ax_eff_area_ratio = axes[5]
+        ax_pr = axes[6]
 
         if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
             exp.update_angular_resolution_reco(ax_ang_res)
@@ -932,6 +1002,7 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
             exp.update_impact_resolution_reco(ax_imp_res)
         if 'mc_energy' in exp.data:
             exp.update_effective_area_reco(ax_eff_area)
+            exp.update_effective_area_ratio(ax_eff_area_ratio)
         if 'reco_gammaness' in exp.data:
             exp.update_pr_cut(ax_pr)
         update_pr_legend(visible_experiments, ax_pr)
@@ -1111,7 +1182,7 @@ class GammaBoard(object):
             site (string): 'south' for Paranal and 'north' for LaPalma
             ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     """
-    def __init__(self, experiments_directory, bias_correction=False, figsize=(12, 16)):
+    def __init__(self, experiments_directory, bias_correction=False, figsize=(12, 20)):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
