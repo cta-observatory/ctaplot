@@ -1055,7 +1055,7 @@ def create_update_color(experiments_dict, fig_resolution, visible_experiments):
 
         plot_exp_on_fig(exp, fig_resolution)
         update_legend(visible_experiments, fig_resolution)
-        update_pr_legend(visible_experiments, axes[5])
+        update_pr_legend(visible_experiments, axes[6])
         update_auc_legend(visible_experiments, axes[4])
 
     return update_color
