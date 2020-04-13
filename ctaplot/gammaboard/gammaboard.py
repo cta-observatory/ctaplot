@@ -571,6 +571,13 @@ class Experiment(object):
                                      self.name + '_reco_noise']:
                     l.set_visible(visible)
 
+    def visibility_effective_area_ratio_plot(self, visible: bool):
+        if self.get_plotted():
+            for l in self.ax_eff_area_ratio.lines:
+                if l.get_label() in [self.name + '_ratio_gamma',
+                                     self.name + '_ratio_noise']:
+                    l.set_visible(visible)
+
     def visibility_roc_curve_plot(self, visible: bool):
         if self.get_plotted():
             for l in self.ax_roc.lines:
@@ -605,6 +612,7 @@ class Experiment(object):
             self.visibility_gammaness_cut(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
+            self.visibility_effective_area_ratio_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
         """
@@ -782,9 +790,6 @@ def create_resolution_fig(figsize=(12, 20)):
 
     fig, axes = plt.subplots(4, 2, figsize=figsize)
 
-    ax_ang_res = axes[0][0]
-    ax_ene_res = axes[0][1]
-    ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
     ax_eff_area_ratio = axes[2][1]
     ax_roc = axes[2][0]
