@@ -176,7 +176,7 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     bin_stat_args['label'] = 'median'
     bin_stat_args['statistic'] = 'median'
 
-    plot_binned_stat(x, y - b, **bin_stat_args)
+    plot_binned_stat(x, y - b, ax=ax, **bin_stat_args)
 
     ax.set_xlabel('log10(# true pe)', fontsize=18)
     ax.set_ylabel(ylabel, fontsize=18)
