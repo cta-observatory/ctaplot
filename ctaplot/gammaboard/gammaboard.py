@@ -794,6 +794,7 @@ def create_resolution_fig(figsize=(12, 20)):
     ax_eff_area_ratio = axes[2][1]
     ax_roc = axes[2][0]
     ax_pr = axes[3][0]
+    legend_ax = axes[3][1]
 
     ax_eff_area.set_xscale('log')
     ax_eff_area.set_yscale('log')
@@ -817,7 +818,7 @@ def create_resolution_fig(figsize=(12, 20)):
         Line2D([0], [0], color='black', label='gamma reco gamma', ls=':'),
         Line2D([0], [0], color='black', label='noise reco gamma', ls='--'),
     ]
-    ax_eff_area_ratio.legend(handles=ax_eff_area_ratio_legend_elements, loc='upper left')
+    ax_eff_area_ratio.legend(handles=ax_eff_area_ratio_legend_elements, loc='upper right')
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
@@ -828,6 +829,8 @@ def create_resolution_fig(figsize=(12, 20)):
 
     ax_pr.set_xlabel('Recall')
     ax_pr.set_ylabel('Precision')
+
+    legend_ax.axis('off')
 
     fig.tight_layout()
 
@@ -875,12 +878,12 @@ def plot_exp_on_fig(exp, fig):
 
 
 def update_legend(visible_experiments, fig):
-    for l in fig.legends:
-        l.remove()
+    legend_ax = fig.get_axes()[-1]
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    fig.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.9, 0.1), ncol=6)
+    legend_ax.legend(handles=legend_elements, loc='best',
+               ncol=5)
 
 
 def update_auc_legend(visible_experiments, ax):
@@ -1210,9 +1213,6 @@ class GammaBoard(object):
         tabs = {}
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(figsize=figsize)
-        ax_eff_area = self._axes_resolution[1][1]
-        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        self._fig_resolution.subplots_adjust(bottom=0.2)
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              self._fig_resolution, visible_experiments)
