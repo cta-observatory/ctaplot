@@ -929,13 +929,13 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
-        reconstructed altitudes
+        reconstructed altitudes in radians
     reco_az: `numpy.ndarray`
-        reconstructed azimuths
+        reconstructed azimuths in radians
     mc_alt: `numpy.ndarray`
-        true altitudes
+        true altitudes in radians
     mc_az: `numpy.ndarray`
-        true azimuths
+        true azimuths in radians
     energy: `numpy.ndarray`
         energies in TeV
     ax: `matplotlib.pyplot.axes`
