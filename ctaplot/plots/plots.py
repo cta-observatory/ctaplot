@@ -929,13 +929,13 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
     Parameters
     ----------
     reco_alt: `numpy.ndarray`
-        reconstructed altitudes
+        reconstructed altitudes in radians
     reco_az: `numpy.ndarray`
-        reconstructed azimuths
+        reconstructed azimuths in radians
     mc_alt: `numpy.ndarray`
-        true altitudes
+        true altitudes in radians
     mc_az: `numpy.ndarray`
-        true azimuths
+        true azimuths in radians
     energy: `numpy.ndarray`
         energies in TeV
     ax: `matplotlib.pyplot.axes`
@@ -948,33 +948,32 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
 
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_xscale('log')
+    try:
+        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
+                                                       percentile=percentile,
+                                                       confidence_level=confidence_level,
+                                                       bias_correction=bias_correction
+                                                       )
+    except Exception as e:
+        print('Angular resolution ', e)
+    else:
+        # Angular resolution is traditionally presented in degrees
+        RES = np.degrees(RES)
 
-    e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
-                                                   percentile=percentile,
-                                                   confidence_level=confidence_level,
-                                                   bias_correction=bias_correction
-                                                   )
+        E = ana.logbin_mean(e_bin)
 
-    # Angular resolution is traditionally presented in degrees
-    RES = np.degrees(RES)
+        if 'fmt' not in kwargs:
+            kwargs['fmt'] = 'o'
 
-    E = ana.logbin_mean(e_bin)
+        ax.set_ylabel(r'$\theta [deg]$')
+        ax.set_xlabel('Energy [TeV]')
+        ax.set_xscale('log')
+        ax.set_title('Angular resolution')
 
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
-
-    ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
-                yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
-
-    ax.set_title('Angular resolution')
-    return ax
+        ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
+                    yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
+    finally:
+        return ax
 
 
 def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
@@ -1319,25 +1318,29 @@ def plot_energy_resolution(simu_energy, reco_energy,
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, Eres = ana.energy_resolution_per_energy(simu_energy, reco_energy,
-                                                   percentile=percentile,
-                                                   confidence_level=confidence_level,
-                                                   bias_correction=bias_correction,
-                                                   )
-    E = ana.logbin_mean(E_bin)
+    try:
+        E_bin, Eres = ana.energy_resolution_per_energy(simu_energy, reco_energy,
+                                                       percentile=percentile,
+                                                       confidence_level=confidence_level,
+                                                       bias_correction=bias_correction,
+                                                       )
+    except Exception as e:
+        print('Energy resolution ', e)
+    else:
+        E = ana.logbin_mean(E_bin)
 
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
+        if 'fmt' not in kwargs:
+            kwargs['fmt'] = 'o'
 
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel("Energy [TeV]")
-    ax.set_xscale('log')
-    ax.set_title('Energy resolution')
+        ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+        ax.set_xlabel("Energy [TeV]")
+        ax.set_xscale('log')
+        ax.set_title('Energy resolution')
 
-    ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
-                yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
-
-    return ax
+        ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
+                    yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
+    finally:
+        return ax
 
 
 def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
@@ -1451,34 +1454,32 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
     """
 
     ax = plt.gca() if ax is None else ax
+    try:
+        E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
+                                                      percentile=percentile,
+                                                      confidence_level=confidence_level,
+                                                      bias_correction=bias_correction,
+                                                      )
+    except Exception as e:
+        print('Impact resolution ', e)
+    else:
+        E = ana.logbin_mean(E_bin)
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel('Impact Resolution [m]')
-    ax.set_xlabel('Energy [TeV]')
-    ax.set_xscale('log')
+        if 'fmt' not in kwargs:
+            kwargs['fmt'] = 'o'
+        ax.set_ylabel('Impact Resolution [m]')
+        ax.set_xlabel('Energy [TeV]')
+        ax.set_xscale('log')
+        ax.set_title('Impact resolution')
 
-    E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
-                                                  percentile=percentile,
-                                                  confidence_level=confidence_level,
-                                                  bias_correction=bias_correction,
-                                                  )
-    E = ana.logbin_mean(E_bin)
-
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
-
-    ax.errorbar(
-        E, RES[:, 0],
-        xerr=(E - E_bin[:-1], E_bin[1:] - E),
-        yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
-        **kwargs,
-        )
-
-    return ax
-
+        ax.errorbar(
+            E, RES[:, 0],
+            xerr=(E - E_bin[:-1], E_bin[1:] - E),
+            yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
+            **kwargs,
+            )
+    finally:
+        return ax
 
 
 def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_args={}, line_args={}):
@@ -1490,7 +1491,7 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     x: list or `numpy.ndarray`
     y: list or `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
-    colorbar: `matplotlib.colorbar`
+    colorbar: `bool`
     hist2d_args: dict, args for `matplotlib.pyplot.hist2d`
     line_args: dict, args for `matplotlib.pyplot.plot`
 
@@ -1681,7 +1682,6 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     -------
     ax: `matplotlib.pyplot.axes`
     """
-
 
     ax = plt.gca() if ax is None else ax
 

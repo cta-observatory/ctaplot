@@ -5,6 +5,7 @@ import os
 from setuptools import setup, find_packages
 import re
 
+
 def package_files(directory):
     paths = []
     for (path, directories, filenames) in os.walk(directory):
@@ -12,9 +13,11 @@ def package_files(directory):
             paths.append(os.path.join('.', path, filename))
     return paths
 
+
 def get_property(prop, project):
     result = re.search(r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop), open(project + '/__init__.py').read())
     return result.group(1)
+
 
 def readfile(filename):
     with open(filename, 'r+') as f:

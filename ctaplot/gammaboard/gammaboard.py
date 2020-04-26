@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown, Text, Label
-from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve
+from sklearn.metrics import roc_auc_score, precision_recall_curve
+from sklearn.multiclass import LabelBinarizer
 from .. import plots
 from .. import ana
 from ..io.dataset import get
@@ -21,6 +22,29 @@ __all__ = ['open_dashboard',
            'GammaBoard',
            'plot_migration_matrices'
            ]
+
+GAMMA_ID = 0
+
+
+def find_data_files(experiment, experiments_directory):
+    """
+    Find in the experiment folder all the hdf5 files containing results
+
+    Args
+        experiment (str): the name of the experiment
+        experiments_directory (str): the path to the folder containing the experiment folders
+
+    Returns
+        List of files
+    """
+    data_folder = experiments_directory + '/' + experiment
+    file_set = set()
+    for dirname, dirnames, filenames in os.walk(data_folder):
+        for file in filenames:
+            filename, ext = os.path.splitext(file)
+            if ext == '.h5':
+                file_set.add(dirname + '/' + file)
+    return tuple(file_set)
 
 
 def load_data_from_h5(experiment, experiments_directory):
@@ -36,85 +60,82 @@ def load_data_from_h5(experiment, experiments_directory):
     """
     assert experiment in os.listdir(experiments_directory)
 
-    filename = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
-    try:
-        data = pd.read_hdf(filename, key='data')
-    except KeyError:
+    result_files = find_data_files(experiment, experiments_directory)
+    result_data = []
+    for r_file in result_files:
         try:
-            data = read_lst_dl2_data(filename)
-        except Exception as e:
-            print(e)
-            return None
-    return data
+            data = pd.read_hdf(r_file, key='data')
+        except KeyError:
+            try:
+                data = read_lst_dl2_data(r_file)
+            except Exception as e:
+                print(e)
+                continue
+        result_data.append(data)
+    return pd.concat(result_data)
 
 
 # TODO Find a more suitable naming
 def load_trig_events(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
 
-    try:
-        trig_events = pd.read_hdf(experiments_directory + '/' + experiment + '/' + experiment + '.h5',
-                                  key='triggered_events',
-                                  )
-    except:
-        print("Cannot load the number of triggered events for experiment {} file".format(experiment))
-        return None
-    return trig_events
+    result_files = find_data_files(experiment, experiments_directory)
+    trig_energies = []
+    for file in result_files:
+        try:
+            result_file = tables.open_file(file)
+        except Exception as e:
+            print('Could not open data file {}'.format(file))
+            print(e)
+        else:
+            try:
+                if result_file.root.simulation._v_attrs['mc_type'] == GAMMA_ID:
+                    result_file.close()
+                    trig_energies.append(pd.read_hdf(file, key='triggered_events'))
+            except:
+                print("Cannot load the number of triggered events for experiment {} file".format(experiment))
+                return None
+    return pd.concat(trig_energies)
 
 
-def load_run_config(experiment, experiments_directory):
+def load_run_configs(experiment, experiments_directory):
     assert experiment in os.listdir(experiments_directory)
-    file = experiments_directory + '/' + experiment + '/' + experiment + '.h5'
-    num_events = 0
-    spectral_index = []
-    max_scatter_range = []
-    energy_range_max = []
-    energy_range_min = []
-    min_alt = []
-    max_alt = []
+    result_files = find_data_files(experiment, experiments_directory)
 
-    result_file = None
+    run_configs = {}
 
-    try:
-        # result_file = pd.HDFStore(file)
-        result_file = tables.open_file(file)
-        run_config = result_file.root.simulation.run_config
-        for row in run_config:
-            num_events += row['num_showers'] * row['shower_reuse']
-            spectral_index.extend([row['spectral_index']])
-            max_scatter_range.extend([row['max_scatter_range']])
-            energy_range_max.extend([row['energy_range_max']])
-            energy_range_min.extend([row['energy_range_min']])
-            min_alt.extend([row['min_alt']])
-            max_alt.extend([row['max_alt']])
-        assert np.alltrue(np.array(spectral_index) == spectral_index[0]), \
-            'Cannot deal with different spectral index for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(max_scatter_range) == max_scatter_range[0]), \
-            'Cannot deal with different max_scatter_range for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(energy_range_min) == energy_range_min[0]), \
-            'Cannot deal with different energy_range_min for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(energy_range_max) == energy_range_max[0]), \
-            'Cannot deal with different energy_range_max for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(min_alt) == min_alt[0]), \
-            'Cannot deal with different min_alt for the experiment ({})'.format(experiment)
-        assert np.alltrue(np.array(max_alt) == max_alt[0]), \
-            'Cannot deal with different max_alt for the experiment ({})'.format(experiment)
-        assert min_alt[0] == max_alt[0], 'Cant deal with different shower altitude for the experiment ({})'.format(
-            experiment)
-        scattering_surface = max_scatter_range[0] ** 2 * np.pi * np.sin(max_alt[0])
-        result_file.close()
-    except Exception as e:
-        print("Cannot load the configuration of the simulation for experiment {} file".format(experiment))
-        if result_file is not None:
-            result_file.close()
-        return None
-    return {
-        'num_events': num_events,
-        'spectral_index': spectral_index[0],
-        'energy_range_min': energy_range_min[0],
-        'energy_range_max': energy_range_max[0],
-        'scattering_surface': scattering_surface
-    }
+    for file in result_files:
+
+        num_showers = 0
+        try:
+            result_file = tables.open_file(file)
+        except Exception as e:
+            print('Could not open data file {}'.format(file))
+            print(e)
+        else:
+            try:
+                mc_type = result_file.root.simulation._v_attrs['mc_type']
+                run_config = result_file.root.simulation.run_config
+                r_config = {}
+                for row in run_config:
+                    num_showers += row['num_showers'] * row['shower_reuse']
+                r_config['num_showers'] = num_showers
+                for col in run_config.colnames:
+                    if col not in ['num_showers', 'detector_prog_start', 'shower_prog_start']:
+                        try:
+                            assert len(np.unique(run_config[:][col])) == (1 if col != 'run_array_direction' else 2)
+                        except AssertionError:
+                            print('Cannot deal with different {} for particle {} '
+                                  'in the experiment ({})'.format(col, mc_type, experiment))
+                            r_config[col] = None
+                        else:
+                            r_config[col] = np.unique(run_config[:][col])
+                r_config['scattering_surface'] = r_config['max_scatter_range']**2 * np.pi * np.sin(r_config['max_alt'])
+            except:
+                print('Could not load run config info from file {}'.format(file))
+            else:
+                run_configs[mc_type] = r_config
+    return run_configs
 
 
 def load_info(experiment, experiments_directory):
@@ -183,8 +204,9 @@ class Experiment(object):
         self.data = None
         self.gamma_data = None
         self.reco_gamma_data = None
+        self.noise_reco_gamma = None
         self.mc_trig_events = None
-        self.run_config = None
+        self.run_configs = None
         self.loaded = False
         self.plotted = False
         self.color = None
@@ -198,6 +220,7 @@ class Experiment(object):
         self.ax_ene_res = None
         self.ax_imp_res = None
         self.ax_eff_area = None
+        self.ax_eff_area_ratio = None
         self.ax_roc = None
         self.ax_pr = None
 
@@ -209,20 +232,22 @@ class Experiment(object):
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_particle' in self.data:
-                if 'reco_hadroness' in self.data:
-                    self.rocness = 'Hadroness'
-                    self.gamma_data = self.data[self.data.mc_particle == 0]
-                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 0]
-                    self.gammaness_cut = 0.5
-                elif 'reco_gammaness' in self.data:
-                    self.rocness = 'Gammaness'
-                    self.gamma_data = self.data[self.data.mc_particle == 1]
-                    self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == 1]
-                    self.gammaness_cut = 0.5
+                self.gamma_data = self.data[self.data.mc_particle == GAMMA_ID]
+                self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == GAMMA_ID]
+                noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
+                self.noise_reco_gamma = self.data[noise_mask]
+                self.gammaness_cut = 1/len(np.unique(self.data.mc_particle)) if 'reco_gammaness' in self.data else None
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
-        self.run_config = load_run_config(self.name, self.experiments_directory)
+        self.run_configs = load_run_configs(self.name, self.experiments_directory)
+
+    def update_gammaness_cut(self, new_cut):
+
+        self.gammaness_cut = new_cut
+        self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
+        noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_gammaness >= self.gammaness_cut)
+        self.noise_reco_gamma = self.data[noise_mask]
 
     def get_data(self):
         return self.data
@@ -267,6 +292,13 @@ class Experiment(object):
                                                                            color=self.color,
                                                                            )
 
+    def update_angular_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_angular_resolution_reco(ax)
+
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
             self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
@@ -287,6 +319,13 @@ class Experiment(object):
                                                                label=self.name + '_reco',
                                                                color=self.color,
                                                                )
+
+    def update_energy_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_energy_resolution_reco(ax)
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
@@ -319,27 +358,34 @@ class Experiment(object):
                                                                           color=self.color,
                                                                           )
 
+    def update_impact_resolution_reco(self, ax):
+        for c in ax.containers:
+            if self.name + '_reco' == c.get_label():
+                c.remove()
+                ax.containers.remove(c)
+        self.plot_impact_resolution_reco(ax)
+
     def plot_effective_area(self, ax=None):
         if self.get_loaded():
             self.ax_eff_area = ax if ax is not None else plt.gca()
 
-            if self.run_config is not None:
+            if self.run_configs is not None and GAMMA_ID in self.run_configs:
                 if self.mc_trig_events is not None:
-                    E_trig, S_trig = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                                             self.run_config['energy_range_max'],
-                                                                             self.run_config['num_events'],
-                                                                             self.run_config['spectral_index'],
+                    E_trig, S_trig = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                             self.run_configs[0]['energy_range_max'],
+                                                                             self.run_configs[0]['num_showers'],
+                                                                             self.run_configs[0]['spectral_index'],
                                                                              self.mc_trig_events.mc_trig_energies,
-                                                                             self.run_config['scattering_surface'])
+                                                                             self.run_configs[0]['scattering_surface'])
                     self.ax_eff_area.plot(E_trig[:-1], S_trig, label=self.name + '_triggered', color=self.color,
                                           linestyle='-.')
 
-                E, S = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                               self.run_config['energy_range_max'],
-                                                               self.run_config['num_events'],
-                                                               self.run_config['spectral_index'],
-                                                               self.gamma_data.mc_energy,
-                                                               self.run_config['scattering_surface'])
+                E, S = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                               self.run_configs[0]['energy_range_max'],
+                                                               self.run_configs[0]['num_showers'],
+                                                               self.run_configs[0]['spectral_index'],
+                                                               self.gamma_data.reco_energy,
+                                                               self.run_configs[0]['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
             else:
@@ -349,48 +395,111 @@ class Experiment(object):
         if self.get_loaded():
             self.ax_eff_area = ax if ax is not None else plt.gca()
 
-            if self.run_config is not None:
+            if self.run_configs is not None and GAMMA_ID in self.run_configs:
                 if self.reco_gamma_data is not None:
-                    E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_config['energy_range_min'],
-                                                                             self.run_config['energy_range_max'],
-                                                                             self.run_config['num_events'],
-                                                                             self.run_config['spectral_index'],
-                                                                             self.reco_gamma_data.mc_energy,
-                                                                             self.run_config['scattering_surface']
+                    E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                             self.run_configs[0]['energy_range_max'],
+                                                                             self.run_configs[0]['num_showers'],
+                                                                             self.run_configs[0]['spectral_index'],
+                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.run_configs[0]['scattering_surface']
                                                                              )
+                    E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
+                        self.run_configs[0]['energy_range_min'],
+                        self.run_configs[0]['energy_range_max'],
+                        self.run_configs[0]['num_showers'],
+                        self.run_configs[0]['spectral_index'],
+                        self.noise_reco_gamma.reco_energy,
+                        self.run_configs[0]['scattering_surface']
+                    )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
                                           label=self.name + '_reco',
                                           color=self.color,
                                           linestyle=':')
+                    self.ax_eff_area.plot(E_reco_prot[:-1], S_reco_prot,
+                                          label=self.name + '_reco_noise',
+                                          color=self.color,
+                                          linestyle='--')
+
+    def update_effective_area_reco(self, ax):
+        to_remove = []
+        for l in ax.lines:
+            if l.get_label() in [self.name + '_reco', self.name + '_reco_noise']:
+                to_remove.append(l)
+        while len(to_remove) > 0:
+            to_remove.pop().remove()
+        self.plot_effective_area_reco(ax)
+
+    def plot_effective_area_ratio(self, ax=None):
+        if self.get_loaded():
+            self.ax_eff_area_ratio = ax if ax is not None else plt.gca()
+
+            if self.run_configs is not None and GAMMA_ID in self.run_configs:
+                if self.mc_trig_events is not None:
+                    E_max, S_max = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                           self.run_configs[0]['energy_range_max'],
+                                                                           self.run_configs[0]['num_showers'],
+                                                                           self.run_configs[0]['spectral_index'],
+                                                                           self.mc_trig_events.mc_trig_energies,
+                                                                           self.run_configs[0]['scattering_surface'])
+                    E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
+                                                                             self.run_configs[0]['energy_range_max'],
+                                                                             self.run_configs[0]['num_showers'],
+                                                                             self.run_configs[0]['spectral_index'],
+                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.run_configs[0]['scattering_surface']
+                                                                             )
+                    E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
+                        self.run_configs[0]['energy_range_min'],
+                        self.run_configs[0]['energy_range_max'],
+                        self.run_configs[0]['num_showers'],
+                        self.run_configs[0]['spectral_index'],
+                        self.noise_reco_gamma.reco_energy,
+                        self.run_configs[0]['scattering_surface']
+                    )
+                    assert np.all(E_reco_prot == E_max) and np.all(E_reco == E_max), \
+                        'To compute effective area ratio, the energy bins must be the same'
+
+                    self.ax_eff_area_ratio.plot(E_reco[:-1], S_reco / S_max,
+                                                label=self.name + '_ratio_gamma',
+                                                color=self.color,
+                                                linestyle=':')
+                    self.ax_eff_area_ratio.plot(E_reco_prot[:-1], S_reco_prot / S_max,
+                                                label=self.name + '_ratio_noise',
+                                                color=self.color,
+                                                linestyle='--')
+
+    def update_effective_area_ratio(self, ax):
+        to_remove = []
+        for l in ax.lines:
+            if l.get_label() in [self.name + '_ratio_gamma', self.name + '_ratio_noise']:
+                to_remove.append(l)
+        while len(to_remove) > 0:
+            to_remove.pop().remove()
+        self.plot_effective_area_ratio(ax)
 
     def plot_roc_curve(self, ax=None):
-        if self.get_loaded():
-            self.ax_roc = plt.gca() if ax is None else ax
-            if 'reco_hadroness' in self.data:
-                fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                        self.data.reco_hadroness, pos_label=1)
-                self.auc = roc_auc_score(self.data.mc_particle,
-                                         self.data.reco_hadroness)
-            elif 'reco_gammaness' in self.data:
-                fpr, tpr, _ = roc_curve(self.data.mc_particle,
-                                        self.data.reco_gammaness, pos_label=1)
-                self.auc = roc_auc_score(self.data.mc_particle,
-                                         self.data.reco_gammaness)
-            else:
-                raise ValueError
-
-            self.ax_roc.plot(fpr, tpr, label=self.name, color=self.color)
+        if self.get_loaded() and 'reco_gammaness' in self.data:
+            self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
+                                                         self.data.reco_gammaness,
+                                                         label=self.name,
+                                                         ax=ax,
+                                                         color=self.color)
+            binarized_class = np.ones_like(self.data.mc_particle)
+            binarized_class[self.data.mc_particle != GAMMA_ID] = 0
+            self.auc = roc_auc_score(binarized_class, self.data.reco_gammaness,)
             self.set_plotted(True)
 
     def plot_pr_curve(self, ax=None):
         if self.get_loaded():
             self.ax_pr = plt.gca() if ax is None else ax
-            if 'reco_hadroness' in self.data:
-                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
-                                                                      self.data.reco_hadroness)
-            elif 'reco_gammaness' in self.data:
-                precision, recall, gammaness_cut = precision_recall_curve(self.data.mc_particle,
-                                                                      self.data.reco_gammaness)
+            if 'reco_gammaness' in self.data:
+                label_binarizer = LabelBinarizer()
+                binarized_classes = label_binarizer.fit_transform(self.data.mc_particle)
+                ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
+                precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
+                                                              self.data.reco_gammaness,
+                                                              pos_label=GAMMA_ID)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
@@ -398,20 +507,26 @@ class Experiment(object):
 
     def plot_gammaness_cut(self):
         if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
-            if 'reco_hadroness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_hadroness < self.gammaness_cut]
-                proton = self.data[self.data.mc_particle == 1]
-                false_positive = proton[proton.reco_hadroness < self.gammaness_cut]
-            elif 'reco_gammaness' in self.data:
+            if 'reco_gammaness' in self.data:
                 true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-                proton = self.data[self.data.mc_particle == 0]
-                false_positive = proton[proton.reco_gammaness >= self.gammaness_cut]
+                noise = self.data[self.data.mc_particle != GAMMA_ID]
+                false_positive = noise[noise.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
-
-            self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
-            self.recall = len(true_positive) / len(self.gamma_data)
+            try:
+                self.precision = len(true_positive) / (len(true_positive) + len(false_positive))
+                self.recall = len(true_positive) / len(self.gamma_data)
+            except Exception as e:
+                print('Plot gammaness cut ', e)
+                self.precision = 0
+                self.recall = 0
             self.ax_pr.scatter(self.recall, self.precision, c=[self.color], label=self.name)
+
+    def update_pr_cut(self, ax):
+        for c in ax.collections:
+            if self.name == c.get_label():
+                c.remove()
+        self.plot_gammaness_cut()
 
     def visibility_angular_resolution_plot(self, visible: bool):
         if self.get_plotted():
@@ -452,7 +567,15 @@ class Experiment(object):
     def visibility_effective_area_plot(self, visible: bool):
         if self.get_plotted():
             for l in self.ax_eff_area.lines:
-                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered']:
+                if l.get_label() in [self.name, self.name + '_reco', self.name + '_triggered',
+                                     self.name + '_reco_noise']:
+                    l.set_visible(visible)
+
+    def visibility_effective_area_ratio_plot(self, visible: bool):
+        if self.get_plotted():
+            for l in self.ax_eff_area_ratio.lines:
+                if l.get_label() in [self.name + '_ratio_gamma',
+                                     self.name + '_ratio_noise']:
                     l.set_visible(visible)
 
     def visibility_roc_curve_plot(self, visible: bool):
@@ -483,12 +606,13 @@ class Experiment(object):
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
             self.visibility_impact_resolution_reco_plot(visible)
-        if 'reco_hadroness' in self.data or 'reco_gammaness' in self.data:
+        if 'reco_gammaness' in self.data:
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
             self.visibility_gammaness_cut(visible)
         if 'mc_energy' in self.data:
             self.visibility_effective_area_plot(visible)
+            self.visibility_effective_area_ratio_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
         """
@@ -654,7 +778,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     return fig
 
 
-def create_resolution_fig(figsize=(12, 16)):
+def create_resolution_fig(figsize=(12, 20)):
     """
     Create the figure holding the resolution plots for the dashboard
     axes = [[ax_ang_res, ax_ene_res],[ax_imp_res, None]]
@@ -664,19 +788,37 @@ def create_resolution_fig(figsize=(12, 16)):
         fig, axes
     """
 
-    fig, axes = plt.subplots(3, 2, figsize=figsize)
+    fig, axes = plt.subplots(4, 2, figsize=figsize)
 
-    ax_ang_res = axes[0][0]
-    ax_ene_res = axes[0][1]
-    ax_imp_res = axes[1][0]
     ax_eff_area = axes[1][1]
+    ax_eff_area_ratio = axes[2][1]
     ax_roc = axes[2][0]
-    ax_pr = axes[2][1]
+    ax_pr = axes[3][0]
+    legend_ax = axes[3][1]
 
     ax_eff_area.set_xscale('log')
     ax_eff_area.set_yscale('log')
-    ax_eff_area.set_xlabel('Energy [TeV]')
+    ax_eff_area.set_xlabel('Reco Energy [TeV]')
+    ax_eff_area.set_ylabel(r'Effective Area $[m^2]$')
+    ax_eff_area.set_title('Effective area')
     ax_eff_area.set_ylim([100, 1e7])
+    ax_eff_area_legend_elements = [
+        Line2D([0], [0], color='black', label='max', ls='-.'),
+        Line2D([0], [0], color='black', label='gamma'),
+        Line2D([0], [0], color='black', label='gamma reco gamma', ls=':'),
+        Line2D([0], [0], color='black', label='noise reco gamma', ls='--')
+    ]
+    ax_eff_area.legend(handles=ax_eff_area_legend_elements, loc='upper left')
+
+    ax_eff_area_ratio.set_xscale('log')
+    ax_eff_area_ratio.set_xlabel('Reco Energy [TeV]')
+    ax_eff_area_ratio.set_ylabel(r'Effective Area / Effective Area Max $[m^2]$')
+    ax_eff_area_ratio.set_title('Effective area ratio over max')
+    ax_eff_area_ratio_legend_elements = [
+        Line2D([0], [0], color='black', label='gamma reco gamma', ls=':'),
+        Line2D([0], [0], color='black', label='noise reco gamma', ls='--'),
+    ]
+    ax_eff_area_ratio.legend(handles=ax_eff_area_ratio_legend_elements, loc='upper right')
 
     ax_roc.plot([0, 1], [0, 1], linestyle='--', color='r', alpha=.5)
     ax_roc.set_xlim([-0.05, 1.05])
@@ -687,6 +829,8 @@ def create_resolution_fig(figsize=(12, 16)):
 
     ax_pr.set_xlabel('Recall')
     ax_pr.set_ylabel('Precision')
+
+    legend_ax.axis('off')
 
     fig.tight_layout()
 
@@ -711,7 +855,8 @@ def plot_exp_on_fig(exp, fig):
     ax_imp_res = axes[2]
     ax_eff_area = axes[3]
     ax_roc = axes[4]
-    ax_pr = axes[5]
+    ax_eff_area_ratio = axes[5]
+    ax_pr = axes[6]
 
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
@@ -722,22 +867,23 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
         exp.plot_impact_resolution_reco(ax=ax_imp_res)
-    if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
+    if 'reco_gammaness' in exp.data:
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
         exp.plot_gammaness_cut()
     if 'mc_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
+        exp.plot_effective_area_ratio(ax=ax_eff_area_ratio)
 
 
 def update_legend(visible_experiments, fig):
-    for l in fig.legends:
-        l.remove()
+    legend_ax = fig.get_axes()[-1]
     experiments = {exp.name: exp for exp in visible_experiments}
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
-    fig.legend(handles=legend_elements, loc='best', bbox_to_anchor=(0.9, 0.1), ncol=6)
+    legend_ax.legend(handles=legend_elements, loc='best',
+               ncol=5)
 
 
 def update_auc_legend(visible_experiments, ax):
@@ -823,7 +969,7 @@ def create_plot_on_click(experiments_dict, experiment_info_box, tabs,
 
         axes = fig_resolution.get_axes()
         ax_auc = axes[4]
-        ax_pr = axes[5]
+        ax_pr = axes[6]
 
         exp.visibility_all_plot(visible)
         update_auc_legend(visible_experiments, ax_auc)
@@ -846,53 +992,27 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
             pass
 
         exp = experiments_dict[exp_name]
-        exp.gammaness_cut = change['new']
-
-        if 'reco_hadroness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_hadroness < exp.gammaness_cut]
-        elif 'reco_gammaness' in exp.data:
-            exp.reco_gamma_data = exp.gamma_data[exp.gamma_data.reco_gammaness >= exp.gammaness_cut]
+        exp.update_gammaness_cut(change['new'])
 
         axes = fig_resolution.get_axes()
         ax_ang_res = axes[0]
         ax_ene_res = axes[1]
         ax_imp_res = axes[2]
         ax_eff_area = axes[3]
-        ax_pr = axes[5]
-
-        for c in ax_ang_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_ang_res.containers.remove(c)
-
-        for c in ax_ene_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_ene_res.containers.remove(c)
-
-        for c in ax_imp_res.containers:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-                ax_imp_res.containers.remove(c)
-
-        for c in ax_eff_area.lines:
-            if exp.name + '_reco' == c.get_label():
-                c.remove()
-
-        for c in ax_pr.collections:
-            if exp.name == c.get_label():
-                c.remove()
+        ax_eff_area_ratio = axes[5]
+        ax_pr = axes[6]
 
         if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
-            exp.plot_angular_resolution_reco(ax=ax_ang_res)
+            exp.update_angular_resolution_reco(ax_ang_res)
         if 'reco_energy' in exp.data:
-            exp.plot_energy_resolution_reco(ax=ax_ene_res)
+            exp.update_energy_resolution_reco(ax_ene_res)
         if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
-            exp.plot_impact_resolution_reco(ax=ax_imp_res)
+            exp.update_impact_resolution_reco(ax_imp_res)
         if 'mc_energy' in exp.data:
-            exp.plot_effective_area_reco(ax=ax_eff_area)
-        if 'reco_hadroness' in exp.data or 'reco_gammaness' in exp.data:
-            exp.plot_gammaness_cut()
+            exp.update_effective_area_reco(ax_eff_area)
+            exp.update_effective_area_ratio(ax_eff_area_ratio)
+        if 'reco_gammaness' in exp.data:
+            exp.update_pr_cut(ax_pr)
         update_pr_legend(visible_experiments, ax_pr)
 
     return update_gammaness_cut
@@ -938,6 +1058,7 @@ def create_update_color(experiments_dict, fig_resolution, visible_experiments):
 
         plot_exp_on_fig(exp, fig_resolution)
         update_legend(visible_experiments, fig_resolution)
+        update_pr_legend(visible_experiments, axes[6])
         update_auc_legend(visible_experiments, axes[4])
 
     return update_color
@@ -1053,6 +1174,15 @@ def make_experiments_carousel(experiments_dic, experiment_info_box, tabs, fig_re
     return VBox(children=items, layout=box_layout)
 
 
+def has_hdf5_file(folder):
+    for dirname, dirnames, filenames in os.walk(folder):
+        for file in filenames:
+            filename, ext = os.path.splitext(file)
+            if ext == '.h5':
+                return True
+    return False
+
+
 class GammaBoard(object):
     """
         Args
@@ -1060,13 +1190,13 @@ class GammaBoard(object):
             site (string): 'south' for Paranal and 'north' for LaPalma
             ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     """
-    def __init__(self, experiments_directory, bias_correction=False, figsize=(12,16)):
+    def __init__(self, experiments_directory, bias_correction=False, figsize=(12, 20)):
 
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
                                  if os.path.isdir(experiments_directory + '/' + exp_name) and
-                                 exp_name + '.h5' in os.listdir(experiments_directory + '/' + exp_name)}
+                                 has_hdf5_file(experiments_directory + '/' + exp_name)}
         self.site = 'north'
         self.ref = 'none'
 
@@ -1083,9 +1213,6 @@ class GammaBoard(object):
         tabs = {}
 
         self._fig_resolution, self._axes_resolution = create_resolution_fig(figsize=figsize)
-        ax_eff_area = self._axes_resolution[1][1]
-        ax_eff_area.set_ylim(ax_eff_area.get_ylim())
-        self._fig_resolution.subplots_adjust(bottom=0.2)
 
         carousel = make_experiments_carousel(self.experiments_dict, experiment_info_box, tabs,
                                              self._fig_resolution, visible_experiments)

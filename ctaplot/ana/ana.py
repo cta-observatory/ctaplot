@@ -471,6 +471,8 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
     -------
     (e, e_res) : tuple of 1d numpy arrays - energy, resolution in energy
     """
+    assert len(reco_energy) > 0, "Empty arrays"
+
     res_e = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
@@ -479,7 +481,6 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
                                        percentile=percentile,
                                        confidence_level=confidence_level,
                                        bias_correction=bias_correction))
-
 
     return irf.E_bin, np.array(res_e)
 
@@ -504,7 +505,6 @@ def energy_bias(simu_energy, reco_energy):
         bias_e.append(relative_bias(simu_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
     return irf.E_bin, np.array(bias_e)
-
 
 
 def get_angles_pipi(angles):
