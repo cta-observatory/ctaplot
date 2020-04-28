@@ -92,14 +92,13 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     y = np.log10(reco_pe[mask])
     x = true_pe[mask]
 
-    kwargs['cumulative'] = -1
-    kwargs['histtype'] = 'step'
-    kwargs['density'] = False
-    kwargs['log'] = True
-    if 'bins' not in kwargs:
-        kwargs['bins'] = 300
-    if 'linewidth' not in kwargs:
-        kwargs['linewidth'] = 3
+    kwargs.setdefault('cumulative', -1)
+    kwargs.setdefault('histtype', 'step')
+    kwargs.setdefault('density', False)
+    kwargs.setdefault('log', True)
+    kwargs.setdefault('bins', 300)
+    kwargs.setdefault('linewidth', 3)
+
     if 'label' in kwargs:
         kwargs.pop('label')
 
@@ -154,8 +153,9 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
         b = 0
         ylabel = "(reco # pe / true # pe)"
 
-    hist_args['bins'] = bins
-    hist_args['norm'] = LogNorm()
+    if 'bins' in hist_args:
+        hist_args.pop('bins')
+    hist_args.setdefault('norm', LogNorm())
 
     h, xedges, yedges, im = ax.hist2d(x, y - b, label='reco pe', **hist_args)
     plt.colorbar(im, ax=ax)
