@@ -42,20 +42,17 @@ def plot_photoelectron_true_reco(true_pe, reco_pe, bins=200, stat='median', erro
 
     if 'bins' in hist_args:
         hist_args.pop('bins')
-    h, xedges, yedges, im = ax.hist2d(x, y, bins=bins, norm=LogNorm())
+    hist_args.setdefault('norm', LogNorm())
+    h, xedges, yedges, im = ax.hist2d(x, y, bins=bins, **hist_args)
 
     if stat is not None:
-        if 'color' not in stat_args:
-            stat_args['color'] = 'red'
-        if 'linewidth' not in stat_args:
-            stat_args['linewidth'] = 2
+        stat_args.setdefault('color', 'red')
+        stat_args.setdefault('linewidth', 2)
         plot_binned_stat(x, y, errorbar=errorbar, bins=bins, ax=ax, statistic=stat, percentile=percentile, label=stat,
                          line=True, **stat_args)
 
-    if 'color' not in xy_args:
-        xy_args['color'] = 'black'
-    if 'label' not in xy_args:
-        xy_args['label'] = 'y=x'
+    xy_args.setdefault('color', 'black')
+    xy_args.setdefault('label', 'y=x')
     ax.plot([x.min(), x.max()], [x.min(), x.max()], **xy_args)
 
     ylim = list(ax.get_ylim())
@@ -95,14 +92,13 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     y = np.log10(reco_pe[mask])
     x = true_pe[mask]
 
-    kwargs['cumulative'] = -1
-    kwargs['histtype'] = 'step'
-    kwargs['density'] = False
-    kwargs['log'] = True
-    if 'bins' not in kwargs:
-        kwargs['bins'] = 300
-    if 'linewidth' not in kwargs:
-        kwargs['linewidth'] = 3
+    kwargs.setdefault('cumulative', -1)
+    kwargs.setdefault('histtype', 'step')
+    kwargs.setdefault('density', False)
+    kwargs.setdefault('log', True)
+    kwargs.setdefault('bins', 300)
+    kwargs.setdefault('linewidth', 3)
+
     if 'label' in kwargs:
         kwargs.pop('label')
 
@@ -157,8 +153,9 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
         b = 0
         ylabel = "(reco # pe / true # pe)"
 
-    hist_args['bins'] = bins
-    hist_args['norm'] = LogNorm()
+    if 'bins' in hist_args:
+        hist_args.pop('bins')
+    hist_args.setdefault('norm', LogNorm())
 
     h, xedges, yedges, im = ax.hist2d(x, y - b, label='reco pe', **hist_args)
     plt.colorbar(im, ax=ax)
