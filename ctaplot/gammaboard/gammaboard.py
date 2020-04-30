@@ -14,7 +14,7 @@ from sklearn.multiclass import LabelBinarizer
 from .. import plots
 from .. import ana
 from ..io.dataset import get
-from ..io import read_lst_dl2_data
+from ..io import read_lst_dl2_data, read_irf_dl2_data
 
 
 __all__ = ['open_dashboard',
@@ -68,9 +68,12 @@ def load_data_from_h5(experiment, experiments_directory):
         except KeyError:
             try:
                 data = read_lst_dl2_data(r_file)
-            except Exception as e:
-                print(e)
-                continue
+            except KeyError:
+                try:
+                    data = read_irf_dl2_data(r_file)
+                except Exception as e:
+                    print(e)
+                    continue
         result_data.append(data)
     return pd.concat(result_data)
 
