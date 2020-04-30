@@ -4,7 +4,7 @@ import pandas as pd
 from astropy.utils import deprecated
 
 
-@deprecated("08/10/2019", "The mc_run_header should be in the data file. Under `/simulation/run_config` for HDF5 files")
+@deprecated('08/10/2019', 'The mc_run_header should be in the data file. Under `/simulation/run_config` for HDF5 files')
 class mc_run_header():
 
     def __init__(self):
@@ -57,7 +57,7 @@ class mc_run_header():
         if self.data['core_pos_mode'] == 1:
             return np.pi * (self.data['core_range'][1] - self.data['core_range'][0])**2
         else:
-            raise Exception("Sorry I do not know this simulation mode")
+            raise Exception('Sorry I do not know this simulation mode')
 
     def get_number_simulated_events(self):
         """
@@ -108,11 +108,11 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
     data = pd.read_hdf(filename, key=key)
 
     data = data.rename(columns={
-        "mc_alt": "mc_altitude",
-        "mc_az": "mc_azimuth",
-        "reco_alt": "reco_altitude",
-        "reco_az": "reco_azimuth",
-        "gammaness": "reco_gammaness",
+        'mc_alt': 'mc_altitude',
+        'mc_az': 'mc_azimuth',
+        'reco_alt': 'reco_altitude',
+        'reco_az': 'reco_azimuth',
+        'gammaness': 'reco_gammaness',
     })
 
     if data['mc_energy'].min() > 0.1 and data['mc_energy'].max() < 10:
@@ -122,3 +122,43 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
 
     return data
 
+
+def read_irf_dl2_data(filename, key='dl2'):
+    """
+    Read lst dl1 data and return a dataframe with right keys for gammaboard
+
+    Parameters
+    ----------
+    filename: path
+    key: dataset path in file
+
+    Returns
+    -------
+    `pandas.DataFrame`
+    """
+
+    data = pd.read_hdf(filename, key=key)
+
+    for col in ['reco_alt', 'reco_az', 'mc_alt', 'mc_az']:
+        data[col] = np.deg2rad(data[col])
+
+    data = data.rename(columns={
+        'mc_alt': 'mc_altitude',
+        'mc_az': 'mc_azimuth',
+        'reco_alt': 'reco_altitude',
+        'reco_az': 'reco_azimuth',
+        'gammaness': 'reco_gammaness',
+        'mc_type': 'mc_particle'
+    })
+
+    reco_particle = data.filter([col for col in data.columns if 'reco_proba' in col])
+    reco_particle = reco_particle.idxmax(axis=1)
+    reco_particle = reco_particle.apply(lambda x: int(x.split('_')[-1]))
+    data['reco_particle'] = reco_particle
+
+    if data['mc_energy'].min() > 0.1 and data['mc_energy'].max() < 10:
+        # energy is probably in log(GeV)
+        data['reco_energy'] = 10 ** (data['reco_energy'] - 3)
+        data['mc_energy'] = 10**(data['mc_energy'] - 3)
+
+    return data
