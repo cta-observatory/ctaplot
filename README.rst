@@ -2,10 +2,12 @@
 ctaplot
 =======
 
-ctaplot is a collection of functions to make instrument response functions (IRF) and reconstruction quality-checks plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
+ctaplot is a collection of functions to produce instrument response functions (IRF) and reconstruction quality-checks metrics and plots for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
-Given a list of reconstructed and simulated quantities, compute and plot the Instrument Response Functions such as:
+Given a list of reconstructed and simulated quantities, compute and plot metric and Instrument Response Functions such as:
 
+* charge resolution
+* ROC curves
 * angular resolution
 * energy resolution
 * effective surface
