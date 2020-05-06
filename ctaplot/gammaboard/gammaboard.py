@@ -502,7 +502,8 @@ class Experiment(object):
                 ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
                 precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
                                                               self.data.reco_gammaness,
-                                                              pos_label=GAMMA_ID)
+                                                              pos_label=GAMMA_ID if len(label_binarizer.classes_) == 2
+                                                              else 1)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)

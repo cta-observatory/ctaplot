@@ -113,6 +113,8 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
         'reco_alt': 'reco_altitude',
         'reco_az': 'reco_azimuth',
         'gammaness': 'reco_gammaness',
+        'reco_type': 'reco_particle',
+        'mc_type': 'mc_particle'
     })
 
     if data['mc_energy'].min() > 0.1 and data['mc_energy'].max() < 10:
@@ -160,5 +162,8 @@ def read_irf_dl2_data(filename, key='dl2'):
         # energy is probably in log(GeV)
         data['reco_energy'] = 10 ** (data['reco_energy'] - 3)
         data['mc_energy'] = 10**(data['mc_energy'] - 3)
+
+    if 'pass_best_cutoff' in data.columns and 'pass_angular_cut' in data.columns:
+        data = data.query('pass_best_cutoff == True and pass_angular_cut == True')
 
     return data
