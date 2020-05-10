@@ -6,7 +6,6 @@ Functions to make IRF and other reconstruction quality-check plots
 
 
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import gaussian_kde, binned_statistic
@@ -98,7 +97,6 @@ def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask
     count_S, bin_S, o = ax.hist(mc_energy, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
     count_D, bin_D, o = ax.hist(mc_energy[mask_mc_detected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
     count_R, bin_R, o = ax.hist(reco_energy, log=True, bins=np.logspace(-3, 3, 30), label="Reconstructed")
-    plt.legend(fontsize=SizeLabel)
     if outfile is not None:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
         plt.close()
@@ -192,7 +190,7 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, color_scale
         c = color_scale
         plt.colorbar()
     else:
-        c = BrewBlues[-1]
+        c = 'blue'
 
     ax.scatter(reco_az, reco_alt, c=c)
     ax.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='orange', label="Source position")
@@ -224,10 +222,8 @@ def plot_angles_distribution(reco_alt, reco_az, source_alt, source_az, outfile=N
     -------
     fig: `matplotlib.pyplot.figure`
     """
-
+    fig = plt.figure()
     dx = 1
-
-    fig = plt.figure(figsize=(12, 9))
 
     ax1 = plt.subplot(211)
     ax1.spines["top"].set_visible(False)
@@ -249,8 +245,6 @@ def plot_angles_distribution(reco_alt, reco_az, source_alt, source_az, outfile=N
     ax2.get_xaxis().tick_bottom()
     ax2.get_yaxis().tick_left()
 
-    ax2.set_xlabel('Alt [deg]', fontsize=SizeLabel)
-    ax2.set_ylabel('Count', fontsize=SizeLabel)
     ax2.set_xlim(source_alt - dx, source_alt + dx)
 
     ax2.hist(reco_alt, bins=60, range=(source_alt - dx, source_alt + dx))
@@ -331,12 +325,9 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
 
     dx = 0.01
 
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure()
 
     ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
 
     ax1.set_xlim(source_az - dx, source_az + dx)
     ax1.set_ylim(source_alt - dx, source_alt + dx)
@@ -352,15 +343,12 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
     ax1.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='black')
 
     ax1.xaxis.set_label_position('top')
-    ax1.yaxis.set_tick_params(labelsize=SizeTick)
     ax1.xaxis.set_ticks_position('top')
-    ax1.xaxis.set_tick_params(labelsize=SizeTick)
     plt.legend('', 'Source position')
 
     ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
     ax2.set_xlim(source_az - dx, source_az + dx)
     ax2.yaxis.tick_right()
-    ax2.xaxis.set_tick_params(labelsize=SizeTick)
     ax2.xaxis.set_ticklabels([])
     ax2.xaxis.tick_bottom()
     ax2.hist(reco_az, bins=60, range=(source_az - dx, source_az + dx))
@@ -369,7 +357,6 @@ def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, o
     ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
     ax3.set_ylim(source_alt - dx, source_alt + dx)
     ax3.yaxis.set_ticklabels([])
-    ax3.yaxis.set_tick_params(labelsize=SizeTick)
     plt.locator_params(nbins=4)
 
     ax3.spines["left"].set_visible(False)
@@ -404,12 +391,9 @@ def plot_impact_point_map_distri(reco_x, reco_y, tel_x, tel_y, fit=False, outfil
     -------
     fig: `matplotlib.pyplot.figure`
     """
-    fig = plt.figure(figsize=(12, 12))
+    fig = plt.figure()
 
     ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-
-    plt.xticks(fontsize=SizeTick)
-    plt.yticks(fontsize=SizeTick)
 
     plt.xlabel("X [m]")
     plt.ylabel("Y [m]")
@@ -422,16 +406,13 @@ def plot_impact_point_map_distri(reco_x, reco_y, tel_x, tel_y, fit=False, outfil
         ax1.hist2d(reco_x, reco_y, bins=80, norm=LogNorm())
 
     ax1.xaxis.set_label_position('top')
-    ax1.yaxis.set_tick_params(labelsize=SizeTick)
     ax1.xaxis.set_ticks_position('top')
-    ax1.xaxis.set_tick_params(labelsize=SizeTick)
     plt.legend('', 'Source position')
 
     ax1.scatter(tel_x, tel_y, c='tomato', marker='+', s=90, linewidths=10)
 
     ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
     ax2.yaxis.tick_right()
-    ax2.xaxis.set_tick_params(labelsize=SizeTick)
     ax2.xaxis.set_ticklabels([])
     ax2.xaxis.tick_bottom()
     ax2.hist(reco_x, bins=60)
@@ -439,7 +420,6 @@ def plot_impact_point_map_distri(reco_x, reco_y, tel_x, tel_y, fit=False, outfil
 
     ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
     ax3.yaxis.set_ticklabels([])
-    ax3.yaxis.set_tick_params(labelsize=SizeTick)
     plt.locator_params(nbins=4)
 
     ax3.spines["left"].set_visible(False)
@@ -467,9 +447,6 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None):
     """
 
     ax = plt.gca() if ax is None else ax
-
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=SizeTick)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=SizeTick)
 
     ax.set_xlabel("X [m]")
     ax.set_ylabel("Y [m]")
@@ -517,11 +494,10 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     x50 = m[int(np.floor(0.5 * len(m)))] + 0.5
     x90 = m[int(np.floor(0.9 * len(m)))] + 0.5
     if quartils and (xmin < x50 < xmax):
-        ax.vlines(x50, 0, n[int(m[int(np.floor(0.5 * len(m)))])], color=BrewOranges[-2], label='50%')
+        ax.vlines(x50, 0, n[int(m[int(np.floor(0.5 * len(m)))])], label='50%')
     if quartils and (xmin < x90 < xmax):
-        ax.vlines(x90, 0, n[int(m[int(np.floor(0.9 * len(m)))])], color=BrewOranges[-1], label='90%')
+        ax.vlines(x90, 0, n[int(m[int(np.floor(0.9 * len(m)))])], label='90%')
 
-    ax.legend(fontsize=SizeLabel)
     ax.set_title("Telescope multiplicity")
     if type(outfile) is str:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -575,9 +551,8 @@ def plot_multiplicity_per_telescope_type(multiplicity, telescope_type, ax=None, 
     if quartils and (xmin < x50 < xmax):
         ax.vlines(x50+0.5, 0, len(multiplicity[multiplicity==x50]), label='50%')
     if quartils and (xmin < x90 < xmax):
-        ax.vlines(x90+0.5, 0, len(multiplicity[multiplicity==x90]), color=BrewOranges[-1], label='90%')
+        ax.vlines(x90+0.5, 0, len(multiplicity[multiplicity==x90]), label='90%')
 
-    ax.legend(fontsize=SizeLabel)
     ax.set_title("Telescope multiplicity")
     if type(outfile) is str:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -1095,7 +1070,6 @@ def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energ
     ax.fill_between(E, err_min, err_max)
     ax.errorbar(E, err_mean, err_std, color="red", label="mean+std")
 
-    plt.legend(fontsize=SizeLabel)
     ax.set_title('Impact parameter resolution')
 
     return E, np.array(err_mean)
@@ -1179,8 +1153,6 @@ def plot_impact_parameter_error_per_multiplicity(reco_x, reco_y, simu_x, simu_y,
 
     ax.fill_between(M, e_min, e_max)
     ax.errorbar(M, e_mean, e_std, color="red", label="mean+std")
-
-    plt.legend(fontsize=SizeLabel)
 
     return M, np.array(e_mean)
 
@@ -2194,7 +2166,7 @@ def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
             kwargs['label'] = particle
         ax.hist(gammaness[mc_type == particle], **kwargs)
 
-    ax.set_title('Gammaness distribution per particle type', fontsize=18)
+    ax.set_title('Gammaness distribution per particle type')
     ax.set_xlabel('gammaness')
-    ax.legend(fontsize=15)
+    ax.legend()
     return ax
