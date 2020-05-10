@@ -684,6 +684,7 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.plot(e_cta, ef_cta, **kwargs)
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -717,6 +718,7 @@ def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.plot(e_cta, ef_cta, **kwargs)
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -751,6 +753,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.plot(e_cta, ef_cta, **kwargs)
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -785,6 +788,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.plot(e_cta, ef_cta, **kwargs)
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -951,6 +955,7 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     ax.set_xscale('log')
     ax.set_title('Angular resolution')
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -983,6 +988,7 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.set_xlabel('Energy [TeV]')
     ax.set_title('Angular resolution')
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -1318,6 +1324,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
@@ -1349,6 +1356,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.grid('on', which='both')
+    ax.legend()
     return ax
 
 
