@@ -9,13 +9,18 @@ SizeLabelSlides = 24
 SizeTickSlides = 20
 
 
-def set_style():
+def set_style(output='slides'):
     """
     Set styling for plots
+
+    Parameters
+    ----------
+    output: str
+        'slides' or 'paper'
     """
     mpl.pyplot.style.use('seaborn-paper')
     set_figsize()
-    set_font()
+    set_font(output=output)
 
 
 def set_figsize():
@@ -31,7 +36,8 @@ def set_font(output='slides'):
 
     Parameters
     ----------
-    output: 'slides' or 'paper'
+    output: str
+        'slides' or 'paper'
     """
     if output == 'slides':
         size_label = SizeLabelSlides
