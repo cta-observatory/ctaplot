@@ -18,7 +18,7 @@ def set_style(output='slides'):
     output: str
         'slides' or 'paper'
     """
-    mpl.pyplot.style.use('seaborn-paper')
+    mpl.pyplot.style.use('seaborn-deep')
     set_figsize()
     set_font(output=output)
 
