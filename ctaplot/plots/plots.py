@@ -706,7 +706,7 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
         kwargs['fmt'] = 'o'
 
     ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -739,7 +739,7 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -772,7 +772,7 @@ def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -806,7 +806,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -840,7 +840,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.plot(e_cta, ef_cta, **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -915,7 +915,7 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
 
     ax.errorbar(E, resolution[:, 0], xerr=(energy_bin[1:] - energy_bin[:-1]) / 2.,
                 yerr=(resolution[:, 0] - resolution[:, 1], resolution[:, 2] - resolution[:, 0]), **kwargs)
-
+    ax.grid('on', which='both')
     ax.set_title('Resolution')
     return ax
 
@@ -972,6 +972,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
 
         ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
                     yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
+        ax.grid('on', which='both')
     finally:
         return ax
 
@@ -1005,6 +1006,7 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_title('Angular resolution')
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1036,6 +1038,7 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.set_ylabel(r'$\theta [deg]$')
     ax.set_xlabel('Energy [TeV]')
     ax.set_title('Angular resolution')
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1151,7 +1154,7 @@ def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, 
     ax.set_xlabel("Energy")
     ax.set_ylabel("Impact parameter resolution")
     ax.set_title("Impact parameter resolution as a function of the energy")
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1287,11 +1290,12 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
         kwargs['fmt'] = 'o'
 
     ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
-    ax.set_xlabel("log(E/TeV)")
+    ax.set_xlabel("Energy [TeV]")
     ax.set_xscale('log')
     ax.set_title('Energy bias')
 
     ax.errorbar(E, biasE, xerr=(E - E_bin[:-1], E_bin[1:] - E), **kwargs)
+    ax.grid('on', which='both')
 
     return ax
 
@@ -1339,6 +1343,8 @@ def plot_energy_resolution(simu_energy, reco_energy,
 
         ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
                     yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
+
+        ax.grid('on', which='both')
     finally:
         return ax
 
@@ -1370,6 +1376,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     ax.set_xlabel("Energy [TeV]")
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1400,6 +1407,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.set_xlabel("Energy [TeV]")
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1429,6 +1437,7 @@ def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=N
     ax.hist2d(distance_center, imp_err, **kwargs)
     ax.set_xlabel("Distance to site center")
     ax.set_ylabel("Impact point error")
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1478,6 +1487,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
             yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
             **kwargs,
             )
+        ax.grid('on', which='both')
     finally:
         return ax
 
@@ -1702,7 +1712,7 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
     ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1742,7 +1752,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
     ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
     ax.set_xlabel("Angular separation to pointing direction [rad]")
     ax.set_ylabel("Angular resolution [{}]".format(res_unit))
-
+    ax.grid('on', which='both')
     return ax
 
 
@@ -1858,7 +1868,7 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
     ax.set_xscale('log')
 
     ax.errorbar(mean_bins, bias, xerr=(mean_bins - bins[:-1], bins[1:] - mean_bins), **kwargs)
-
+    ax.grid('on', which='both')
     return ax
 
 
