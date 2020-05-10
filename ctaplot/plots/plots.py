@@ -17,35 +17,6 @@ from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
 from sklearn.preprocessing import label_binarize
 
-# plt.style.use('seaborn-colorblind')
-plt.style.use('seaborn-paper')
-
-# "#3F5D7D" is the nice dark blue color.
-
-
-SizeTitleArticle = 20
-SizeLabelArticle = 18
-SizeTickArticle = 16
-SizeTitleSlides = 28
-SizeLabelSlides = 24
-SizeTickSlides = 20
-
-SizeLabel = SizeLabelArticle
-SizeTick = SizeTickArticle
-
-mpl.rc('xtick', labelsize=SizeTick)
-mpl.rc('ytick', labelsize=SizeTick)
-mpl.rc('axes', labelsize=SizeLabel)
-
-# sets of colors from color-brewer
-BrewReds = ['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d']
-BrewBlues = ['#eff3ff', '#bdd7e7', '#6baed6', '#2171b5']
-BrewGreens = ['#edf8e9', '#bae4b3', '#74c476', '#238b45']
-BrewGreys = ['#f7f7f7', '#cccccc', '#969696', '#525252']
-BrewViolets = ['#f2f0f7', '#cbc9e2', '#9e9ac8', '#6a51a3']
-BrewOranges = ['#feedde', '#fdbe85', '#fd8d3c', '#d94701']
-
-
 
 __all__ = ['plot_resolution',
            'plot_resolution_difference',
@@ -94,8 +65,6 @@ __all__ = ['plot_resolution',
            'plot_roc_curve_gammaness_per_energy',
            'plot_gammaness_distribution',
            ]
-
-
 
 
 def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
