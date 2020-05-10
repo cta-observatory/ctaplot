@@ -9,3 +9,4 @@ Examples
    notebooks/resolution_examples.ipynb
    notebooks/ROC curves.ipynb
    notebooks/dashboard.ipynb
+   notebooks/style.ipynb
