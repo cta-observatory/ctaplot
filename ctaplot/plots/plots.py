@@ -68,7 +68,7 @@ __all__ = ['plot_resolution',
 
 def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
     """
-    Plot the energy distribution of the simulated particles, detected particles and reconstructed particles
+    Plot the reco_energy distribution of the simulated particles, detected particles and reconstructed particles
     The plot might be saved automatically if `outfile` is provided.
 
     Parameters
@@ -106,7 +106,7 @@ def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask
 
 def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     """
-    Plot the telescope multiplicity as a function of the energy
+    Plot the telescope multiplicity as a function of the reco_energy
     The plot might be saved automatically if `outfile` is provided.
 
     Parameters
@@ -606,7 +606,7 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
 
 def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=None, **kwargs):
     """
-    Plot the effective area as a function of the energy
+    Plot the effective area as a function of the reco_energy
 
     Parameters
     ----------
@@ -638,7 +638,7 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_T [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -676,7 +676,7 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_T [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
@@ -710,7 +710,7 @@ def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_T [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
@@ -745,7 +745,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_R [TeV]')
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
@@ -780,7 +780,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_R [TeV]')
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
@@ -826,7 +826,7 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
 
 def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     """
-    Plot a variable resolution as a function of the energy
+    Plot a variable resolution as a function of the reco_energy
 
     Parameters
     ----------
@@ -868,11 +868,11 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     return ax
 
 
-def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
+def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_energy,
                                        percentile=68.27, confidence_level=0.95, bias_correction=False,
                                        ax=None, **kwargs):
     """
-    Plot the angular resolution as a function of the energy
+    Plot the angular resolution as a function of the reconstructed energy
 
     Parameters
     ----------
@@ -884,7 +884,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
         true altitudes in radians
     mc_az: `numpy.ndarray`
         true azimuths in radians
-    energy: `numpy.ndarray`
+    reco_energy: `numpy.ndarray`
         energies in TeV
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
@@ -897,7 +897,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
     ax = plt.gca() if ax is None else ax
 
     try:
-        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
+        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_energy,
                                                        percentile=percentile,
                                                        confidence_level=confidence_level,
                                                        bias_correction=bias_correction
@@ -914,7 +914,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, energy,
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel(r'$\theta [deg]$')
-        ax.set_xlabel('Energy [TeV]')
+        ax.set_xlabel('Energy_R [TeV]')
         ax.set_xscale('log')
         ax.set_title('Angular resolution')
 
@@ -950,7 +950,7 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
 
     ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_R [TeV]')
 
     ax.set_xscale('log')
     ax.set_title('Angular resolution')
@@ -985,7 +985,7 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.set_ylabel(r'$\theta [deg]$')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel('Energy_R [TeV]')
     ax.set_title('Angular resolution')
     ax.grid('on', which='both')
     ax.legend()
@@ -1024,7 +1024,7 @@ def hist_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwarg
                                   'Use `plot_impact_parameter_resolution_per_energy` instead')
 def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
     """
-    plot the impact parameter error distance as a function of energy and save the plot as Outfile
+    plot the impact parameter error distance as a function of reco_energy and save the plot as Outfile
     
     Parameters
     ----------
@@ -1038,7 +1038,7 @@ def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energ
 
     Returns
     -------
-    energy, err_mean : numpy arrays
+    reco_energy, err_mean : numpy arrays
     """
     irf = ana.irf_cta()
     E_bin = irf.E_bin
@@ -1102,7 +1102,7 @@ def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, 
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
     ax.set_xlabel("Energy")
     ax.set_ylabel("Impact parameter resolution")
-    ax.set_title("Impact parameter resolution as a function of the energy")
+    ax.set_title("Impact parameter resolution as a function of the reco_energy")
     ax.grid('on', which='both')
     return ax
 
@@ -1213,7 +1213,7 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
 
 def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
     """
-    Plot the energy bias
+    Plot the reco_energy bias
 
     Parameters
     ----------
@@ -1226,7 +1226,7 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured energy arrrays should have the same length"
+    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured reco_energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1237,7 +1237,7 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
         kwargs['fmt'] = 'o'
 
     ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
-    ax.set_xlabel("Energy [TeV]")
+    ax.set_xlabel("Energy_R [TeV]")
     ax.set_xscale('log')
     ax.set_title('Energy bias')
 
@@ -1251,7 +1251,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
                            percentile=68.27, confidence_level=0.95, bias_correction=False,
                            ax=None, **kwargs):
     """
-    Plot the enregy resolution as a function of the energy
+    Plot the enregy resolution as a function of the reco_energy
 
     Parameters
     ----------
@@ -1265,7 +1265,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured energy arrrays should have the same length"
+    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured reco_energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1284,7 +1284,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-        ax.set_xlabel("Energy [TeV]")
+        ax.set_xlabel("Energy_R [TeV]")
         ax.set_xscale('log')
         ax.set_title('Energy resolution')
 
@@ -1298,7 +1298,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
 
 def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     """
-    Plot the cta requirement for the energy resolution
+    Plot the cta requirement for the reco_energy resolution
 
     Parameters
     ----------
@@ -1330,7 +1330,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
 
 def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     """
-    Plot the cta performances (June 2018) for the energy resolution
+    Plot the cta performances (June 2018) for the reco_energy resolution
 
     Parameters
     ----------
@@ -1394,7 +1394,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
                                       percentile=68.27, confidence_level=0.95, bias_correction=False,
                                       ax=None, **kwargs):
     """
-    Plot the angular resolution as a function of the energy
+    Plot the angular resolution as a function of the reco_energy
 
     Parameters
     ----------
@@ -1617,15 +1617,15 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
 def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                              reco_energy, simu_area, ax=None, **kwargs):
     """
-    Plot the effective area as a function of the energy.
+    Plot the effective area as a function of the reco_energy.
     The effective area is computed using the `ctaplot.ana.effective_area_per_energy_power_law`.
 
     Parameters
     ----------
     emin: float
-        min simulated energy
+        min simulated reco_energy
     emax: float
-        max simulated energy
+        max simulated reco_energy
     total_number_events: int
         total number of simulated events
     spectral_index: float
@@ -1755,7 +1755,7 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
     assert len(simu) == len(reco), \
         "simu and reco arrays should have the same length"
     assert len(simu) == len(x), \
-        "simu and energy arrays should have the same length"
+        "simu and reco_energy arrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1783,7 +1783,7 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
 
 def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=None, **kwargs):
     """
-    Plot the bias per bins of energy
+    Plot the bias per bins of reco_energy
 
     Parameters
     ----------
@@ -1802,7 +1802,7 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
     assert len(simu) == len(reco), \
         "simu and reco arrays should have the same length"
     assert len(simu) == len(energy), \
-        "simu and energy arrays should have the same length"
+        "simu and reco_energy arrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -2042,7 +2042,7 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
                                         ax=None,
                                         **kwargs):
     """
-    Plot a gamma ROC curve per gamma energy bin.
+    Plot a gamma ROC curve per gamma reco_energy bin.
 
     Parameters
     ----------
@@ -2051,11 +2051,11 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     gammaness: `numpy.ndarray`
         probability of each event to be a gamma, values must be between 0 and 1
     simu_energy: `numpy.ndarray`
-        energy of the gamma events in TeV
+        reco_energy of the gamma events in TeV
         simu_energy.shape == simu_type.shape (but energies for events that are not gammas are not considered)
     gamma_label: the label of the gamma class in `simu_type`.
     energy_bins: None or int or `numpy.ndarray`
-        bins in energy.
+        bins in reco_energy.
         If `bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
         If `bins` is an int, it defines the number of equal-width
         bins in the given range.
