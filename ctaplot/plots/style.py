@@ -61,4 +61,6 @@ def set_font(output='slides'):
     }
     mpl.pyplot.rcParams.update(params)
     mpl.rc('font', **{'size': size_label})
+    mpl.rcParams['mathtext.fontset'] = 'cm'
+    mpl.rcParams['font.family'] = 'STIXGeneral'
     mpl.rc('text', usetex=True)
