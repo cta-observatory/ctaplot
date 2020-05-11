@@ -383,11 +383,13 @@ class Experiment(object):
                     self.ax_eff_area.plot(E_trig[:-1], S_trig, label=self.name + '_triggered', color=self.color,
                                           linestyle='-.')
 
+                energies = self.gamma_data.reco_energy if 'reco_energy' in self.gamma_data else self.gamma_data.mc_energy
+
                 E, S = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                self.run_configs[0]['energy_range_max'],
                                                                self.run_configs[0]['num_showers'],
                                                                self.run_configs[0]['spectral_index'],
-                                                               self.gamma_data.reco_energy,
+                                                               energies,
                                                                self.run_configs[0]['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
@@ -400,19 +402,23 @@ class Experiment(object):
 
             if self.run_configs is not None and GAMMA_ID in self.run_configs:
                 if self.reco_gamma_data is not None:
+                    gamma_energies = self.reco_gamma_data.reco_energy if 'reco_energy' in self.reco_gamma_data \
+                        else self.reco_gamma_data.mc_energy
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             gamma_energies,
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
+                    noise_energies = self.noise_reco_gamma.reco_energy if 'reco_energy' in self.noise_reco_gamma \
+                        else self.noise_reco_gamma.mc_energy
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
                         self.run_configs[0]['energy_range_min'],
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        noise_energies,
                         self.run_configs[0]['scattering_surface']
                     )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
@@ -438,26 +444,30 @@ class Experiment(object):
             self.ax_eff_area_ratio = ax if ax is not None else plt.gca()
 
             if self.run_configs is not None and GAMMA_ID in self.run_configs:
-                if self.mc_trig_events is not None:
+                if self.mc_trig_events is not None and self.reco_gamma_data is not None:
                     E_max, S_max = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                            self.run_configs[0]['energy_range_max'],
                                                                            self.run_configs[0]['num_showers'],
                                                                            self.run_configs[0]['spectral_index'],
                                                                            self.mc_trig_events.mc_trig_energies,
                                                                            self.run_configs[0]['scattering_surface'])
+                    gamma_energies = self.reco_gamma_data.reco_energy if 'reco_energy' in self.reco_gamma_data \
+                        else self.reco_gamma_data.mc_energy
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             gamma_energies,
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
+                    noise_energies = self.noise_reco_gamma.reco_energy if 'reco_energy' in self.noise_reco_gamma \
+                        else self.noise_reco_gamma.mc_energy
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
                         self.run_configs[0]['energy_range_min'],
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        noise_energies,
                         self.run_configs[0]['scattering_surface']
                     )
                     assert np.all(E_reco_prot == E_max) and np.all(E_reco == E_max), \
