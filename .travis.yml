@@ -17,8 +17,7 @@ before_install:
   - conda update -q conda
 
 install:
-  - sed -i -e "s/- python=.*/- python=$TRAVIS_PYTHON_VERSION/g" environment.yml
-  - conda env create -f environment.yml
+  - conda env create -f environment.yml python=$TRAVIS_PYTHON_VERSION
   - conda activate ctaplot
   - pip install .
 
