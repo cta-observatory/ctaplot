@@ -2,7 +2,7 @@
 ana.py
 ======
 Contain mathematical functions to make results analysis
-(compute angular resolution, effective surface, energy resolution... )
+(compute angular resolution, effective surface, true_energy resolution... )
 """
 import numpy as np
 from ..io import dataset as ds
@@ -67,6 +67,7 @@ class cta_performance:
     def __init__(self, site):
         self.site = site
         self.E = np.empty(0)
+        self.E_bin = np.empty(0)
         self.effective_area = np.empty(0)
         self.angular_resolution = np.empty(0)
         self.energy_resolution = np.empty(0)
@@ -76,7 +77,7 @@ class cta_performance:
         """
         Return the effective area at the given observation time in hours.
         NB: Only 50h supported
-        Returns the energy array and the effective area array
+        Returns the true_energy array and the effective area array
         Parameters
         ----------
         observation_time: optional
@@ -136,7 +137,8 @@ class cta_performance:
             }
             Emin, Emax, self.sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                   skiprows=10, unpack=True)
-            self.E = logbin_mean(np.append(Emin, Emax[-1]))
+            self.E_bin = np.append(Emin, Emax[-1])
+            self.E = logbin_mean(self.E_bin)
 
         if self.site in ['north', 'lapalma']:
             observation_times = {50: 'CTA-Performance-prod3b-v2-North-20deg-50h-DiffSens.txt',
@@ -145,7 +147,8 @@ class cta_performance:
             }
             Emin, Emax, self.sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                   skiprows=10, unpack=True)
-            self.E = logbin_mean(np.append(Emin, Emax[-1]))
+            self.E_bin = np.append(Emin, Emax[-1])
+            self.E = logbin_mean(self.E_bin)
 
         return self.E, self.sensitivity
 
@@ -164,7 +167,7 @@ class cta_requirement:
         """
         Return the effective area at the given observation time in hours.
         NB: Only 0.5h supported
-        Returns the energy array and the effective area array
+        Returns the true_energy array and the effective area array
         Parameters
         ----------
         observation_time: optional
@@ -229,7 +232,7 @@ def logspace_decades_nbin(Xmin, Xmax, n=5):
 
 def stat_per_energy(energy, y, statistic='mean'):
     """
-    Return statistic for the given quantity per energy bins.
+    Return statistic for the given quantity per true_energy bins.
     The binning is given by irf_cta
 
     Parameters
@@ -436,8 +439,8 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
 
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
-    Compute the energy resolution of reco_energy as the percentile (68 as standard) containment radius of
-    `true_energy-reco_energy)/simu_energy
+    Compute the true_energy resolution of true_energy as the percentile (68 as standard) containment radius of
+    `true_energy-true_energy)/simu_energy
     with the lower and upper confidence limits defined by the given confidence level
 
     Parameters
@@ -461,22 +464,30 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
 def energy_resolution_per_energy(simu_energy, reco_energy,
                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
+    The energy resolution ΔE / E is obtained from the distribution of (ER – ET) / ET, where R and T refer
+    to the reconstructed and true energies of gamma-ray events.
+     ΔE/E is the half-width of the interval around 0 which contains given percentile of the distribution.
 
     Parameters
     ----------
     simu_energy: 1d numpy array of simulated energies
     reco_energy: 1d numpy array of reconstructed energies
+    percentile: float
+        between 0 and 100
+    confidence_level: float
+        between 0 and 1
+    bias_correction: bool
 
     Returns
     -------
-    (e, e_res) : tuple of 1d numpy arrays - energy, resolution in energy
+    (e, e_res) : tuple of 1d numpy arrays - true_energy, resolution in true_energy
     """
     assert len(reco_energy) > 0, "Empty arrays"
 
     res_e = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
-        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
+        mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
         res_e.append(energy_resolution(simu_energy[mask], reco_energy[mask],
                                        percentile=percentile,
                                        confidence_level=confidence_level,
@@ -487,7 +498,7 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
 
 def energy_bias(simu_energy, reco_energy):
     """
-    Compute the energy relative bias per energy bin.
+    Compute the true_energy relative bias per true_energy bin.
 
     Parameters
     ----------
@@ -496,12 +507,12 @@ def energy_bias(simu_energy, reco_energy):
 
     Returns
     -------
-    (energy_bins, bias) : tuple of 1d numpy arrays - energy, energy bias
+    (energy_bins, bias) : tuple of 1d numpy arrays - true_energy, true_energy bias
     """
     bias_e = []
     irf = irf_cta()
     for i, e in enumerate(irf.E):
-        mask = (simu_energy > irf.E_bin[i]) & (simu_energy < irf.E_bin[i + 1])
+        mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
         bias_e.append(relative_bias(simu_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
     return irf.E_bin, np.array(bias_e)
@@ -646,7 +657,7 @@ def angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, x,
 def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
                                   percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
-    Plot the angular resolution as a function of the event simulated energy
+    Plot the angular resolution as a function of the event simulated true_energy
 
     Parameters
     ----------
@@ -723,7 +734,7 @@ def effective_area(simu_energy, reco_energy, simu_area):
 
 def effective_area_per_energy(simu_energy, reco_energy, simu_area):
     """
-    Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
+    Compute the effective area per true_energy bins from a list of simulated energies and reconstructed energies
 
     Parameters
     ----------
@@ -867,7 +878,7 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
                                  bias_correction=False,
                                  relative_scaling_method=None):
     """
-    Plot the angular resolution as a function of the event simulated energy
+    Plot the angular resolution as a function of the event simulated true_energy
 
     Parameters
     ----------
@@ -887,7 +898,7 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
 
     Returns
     -------
-    (energy, resolution) : (1d numpy array, 1d numpy array)
+    (true_energy, resolution) : (1d numpy array, 1d numpy array)
     """
     assert len(reco_x) == len(energy)
     assert len(energy) > 0, "Empty arrays"
@@ -961,7 +972,7 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
 
 def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, reco_energy, simu_area):
     """
-    Compute the effective area per energy bins from a list of simulated energies and reconstructed energies
+    Compute the effective area per true_energy bins from a list of simulated energies and reconstructed energies
 
     Parameters
     ----------
@@ -974,7 +985,7 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
 
     Returns
     -------
-    (energy, effective_area) : (1d numpy array, 1d numpy array)
+    (true_energy, effective_area) : (1d numpy array, 1d numpy array)
     """
 
     irf = irf_cta()
@@ -1104,7 +1115,7 @@ def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
 
 def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
     """
-    Bias between `simu` and `reco` per bins of energy
+    Bias between `simu` and `reco` per bins of true_energy
 
     Parameters
     ----------
