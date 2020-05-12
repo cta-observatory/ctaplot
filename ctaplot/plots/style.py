@@ -1,52 +1,68 @@
 import matplotlib as mpl
 
+_SizeTitlePaper = 11
+_SizeLabelPaper = 9
+_SizeTickPaper = 8
+_SizeTitleSlides = 28
+_SizeLabelSlides = 24
+_SizeTickSlides = 20
 
-SizeTitlePaper = 20
-SizeLabelPaper = 18
-SizeTickPaper = 16
-SizeTitleSlides = 28
-SizeLabelSlides = 24
-SizeTickSlides = 20
+_global_style = 'notebook'  # internal - set by `set_style`
 
 
-def set_style(output='slides'):
+def set_style(style='notebook'):
     """
     Set styling for plots
 
     Parameters
     ----------
-    output: str
-        'slides' or 'paper'
+    style: str
+        'notebook', 'slides' or 'paper'
     """
     mpl.pyplot.style.use('seaborn-deep')
     set_figsize()
-    set_font(output=output)
+    _global_style = style
+    set_font(style=style)
 
 
-def set_figsize():
+def set_figsize(style='notebook'):
     """
     Set default figsize
+    Parameters
+    ----------
+    style: str
+        'notebook', 'slides' or 'paper'
     """
-    mpl.rcParams['figure.figsize'] = (12, 8)
+    if style == 'notebook' or 'slides':
+        mpl.rcParams['figure.figsize'] = (12, 8)
+    elif style == 'paper':
+        mpl.rcParams['figure.figsize'] = (5.25, 3.5)  # column-width in inches of a 2-columns article
+    else:
+        raise ValueError
 
 
-def set_font(output='slides'):
+def set_font(style='notebook'):
     """
     Set font style
 
     Parameters
     ----------
     output: str
-        'slides' or 'paper'
+        'notebook', 'slides' or 'paper'
     """
-    if output == 'slides':
-        size_label = SizeLabelSlides
-        size_tick = SizeTickSlides
-        size_title = SizeTitleSlides
-    elif output == 'paper':
-        size_label = SizeLabelPaper
-        size_tick = SizeTickPaper
-        size_title = SizeTitlePaper
+    if style == 'slides' or 'notebook':
+        size_label = _SizeLabelSlides
+        size_tick = _SizeTickSlides
+        size_title = _SizeTitleSlides
+        if style == 'slides':
+            mpl.rc('text', usetex=True)
+        else:
+            mpl.rc('text', usetex=False)
+    elif style == 'paper':
+        size_label = _SizeLabelPaper
+        size_tick = _SizeTickPaper
+        size_title = _SizeTitlePaper
+        mpl.rc('text', usetex=True)
     else:
         raise ValueError
 
@@ -63,4 +79,4 @@ def set_font(output='slides'):
     mpl.rc('font', **{'size': size_label})
     mpl.rcParams['mathtext.fontset'] = 'cm'
     mpl.rcParams['font.family'] = 'STIXGeneral'
-    mpl.rc('text', usetex=True)
+
