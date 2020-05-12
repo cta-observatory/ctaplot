@@ -638,7 +638,7 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
-    ax.set_xlabel(r'Energy\textsubscript{true} [TeV]')
+    ax.set_xlabel(r'$E_T$ [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -676,7 +676,7 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel(r'Energy\textsubscript{true} [TeV]')
+    ax.set_xlabel(r'$E_T$ [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
@@ -710,7 +710,7 @@ def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel(r'Energy\textsubscript{true} [TeV]')
+    ax.set_xlabel(r'$E_T$ [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
 
     if not 'label' in kwargs:
@@ -744,7 +744,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
@@ -780,7 +780,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
@@ -914,7 +914,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_en
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel('Angular Resolution [deg]')
-        ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+        ax.set_xlabel(r'$E_R$ [TeV]')
         ax.set_xscale('log')
         ax.set_title('Angular resolution')
 
@@ -950,7 +950,7 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
 
     ax.set_ylabel(r'Angular Resolution [deg]')
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
 
     ax.set_xscale('log')
     ax.set_title('Angular resolution')
@@ -985,7 +985,7 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.set_ylabel('Angular resolution [deg]')
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.set_title('Angular resolution')
     ax.grid('on', which='both')
     ax.legend()
@@ -1237,7 +1237,7 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
         kwargs['fmt'] = 'o'
 
     ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.set_xscale('log')
     ax.set_title('Energy bias')
 
@@ -1284,7 +1284,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-        ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+        ax.set_xlabel(r'$E_R$ [TeV]')
         ax.set_xscale('log')
         ax.set_title('Energy resolution')
 
@@ -1320,7 +1320,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.grid('on', which='both')
@@ -1352,7 +1352,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel(r'Energy\textsubscript{reco} [TeV]')
+    ax.set_xlabel(r'$E_R$ [TeV]')
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
     ax.grid('on', which='both')
@@ -1648,7 +1648,7 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
-    ax.set_xlabel(r'Energy\textsubscript{true} [TeV]')
+    ax.set_xlabel(r'$E_T$ [TeV]')
     ax.set_ylabel(r'Effective Area $[m^2]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
