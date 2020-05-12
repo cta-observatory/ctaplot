@@ -28,6 +28,10 @@ def set_style(style='notebook'):
 def set_figsize(style='notebook'):
     """
     Set default figsize
+    Parameters
+    ----------
+    style: str
+        'notebook', 'slides' or 'paper'
     """
     if style == 'notebook' or 'slides':
         mpl.rcParams['figure.figsize'] = (12, 8)
