@@ -14,7 +14,6 @@ from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
-from sklearn.preprocessing import label_binarize
 
 
 __all__ = ['plot_resolution',
