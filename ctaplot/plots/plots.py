@@ -1916,7 +1916,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ----------
     simu_type: `numpy.ndarray`
         true labels: int, float or str
-    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), )`
+    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), len(set(simu_type))`
         reconstruction probability for each class in `simu_type`, values must be between 0 and 1
     pos_label : int or str, default=None
         The label of the positive class.
