@@ -247,6 +247,17 @@ def test_plot_roc_curve_gammaness_per_energy():
                                               alpha=0.6, lw=3,
                                               )
 
+    size = 1000
+    simu_classes = np.random.choice(['gamma', 'proton'], size=size)
+    gamma_reco_proba = np.random.rand(size)
+    simu_energy = 10 ** (np.random.rand(size) * 4 - 2)
+
+    plots.plot_roc_curve_gammaness_per_energy(simu_classes, gamma_reco_proba, simu_energy,
+                                              gamma_label='gamma',
+                                              energy_bins=np.array([1e-2, 1e-1, 1, 10, 100]),
+                                              alpha=0.6, lw=3,
+                                              )
+
 
 def test_plot_any_resource():
     from ctaplot.io.dataset import resources_list
