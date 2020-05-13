@@ -2079,7 +2079,7 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     gammas = simu_type == gamma_label
     non_gammas = simu_type != gamma_label
     gamma_energy = simu_energy[gammas]
-    binarized_label = label_binarize(simu_type, [gamma_label]).ravel()  # binarize in a gamma vs all fashion
+    binarized_label = (simu_type == gamma_label).astype(int)  # binarize in a gamma vs all fashion
 
     if energy_bins is None:
         irf = ana.irf_cta()
