@@ -14,7 +14,6 @@ from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
-from sklearn.preprocessing import label_binarize
 
 
 __all__ = ['plot_resolution',
@@ -1916,7 +1915,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ----------
     simu_type: `numpy.ndarray`
         true labels: int, float or str
-    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), )`
+    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), len(set(simu_type))`
         reconstruction probability for each class in `simu_type`, values must be between 0 and 1
     pos_label : int or str, default=None
         The label of the positive class.
@@ -2079,7 +2078,7 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     gammas = simu_type == gamma_label
     non_gammas = simu_type != gamma_label
     gamma_energy = simu_energy[gammas]
-    binarized_label = label_binarize(simu_type, [gamma_label]).ravel()  # binarize in a gamma vs all fashion
+    binarized_label = (simu_type == gamma_label).astype(int)  # binarize in a gamma vs all fashion
 
     if energy_bins is None:
         irf = ana.irf_cta()
