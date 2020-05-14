@@ -41,7 +41,8 @@ setup(
         'sphinx>=1.4',
         'nbsphinx',
         'sphinx_rtd_theme',
-        'nbconvert'
+        'nbconvert',
+        'pygments >=2.4.1'
     ],
     tests_require=['pytest'],
     classifiers=[
