@@ -60,8 +60,8 @@ def plot_photoelectron_true_reco(true_pe, reco_pe, bins=200, stat='median', erro
     ax.set_ylim(ylim)
 
     plt.colorbar(im, ax=ax)
-    ax.set_xlabel('log10(# true p.e)', fontsize=18)
-    ax.set_ylabel('log10(# reconstructed p.e)', fontsize=18)
+    ax.set_xlabel('log10(true pe)', fontsize=18)
+    ax.set_ylabel('log10(reco pe)', fontsize=18)
     ax.grid()
     ax.legend(fontsize=16)
     return ax
@@ -107,8 +107,8 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     ax.hist(y[x == 0], **kwargs, label='pixels with no signal')
     ax.hist(np.log10(true_pe[true_pe > 0]), **kwargs, label='true signal pixels', alpha=0.4)
     ax.set_xlim(-1, 5)
-    ax.set_xlabel('log10(# true pe)')
-    ax.set_ylabel('# reco pe')
+    ax.set_xlabel('log10(true pe)')
+    ax.set_ylabel('reco pe')
     ax.legend(fontsize=16)
     ax.grid()
     return ax
@@ -117,7 +117,7 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
 def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correction=True, bins=400, ax=None, hist_args={},
                            bin_stat_args={}):
     """
-    Plot the charge resolution
+    Plot the charge resolution.
 
     Parameters
     ----------
@@ -128,7 +128,8 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     xlim_bias: tuple (xmin, xmax)
         unused if `bias_correction=False`
     bias_correction: bool
-    bins: int
+    bins: int or `numpy.ndarray`
+        binning for the histogram and the stat
     ax: `matplotlib.pyplot.axis` or None
     hist_args: dict
         args for `matplotlib.pyplot.hist2d`
@@ -148,13 +149,12 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
     if bias_correction:
         mask_bias = (x > np.log10(xlim_bias[0])) & (x < np.log10(xlim_bias[1]))
         b = bias(np.ones_like(y[mask_bias]), y[mask_bias])
-        ylabel = "(reco # pe / true # pe) - ({:.3f})".format(b)
+        ylabel = "(reco pe / true pe) - ({:.3f})".format(b)
     else:
         b = 0
-        ylabel = "(reco # pe / true # pe)"
+        ylabel = "(reco pe / true pe)"
 
-    if 'bins' in hist_args:
-        hist_args.pop('bins')
+    hist_args.setdefault('bins', bins)
     hist_args.setdefault('norm', LogNorm())
 
     h, xedges, yedges, im = ax.hist2d(x, y - b, label='reco pe', **hist_args)
@@ -166,16 +166,15 @@ def plot_charge_resolution(true_pe, reco_pe, xlim_bias=(50, 500), bias_correctio
         ax.axvspan(np.log10(xlim_bias[0]), np.log10(xlim_bias[1]), alpha=0.05, color='black',
                    label='bias computed there')
 
-    if 'errorbar' not in bin_stat_args:
-        bin_stat_args['errorbar'] = True
-    if 'color' not in bin_stat_args:
-        bin_stat_args['color'] = 'red'
+    bin_stat_args.setdefault('errorbar', True)
+    bin_stat_args.setdefault('color', 'red')
+    bin_stat_args.setdefault('bins', bins)
     bin_stat_args['label'] = 'median'
     bin_stat_args['statistic'] = 'median'
 
     plot_binned_stat(x, y - b, ax=ax, **bin_stat_args)
 
-    ax.set_xlabel('log10(# true pe)', fontsize=18)
+    ax.set_xlabel('log10(true pe)', fontsize=18)
     ax.set_ylabel(ylabel, fontsize=18)
     ax.grid()
     ax.legend(fontsize=18)
