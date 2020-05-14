@@ -70,8 +70,10 @@ Column names:
 
 
 
-`lstchain <https://github.com/cta-observatory/cta-lstchain>`_ DL2 file format
+lstchain_ DL2 file format
 ------------------------
+
+.. _lstchain: https://github.com/cta-observatory/cta-lstchain
 
 Datasets:
 
