@@ -596,7 +596,7 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
-    ax.errorbar(x, res[:, 0], xerr=(bins[1:] - bins[:-1]) / 2.,
+    ax.errorbar(x, res[:, 0], xerr=[x - bins[:-1], bins[1:] - x],
                 yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]), **kwargs)
 
     ax.set_title('Resolution')
@@ -1900,7 +1900,7 @@ def plot_roc_curve(simu_type, reco_proba,
     ax.plot([0, 1], [0, 1], '--', color='black')
     ax.axis('equal')
     ax.legend(loc=4)
-
+    ax.grid('on')
     return ax
 
 
@@ -1980,7 +1980,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ax.plot([0, 1], [0, 1], '--', color='black')
     ax.legend(loc=4)
     ax.axis('equal')
-
+    ax.grid('on')
     return ax
 
 
@@ -2034,6 +2034,7 @@ def plot_roc_curve_gammaness(simu_type, gammaness,
     ax.set_title("gamma ROC curve")
     ax.set_xlabel("gamma false positive rate")
     ax.set_ylabel("gamma true positive rate")
+    ax.grid('on')
     return ax
 
 
@@ -2109,8 +2110,7 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
             counter += 2
 
     ax.legend(loc=4)
-    ax.grid()
-
+    ax.grid('on')
     return ax
 
 
