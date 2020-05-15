@@ -278,6 +278,7 @@ class Experiment(object):
                                                                        ax=ax,
                                                                        label=self.name,
                                                                        color=self.color)
+            self.ax_ang_res.set_xlabel(r'$E_{MC}$ [TeV]')
 
             self.set_plotted(True)
 
@@ -294,6 +295,7 @@ class Experiment(object):
                                                                            label=self.name + '_reco',
                                                                            color=self.color,
                                                                            )
+                self.ax_ang_res.set_xlabel(r'$E_{MC}$ [TeV]')
 
     def update_angular_resolution_reco(self, ax):
         for c in ax.containers:
