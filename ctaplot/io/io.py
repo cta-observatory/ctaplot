@@ -93,7 +93,7 @@ def read_lst_dl1_data(filename, key='dl1/event/telescope/parameters/LST_LSTCam')
 
 def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam'):
     """
-    Read lst dl1 data and return a dataframe with right keys for gammaboard
+    Read lst dl2 data and return a dataframe with right keys for gammaboard
 
     Parameters
     ----------
@@ -129,9 +129,9 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
     return data
 
 
-def read_irf_dl2_data(filename, key='dl2'):
+def read_pyirf_dl2_data(filename, key='dl2'):
     """
-    Read lst dl1 data and return a dataframe with right keys for gammaboard
+    Read lst dl2 data and return a dataframe with right keys for gammaboard
 
     Parameters
     ----------
