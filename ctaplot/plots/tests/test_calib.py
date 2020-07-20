@@ -12,7 +12,7 @@ def test_plot_photoelectron_true_reco():
 
 def test_plot_pixels_pe_spectrum():
     true_pe = 100 * np.random.rand(1000)
-    reco_pe = true_pe * np.random.rand(len(true_pe))
+    reco_pe = -50 + 100 * np.random.rand(len(true_pe))
 
     calib.plot_pixels_pe_spectrum(true_pe, reco_pe)
 
