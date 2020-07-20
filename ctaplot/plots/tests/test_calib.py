@@ -16,7 +16,8 @@ def test_plot_pixels_pe_spectrum():
     true_pe = 100 * np.random.rand(1000)
     reco_pe = -50 + 100 * np.random.rand(len(true_pe))
 
-    calib.plot_pixels_pe_spectrum(true_pe, reco_pe)
+    calib.plot_pixels_pe_spectrum(true_pe, reco_pe, bins=100)
+    calib.plot_pixels_pe_spectrum(true_pe, reco_pe, bins=np.logspace(-2, 4, 50))
 
 
 def test_plot_charge_resolution():
