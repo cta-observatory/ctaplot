@@ -20,7 +20,7 @@ def check_latex():
     -------
     bool
     """
-    return find_executable('latex')
+    return not find_executable('latex') is None
 
 
 def set_style(style='notebook'):
