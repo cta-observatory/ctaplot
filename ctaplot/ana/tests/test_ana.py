@@ -251,5 +251,7 @@ def test_bias_per_energy():
 
 def test_get_magic_sensitivity():
     from astropy.table.table import QTable
+    import astropy.units as u
     table = ana.get_magic_sensitivity()
     assert type(table) is QTable
+    assert table['e_min'][0] == 63 * u.GeV
