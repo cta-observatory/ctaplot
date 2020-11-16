@@ -3,6 +3,7 @@ import numpy as np
 
 np.random.seed(42)
 
+
 def test_logspace_decades_nbin():
     ca = ana.logspace_decades_nbin(0.1, 10, n=9)
     assert len(ca) == 19
@@ -56,7 +57,7 @@ def test_resolution():
 
     # Test bias
     bias = np.random.rand() * 100
-    y_reco_bias = np.random.normal(loc=loc+bias, scale=scale, size=size)
+    y_reco_bias = np.random.normal(loc=loc + bias, scale=scale, size=size)
 
     assert np.isclose(ana.resolution(y_true, y_reco_bias,
                                      bias_correction=True,
@@ -91,7 +92,7 @@ def test_resolution_per_bin():
         np.testing.assert_allclose(res[:, 0], scale / ana.relative_scaling(y_true, y_reco, scaling).mean(), rtol=1e-1)
 
     bias = 50
-    y_reco = np.random.normal(loc=loc+bias, scale=scale, size=size)
+    y_reco = np.random.normal(loc=loc + bias, scale=scale, size=size)
     bins, res = ana.resolution_per_bin(x, y_true, y_reco, bias_correction=True)
     np.testing.assert_allclose(res[:, 0], scale / ana.relative_scaling(y_true, y_reco).mean(), rtol=1e-1)
 
@@ -147,16 +148,16 @@ def test_distance2d_resolution():
     simu_y = np.ones(size)
     # reconstructed positions on a circle around true position
     t = np.random.rand(size) * np.pi * 2
-    reco_x = 1 + 3*np.cos(t)
-    reco_y = 1 + 3*np.sin(t)
+    reco_x = 1 + 3 * np.cos(t)
+    reco_y = 1 + 3 * np.sin(t)
     res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
                                                       percentile=68.27, confidence_level=0.95, bias_correction=False)
 
     np.testing.assert_equal(res, 3)
 
     # with different bias on X and Y:
-    reco_x = 5 + 2*np.cos(t)
-    reco_y = 7 + 2*np.sin(t)
+    reco_x = 5 + 2 * np.cos(t)
+    reco_y = 7 + 2 * np.sin(t)
     res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
                                                       percentile=68.27, confidence_level=0.95, bias_correction=True)
 
@@ -169,8 +170,8 @@ def test_distance2d_resolution_per_bin():
     simu_x = np.ones(size)
     simu_y = np.ones(size)
     t = np.random.rand(size) * np.pi * 2
-    reco_x = 3*np.cos(t)
-    reco_y = 3*np.sin(t)
+    reco_x = 3 * np.cos(t)
+    reco_y = 3 * np.sin(t)
 
     bin, res = ana.distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=10, bias_correction=True)
 
@@ -178,7 +179,7 @@ def test_distance2d_resolution_per_bin():
 
 
 def test_angular_resolution():
-    size=10000
+    size = 10000
     simu_alt = np.random.rand(size)
     simu_az = np.random.rand(size)
     scale = 0.01
@@ -215,7 +216,6 @@ def test_angular_resolution_small_angles():
                                rtol=1e-1,
                                )
 
-
     simu_az = np.random.rand(size)
     simu_alt = np.zeros(size)
     reco_alt = simu_alt
@@ -225,9 +225,11 @@ def test_angular_resolution_small_angles():
                                rtol=1e-1,
                                )
 
+
 def test_bias_empty():
     x = np.empty(0)
     assert ana.bias(x, x) == 0
+
 
 def test_bias_per_bin():
     size = 100000
@@ -245,3 +247,9 @@ def test_bias_per_energy():
     energy = np.logspace(-2, 2, size)
     bins, bias = ana.bias_per_energy(simu, reco, energy)
     np.testing.assert_allclose(bias, 1, rtol=1e-1)
+
+
+def test_get_magic_sensitivity():
+    from astropy.table.table import QTable
+    table = ana.get_magic_sensitivity()
+    assert type(table) is QTable

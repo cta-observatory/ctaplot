@@ -89,6 +89,7 @@ resources_list = ['CTA-Performance-prod3b-v1-South-20deg-50h-EffArea.txt',
                   'HESS_Impact_Energy_Bias_Std_Mono.txt',
                   'HESS_Impact_Effective_Area_Safe_Mono.txt',
                   'HESS_Impact_Energy_Bias_Stereo.txt',
+                  'magic_sensitivity_2014.ecsv'
                   ]
 
 
