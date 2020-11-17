@@ -273,6 +273,6 @@ def test_plot_gammaness_distribution():
     plots.plot_gammaness_distribution(mc_type, gammaness)
 
 
-def test_plot_magic_sensitivity_performance():
-    ax = plots.plot_magic_sensitivity_performance(key='lima_5off')
-    plots.plot_magic_sensitivity_performance(key='lima_3off', ax=ax, color='black', ls='--')
+def test_plot_sensitivity_magic_performance():
+    ax = plots.plot_sensitivity_magic_performance(key='lima_5off')
+    plots.plot_sensitivity_magic_performance(key='lima_3off', ax=ax, color='black', ls='--')
