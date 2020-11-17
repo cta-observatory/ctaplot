@@ -37,7 +37,7 @@ setup(
         'scikit-learn',
         'jupyter',
         'ipywidgets',
-        'pyaml',
+        'pyyaml',
     ],
     tests_require=['pytest'],
     classifiers=[
