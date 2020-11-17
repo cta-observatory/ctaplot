@@ -2206,8 +2206,9 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
     magic_table['e_err_lo'] = magic_table['e_center'] - magic_table['e_min']
     magic_table['e_err_hi'] = magic_table['e_max'] - magic_table['e_center']
 
-    kwargs.setdefault('ls', '')
-    kwargs.setdefault('label', f'MAGIC {key}')
+    if 'ls' not in kwargs and 'linestyle' not in kwargs:
+        kwargs['ls'] = ''
+    kwargs.setdefault('label', f'MAGIC {key} (Aleksić et al, 2016)')
 
     k = 'sensitivity_' + key
     ax.errorbar(
@@ -2218,6 +2219,8 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
         **kwargs
     )
 
+    ax.set_xlabel(r'$E_R$ [TeV]')
+    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.grid(True, which='both')
