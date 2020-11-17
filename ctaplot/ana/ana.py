@@ -7,6 +7,7 @@ Contain mathematical functions to make results analysis
 import numpy as np
 from ..io import dataset as ds
 from scipy.stats import binned_statistic, norm
+from astropy.io.ascii import read
 
 _relative_scaling_method = 's1'
 
@@ -42,6 +43,7 @@ __all__ = ['irf_cta',
            'bias_per_bin',
            'percentile_confidence_interval',
            'logbin_mean',
+           'get_magic_sensitivity',
            ]
 
 
@@ -1135,3 +1137,16 @@ def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
 
     return bias_per_bin(simu, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
 
+
+def get_magic_sensitivity():
+    """
+    Load MAGIC differential sensitivity data from file `magic_sensitivity_2014.ecsv`.
+    Extracted from table A.7 in Aleksić, Jelena, et al. "The major upgrade of the MAGIC telescopes,
+    Part II: A performance study using observations of the Crab Nebula." Astroparticle Physics 72 (2016): 76-94.,
+    DOI: 10.1016/j.astropartphys.2015.02.005'
+
+    Returns
+    -------
+    `astropy.table.table.QTable`
+    """
+    return read(ds.get('magic_sensitivity_2014.ecsv'))

@@ -37,11 +37,7 @@ setup(
         'scikit-learn',
         'jupyter',
         'ipywidgets',
-        'recommonmark',
-        'sphinx>=1.4',
-        'nbsphinx',
-        'sphinx_rtd_theme',
-        'nbconvert',
+        'pyaml',
     ],
     tests_require=['pytest'],
     classifiers=[

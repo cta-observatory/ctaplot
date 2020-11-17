@@ -14,6 +14,7 @@ from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
+import astropy.units as u
 
 
 __all__ = ['plot_resolution',
@@ -62,6 +63,7 @@ __all__ = ['plot_resolution',
            'plot_roc_curve_multiclass',
            'plot_roc_curve_gammaness_per_energy',
            'plot_gammaness_distribution',
+           'plot_sensitivity_magic_performance'
            ]
 
 
@@ -2177,3 +2179,49 @@ def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
     ax.set_xlabel('gammaness')
     ax.legend()
     return ax
+
+
+def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
+    """
+
+    Parameters
+    ----------
+    key: string
+        'lima_1off': LiMa 1 off position
+        'lima_3off': LiMa 3 off positions
+        'lima_5off': LiMa 5 off positions
+        'snr': Nex/sqrt(Nbkg)
+    ax: `matplotlib.pyplot.axis`
+    kwargs: kwargs for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axis`
+    """
+
+    ax = plt.gca() if ax is None else ax
+
+    magic_table = ana.get_magic_sensitivity()
+
+    magic_table['e_err_lo'] = magic_table['e_center'] - magic_table['e_min']
+    magic_table['e_err_hi'] = magic_table['e_max'] - magic_table['e_center']
+
+    kwargs.setdefault('ls', '')
+    kwargs.setdefault('label', f'MAGIC {key}')
+
+    k = 'sensitivity_' + key
+    ax.errorbar(
+        magic_table['e_center'].to_value(u.TeV),
+        y=(magic_table['e_center'] ** 2 * magic_table[k]).to_value(u.Unit('erg cm-2 s-1')),
+        xerr=[magic_table['e_err_lo'].to_value(u.TeV), magic_table['e_err_hi'].to_value(u.TeV)],
+        yerr=(magic_table['e_center'] ** 2 * magic_table[f'{k}_err']).to_value(u.Unit('erg cm-2 s-1')),
+        **kwargs
+    )
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.grid(True, which='both')
+    ax.legend()
+
+    return ax
+

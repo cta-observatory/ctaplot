@@ -4,6 +4,7 @@ import numpy as np
 
 np.random.seed(42)
 
+
 def plot_energy_distribution():
     SimuE = np.random.rand(100)
     RecoE = np.random.rand(10)
@@ -270,3 +271,8 @@ def test_plot_gammaness_distribution():
     mc_type = np.random.choice([0, 1, 2, 3], size=nb_events)
     gammaness = np.random.rand(nb_events)
     plots.plot_gammaness_distribution(mc_type, gammaness)
+
+
+def test_plot_sensitivity_magic_performance():
+    ax = plots.plot_sensitivity_magic_performance(key='lima_5off')
+    plots.plot_sensitivity_magic_performance(key='lima_3off', ax=ax, color='black', ls='--')
