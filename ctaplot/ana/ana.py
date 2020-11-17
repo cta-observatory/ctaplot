@@ -43,6 +43,7 @@ __all__ = ['irf_cta',
            'bias_per_bin',
            'percentile_confidence_interval',
            'logbin_mean',
+           'get_magic_sensitivity',
            ]
 
 
