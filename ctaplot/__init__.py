@@ -3,4 +3,4 @@ from .ana.ana import *
 from .gammaboard import gammaboard
 from .plots.style import set_style
 
-__version__ = '0.5.3'
+__version__ = '0.5.4'
