@@ -1,4 +1,6 @@
 import matplotlib as mpl
+from distutils.spawn import find_executable
+import warnings
 
 _SizeTitlePaper = 11
 _SizeLabelPaper = 9
@@ -10,9 +12,21 @@ _SizeTickSlides = 20
 _global_style = 'notebook'  # internal - set by `set_style`
 
 
+def check_latex():
+    """
+    Check if a latex distribution is installed.
+
+    Returns
+    -------
+    bool
+    """
+    return not find_executable('latex') is None
+
+
 def set_style(style='notebook'):
     """
     Set styling for plots
+    'slides' and 'paper' require a LaTeX distribution to be installed on the system.
 
     Parameters
     ----------
@@ -43,13 +57,18 @@ def set_figsize(style='notebook'):
 
 def set_font(style='notebook'):
     """
-    Set font style
+    Set font style.
+    'slides' and 'paper' require a LaTeX distribution to be installed on the system.
 
     Parameters
     ----------
     output: str
         'notebook', 'slides' or 'paper'
     """
+    if (style == 'paper' or style == 'slides') and not check_latex():
+        warnings.warn(f'A LaTeX distribution must be installed to use the {style} style. Switching to notebook style')
+        style = 'notebook'
+
     if style == 'slides' or 'notebook':
         size_label = _SizeLabelSlides
         size_tick = _SizeTickSlides
