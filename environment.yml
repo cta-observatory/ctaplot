@@ -11,7 +11,7 @@ dependencies:
   - numpy
   - python >= 3.6
   - pandas
-  - pyaml
+  - pyyaml
   - pytables
   - pytest
   - scikit-learn
