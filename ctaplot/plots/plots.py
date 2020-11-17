@@ -63,6 +63,7 @@ __all__ = ['plot_resolution',
            'plot_roc_curve_multiclass',
            'plot_roc_curve_gammaness_per_energy',
            'plot_gammaness_distribution',
+           'plot_sensitivity_magic_performance'
            ]
 
 
@@ -2180,7 +2181,7 @@ def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
     return ax
 
 
-def plot_magic_sensitivity_performance(key='lima_5off', ax=None, **kwargs):
+def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
     """
 
     Parameters
