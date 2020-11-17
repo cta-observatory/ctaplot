@@ -9,12 +9,15 @@ def test_plot_photoelectron_true_reco():
     calib.plot_photoelectron_true_reco(true_pe, reco_pe, bins=40, stat='median', errorbar=True, percentile=68.27,
                                        hist_args=dict(cmax=50), stat_args=dict(alpha=0), xy_args=dict(color='blue'))
 
+    calib.plot_photoelectron_true_reco(true_pe, reco_pe, bins=np.logspace(-2, 4, 50))
+
 
 def test_plot_pixels_pe_spectrum():
     true_pe = 100 * np.random.rand(1000)
-    reco_pe = true_pe * np.random.rand(len(true_pe))
+    reco_pe = -50 + 100 * np.random.rand(len(true_pe))
 
-    calib.plot_pixels_pe_spectrum(true_pe, reco_pe)
+    calib.plot_pixels_pe_spectrum(true_pe, reco_pe, bins=100)
+    calib.plot_pixels_pe_spectrum(true_pe, reco_pe, bins=np.logspace(-2, 4, 50))
 
 
 def test_plot_charge_resolution():
