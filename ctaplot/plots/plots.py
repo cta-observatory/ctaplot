@@ -63,7 +63,12 @@ __all__ = ['plot_resolution',
            'plot_roc_curve_multiclass',
            'plot_roc_curve_gammaness_per_energy',
            'plot_gammaness_distribution',
-           'plot_sensitivity_magic_performance'
+           'plot_sensitivity_magic_performance',
+           'plot_rate',
+           'plot_gamma_rate',
+           'plot_background_rate',
+           'plot_background_rate_magic',
+           'plot_gamma_rate_magic',
            ]
 
 
@@ -2183,6 +2188,7 @@ def plot_gammaness_distribution(mc_type, gammaness, ax=None, **kwargs):
 
 def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
     """
+    Plot the  MAGIC sensitivity from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
 
     Parameters
     ----------
@@ -2228,3 +2234,138 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
 
     return ax
 
+
+def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
+    """
+    Plot the background rate [Hz] as a function of the energy [TeV]
+
+    Parameters
+    ----------
+    e_min: `numpy.ndarray`
+        Reconstructed energy in TeV
+    e_max: `numpy.ndarray`
+        Reconstructed energy in TeV
+    background_rate: `numpy.ndarray`
+        Background rate in Hz
+    ax: `matplotlib.pyplot.axis`
+    kwargs: kwargs for  `matplotlib.pyplot.errobar`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axis`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    e_center = np.sqrt(e_min * e_max)
+
+    ax.errorbar(e_center, rate, xerr=[e_center-e_min, e_max-e_center], yerr=rate_err, **kwargs)
+
+    ax.set_xlabel(r"$E_\mathrm{Reco} [\mathrm{TeV}]$")
+    ax.set_ylabel("Event rate [Hz]")
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.grid(True, which='both')
+    ax.legend()
+
+    return ax
+
+
+def plot_background_rate(e_min, e_max, background_rate, background_rate_err=None, ax=None, **kwargs):
+    """
+    Plot the background rate [Hz] as a function of the energy [TeV]
+
+    Parameters
+    ----------
+    e_min: `numpy.ndarray`
+        Reconstructed energy in TeV
+    e_max: `numpy.ndarray`
+        Reconstructed energy in TeV
+    background_rate: `numpy.ndarray`
+        Background rate in Hz
+    ax: `matplotlib.pyplot.axis`
+    kwargs: kwargs for  `matplotlib.pyplot.errobar`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axis`
+    """
+
+    ax = plot_rate(e_min, e_max, background_rate, rate_err=background_rate_err, ax=ax, **kwargs)
+    ax.set_ylabel("Background rate [Hz]")
+
+    return ax
+
+
+def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kwargs):
+    """
+    Plot the gamma rate [Hz] as a function of the energy [TeV]
+
+    Parameters
+    ----------
+    e_min: `numpy.ndarray`
+        Reconstructed energy in TeV
+    e_max: `numpy.ndarray`
+        Reconstructed energy in TeV
+    gamma_rate: `numpy.ndarray`
+        gamma rate in Hz
+    ax: `matplotlib.pyplot.axis`
+    kwargs: kwargs for  `matplotlib.pyplot.errobar`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axis`
+    """
+
+    ax = plot_rate(e_min, e_max, gamma_rate, rate_err=gamma_rate_err, ax=ax, **kwargs)
+    ax.set_ylabel("Gamma rate [Hz]")
+
+    return ax
+
+
+
+def plot_background_rate_magic(ax=None, **kwargs):
+    """
+    Plot the  MAGIC sensitivity from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+
+    Returns
+    -------
+
+    """
+
+    magic_table = ana.get_magic_sensitivity()
+
+    kwargs.setdefault('label', 'MAGIC (Aleksić et al, 2016)')
+
+    ax = plot_background_rate(magic_table['e_min'].to_value(u.TeV),
+                              magic_table['e_max'].to_value(u.TeV),
+                              magic_table['background_rate'].to_value(u.Hz),
+                              magic_table['background_rate_err'].to_value(u.Hz),
+                              ax=ax,
+                              **kwargs
+                              )
+
+    return ax
+
+
+def plot_gamma_rate_magic(ax=None, **kwargs):
+    """
+    Plot the  MAGIC sensitivity from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+
+    Returns
+    -------
+
+    """
+
+    magic_table = ana.get_magic_sensitivity()
+
+    kwargs.setdefault('label', 'MAGIC (Aleksić et al, 2016)')
+
+    ax = plot_gamma_rate(magic_table['e_min'].to_value(u.TeV),
+                         magic_table['e_max'].to_value(u.TeV),
+                         magic_table['gamma_rate'].to_value(u.Hz),
+                         magic_table['gamma_rate_err'].to_value(u.Hz),
+                         ax=ax,
+                         **kwargs
+                         )
+
+    return ax
