@@ -16,13 +16,9 @@
 # - {name: sensitivity_snr, unit: 1 / (cm2 s TeV), datatype: float64}
 # - {name: sensitivity_snr_err, unit: 1 / (cm2 s TeV), datatype: float64}
 # - {name: e_center, unit: GeV, datatype: float64}
-# - {name: e_err_lo, unit: GeV, datatype: float64}
-# - {name: e_err_hi, unit: GeV, datatype: float64}
 # meta: !!omap
 # - {COMMENT: "Table extracted from table A.7 in Aleksi\u0107, Jelena, et al. \"The major upgrade of the MAGIC telescopes, Part II: A\
-#     \ performance study using observations of the Crab Nebula.\" Astroparticle Physics 72 (2016): 76-94., DOI: 10.1016/j.astropartphys.2015.02.005\
-#     \ and multiplied by the CRAB spectrum from  \"Measurement of the Crab Nebula spectrum over three decades in energy with the MAGIC\
-#     \ telescopes\", Aleksi\u0107 2015, DOI:10.1016/j.jheap.2015.01.002"}
+#     \ performance study using observations of the Crab Nebula.\" Astroparticle Physics 72 (2016): 76-94., DOI: 10.1016/j.astropartphys.2015.02.005"}
 # - __serialized_columns__:
 #     background_rate:
 #       __class__: astropy.units.quantity.Quantity
@@ -34,23 +30,15 @@
 #       value: !astropy.table.SerializedColumn {name: background_rate_err}
 #     e_center:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: &id001 !astropy.units.Unit {unit: GeV}
+#       unit: !astropy.units.Unit {unit: GeV}
 #       value: !astropy.table.SerializedColumn {name: e_center}
-#     e_err_hi:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: &id002 !astropy.units.Unit {unit: GeV}
-#       value: !astropy.table.SerializedColumn {name: e_err_hi}
-#     e_err_lo:
-#       __class__: astropy.units.quantity.Quantity
-#       unit: *id001
-#       value: !astropy.table.SerializedColumn {name: e_err_lo}
 #     e_max:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id002
+#       unit: &id001 !astropy.units.Unit {unit: GeV}
 #       value: !astropy.table.SerializedColumn {name: e_max}
 #     e_min:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id002
+#       unit: *id001
 #       value: !astropy.table.SerializedColumn {name: e_min}
 #     gamma_rate:
 #       __class__: astropy.units.quantity.Quantity
@@ -62,27 +50,27 @@
 #       value: !astropy.table.SerializedColumn {name: gamma_rate_err}
 #     sensitivity_lima_1off:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: &id003 !astropy.units.Unit {unit: 1 / (cm2 s TeV)}
+#       unit: &id002 !astropy.units.Unit {unit: 1 / (cm2 s TeV)}
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_1off}
 #     sensitivity_lima_1off_err:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id003
+#       unit: *id002
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_1off_err}
 #     sensitivity_lima_3off:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id003
+#       unit: *id002
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_3off}
 #     sensitivity_lima_3off_err:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id003
+#       unit: *id002
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_3off_err}
 #     sensitivity_lima_5off:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id003
+#       unit: *id002
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_5off}
 #     sensitivity_lima_5off_err:
 #       __class__: astropy.units.quantity.Quantity
-#       unit: *id003
+#       unit: *id002
 #       value: !astropy.table.SerializedColumn {name: sensitivity_lima_5off_err}
 #     sensitivity_snr:
 #       __class__: astropy.units.quantity.Quantity
@@ -93,15 +81,15 @@
 #       unit: !astropy.units.Unit {unit: 1 / (cm2 s TeV)}
 #       value: !astropy.table.SerializedColumn {name: sensitivity_snr_err}
 # schema: astropy-2.0
-e_max e_min background_rate background_rate_err gamma_rate gamma_rate_err sensitivity_lima_1off sensitivity_lima_1off_err sensitivity_lima_3off sensitivity_lima_3off_err sensitivity_lima_5off sensitivity_lima_5off_err sensitivity_snr sensitivity_snr_err e_center e_err_lo e_err_hi
-100.0 63.0 4.06 0.08 3.01 0.13 7.601958508074096e-10 3.455435685488226e-11 6.1333983417416e-10 2.5915767641161692e-11 5.874240665329984e-10 2.5915767641161692e-11 7.3e-10 3e-11 79.37253933193772 16.372539331937716 20.627460668062284
-158.0 100.0 2.41 0.06 4.29 0.12 1.650780087464995e-10 4.845056860484262e-12 1.339312146433864e-10 3.806830390380492e-12 1.270097048426946e-10 3.460754900345902e-12 1.37e-10 5e-12 125.69805089976535 25.69805089976535 32.30194910023465
-251.0 158.0 0.54 0.03 3.37 0.08 3.910257867777991e-11 1.325511141619658e-12 3.154716517054787e-11 1.0604089132957266e-12 2.982400068644231e-11 1.0604089132957266e-12 3.05e-11 1.3000000000000001e-12 199.14316458266902 41.143164582669016 51.856835417330984
-398.0 251.0 0.066 0.01 1.36 0.05 1.3547361416709163e-11 9.67668672622083e-13 1.0450821664318497e-11 7.741349380976664e-13 9.821837027114142e-12 7.257515044665623e-13 9.300000000000001e-12 8e-13 316.066448709761 65.066448709761 81.933551290239
-631.0 398.0 0.027 0.006 1.22 0.04 3.5556881058906414e-12 3.047732662191978e-13 2.7260275478494916e-12 3.047732662191978e-13 2.556709066616604e-12 2.539777218493315e-13 2.3e-12 3e-13 501.13670789516107 103.13670789516107 129.86329210483893
-1000.0 631.0 0.0133 0.0018 0.88 0.04 1.2365835413508895e-12 6.806881878995721e-14 9.30273856796082e-13 5.105161409246791e-14 8.678774395719544e-13 6.239641722412745e-14 7.2e-13 6e-14 794.35508432942 163.35508432942004 205.64491567057996
-1585.0 1000.0 0.0059 0.0007 0.58 0.03 4.5104238659926285e-13 2.0005912308838273e-14 3.2736947414462623e-13 1.6368473707231312e-14 3.0190740393337754e-13 1.6368473707231312e-14 2.3000000000000003e-13 1.8e-14 1258.967831201417 258.9678312014171 326.0321687985829
-2512.0 1585.0 0.0027 0.0005 0.3 0.02 2.1199333369145533e-13 1.115754387849765e-14 1.4504807042046943e-13 1.0599666684572767e-14 1.3165901776627226e-13 1.0041789490647884e-14 9e-14 1e-14 1995.374651537901 410.37465153790095 516.625348462099
-3981.0 2512.0 0.002 0.0005 0.166 0.016 1.015262173688021e-13 8.187598174903395e-15 7.041334430416919e-14 6.550078539922716e-15 6.22257461292658e-14 6.550078539922716e-15 4.1e-14 7e-15 3162.3206668521143 650.3206668521143 818.6793331478857
-6310.0 3981.0 0.0014 0.0003 0.093 0.012 4.689996060266254e-14 4.59803535320221e-15 3.126664040177503e-14 3.2186247472415472e-15 2.804801565453348e-14 3.2186247472415472e-15 1.7e-14 3e-15 5011.996608139315 1030.996608139315 1298.003391860685
-10000.0 6310.0 0.0046 0.0015 0.06 0.01 2.717581659166208e-14 3.705793171590284e-15 1.9764230248481512e-14 3.705793171590284e-15 1.8528965857951418e-14 2.470528781060189e-15 1.3e-14 3e-15 7943.550843294201 1633.5508432942006 2056.4491567057994
+e_max e_min background_rate background_rate_err gamma_rate gamma_rate_err sensitivity_lima_1off sensitivity_lima_1off_err sensitivity_lima_3off sensitivity_lima_3off_err sensitivity_lima_5off sensitivity_lima_5off_err sensitivity_snr sensitivity_snr_err e_center
+1.00e+02 6.30e+01 4.06e+00 8.00e-02 3.01e+00 1.30e-01 7.60e-10 3.46e-11 6.13e-10 2.59e-11 5.87e-10 2.59e-11 7.30e-10 3.00e-11 7.94e+01
+1.58e+02 1.00e+02 2.41e+00 6.00e-02 4.29e+00 1.20e-01 1.65e-10 4.85e-12 1.34e-10 3.81e-12 1.27e-10 3.46e-12 1.37e-10 5.00e-12 1.26e+02
+2.51e+02 1.58e+02 5.40e-01 3.00e-02 3.37e+00 8.00e-02 3.91e-11 1.33e-12 3.15e-11 1.06e-12 2.98e-11 1.06e-12 3.05e-11 1.30e-12 1.99e+02
+3.98e+02 2.51e+02 6.60e-02 1.00e-02 1.36e+00 5.00e-02 1.35e-11 9.68e-13 1.05e-11 7.74e-13 9.82e-12 7.26e-13 9.30e-12 8.00e-13 3.16e+02
+6.31e+02 3.98e+02 2.70e-02 6.00e-03 1.22e+00 4.00e-02 3.56e-12 3.05e-13 2.73e-12 3.05e-13 2.56e-12 2.54e-13 2.30e-12 3.00e-13 5.01e+02
+1.00e+03 6.31e+02 1.33e-02 1.80e-03 8.80e-01 4.00e-02 1.24e-12 6.81e-14 9.30e-13 5.11e-14 8.68e-13 6.24e-14 7.20e-13 6.00e-14 7.94e+02
+1.58e+03 1.00e+03 5.90e-03 7.00e-04 5.80e-01 3.00e-02 4.51e-13 2.00e-14 3.27e-13 1.64e-14 3.02e-13 1.64e-14 2.30e-13 1.80e-14 1.26e+03
+2.51e+03 1.58e+03 2.70e-03 5.00e-04 3.00e-01 2.00e-02 2.12e-13 1.12e-14 1.45e-13 1.06e-14 1.32e-13 1.00e-14 9.00e-14 1.00e-14 2.00e+03
+3.98e+03 2.51e+03 2.00e-03 5.00e-04 1.66e-01 1.60e-02 1.02e-13 8.19e-15 7.04e-14 6.55e-15 6.22e-14 6.55e-15 4.10e-14 7.00e-15 3.16e+03
+6.31e+03 3.98e+03 1.40e-03 3.00e-04 9.30e-02 1.20e-02 4.69e-14 4.60e-15 3.13e-14 3.22e-15 2.80e-14 3.22e-15 1.70e-14 3.00e-15 5.01e+03
+1.00e+04 6.31e+03 4.60e-03 1.50e-03 6.00e-02 1.00e-02 2.72e-14 3.71e-15 1.98e-14 3.71e-15 1.85e-14 2.47e-15 1.30e-14 3.00e-15 7.94e+03
