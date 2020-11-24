@@ -1,0 +1,14 @@
+#### MATPLOTLIBRC FORMAT
+
+
+## figure ##
+
+figure.dpi : 200
+
+
+## font ##
+
+text.usetex : False
+mathtext.fontset : cm
+font.family : STIXGeneral
+
