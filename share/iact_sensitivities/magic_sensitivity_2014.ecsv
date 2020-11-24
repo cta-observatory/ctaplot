@@ -18,7 +18,9 @@
 # - {name: e_center, unit: GeV, datatype: float64}
 # meta: !!omap
 # - {COMMENT: "Table extracted from table A.7 in Aleksi\u0107, Jelena, et al. \"The major upgrade of the MAGIC telescopes, Part II: A\
-#     \ performance study using observations of the Crab Nebula.\" Astroparticle Physics 72 (2016): 76-94., DOI: 10.1016/j.astropartphys.2015.02.005"}
+#     \ performance study using observations of the Crab Nebula.\" Astroparticle Physics 72 (2016): 76-94., DOI: 10.1016/j.astropartphys.2015.02.005\
+#     \ and multiplied by the CRAB spectrum from \"Measurement of the Crab Nebula spectrum over three decades in energy with the MAGIC\
+#     \ telescopes\", Aleksi\u0107 2015, DOI:10.1016/j.jheap.2015.01.002"}
 # - __serialized_columns__:
 #     background_rate:
 #       __class__: astropy.units.quantity.Quantity
