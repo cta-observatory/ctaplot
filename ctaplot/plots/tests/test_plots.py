@@ -276,3 +276,19 @@ def test_plot_gammaness_distribution():
 def test_plot_sensitivity_magic_performance():
     ax = plots.plot_sensitivity_magic_performance(key='lima_5off')
     plots.plot_sensitivity_magic_performance(key='lima_3off', ax=ax, color='black', ls='--')
+
+
+def test_plot_rate():
+    e_bins = np.logspace(-2, 2)
+    e_min = e_bins[:-1]
+    e_max = e_bins[1:]
+    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=None, color='green', ls='--')
+    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=1e-15*e_min)
+
+
+def test_plot_background_rate_magic():
+    plots.plot_background_rate_magic(color='grey')
+
+
+def test_plot_gamma_rate_magic():
+    plots.plot_background_rate_magic(color='red')
