@@ -15,6 +15,7 @@ from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
 import astropy.units as u
+from astropy.visualization import quantity_support
 
 
 __all__ = ['plot_resolution',
@@ -268,13 +269,13 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray`
+    reco_alt: `astropy.quantity`
         reconstructed altitude angle in radians
-    reco_az: `numpy.ndarray`
+    reco_az: `astropy.quantity`
         reconstructed azimuth angle in radians
-    simu_alt: `numpy.ndarray`
+    simu_alt: `astropy.quantity`
         true altitude angle in radians
-    simu_az: `numpy.ndarray`
+    simu_az: astropy.quantity`
         true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
     **kwargs:
@@ -293,14 +294,18 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
         reco_alt = reco_alt - bias_alt
         reco_az = reco_az - bias_az
 
-    theta2 = (np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az))))** 2
+    theta2 = np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az)).to(u.deg)**2
     ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az))
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
     ax.set_ylabel('Count')
 
-    ax.hist(theta2, **kwargs)
-    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f}) deg'.format(ang_res[0], ang_res[2], ang_res[1]))
+    with quantity_support():
+        ax.hist(theta2, **kwargs)
+
+    err_max = (ang_res[2] - ang_res[0]).to_value(u.deg)
+    err_min = (ang_res[0] - ang_res[1]).to_value(u.deg)
+    ax.set_title(rf'angular resolution: {ang_res[0].to_value(u.deg):.3f}(+{err_max:.1e}/-{err_min:.1e})deg')
 
     return ax
 

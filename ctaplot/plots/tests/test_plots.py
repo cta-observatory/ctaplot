@@ -1,6 +1,7 @@
 from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
+import astropy.units as u
 
 np.random.seed(42)
 
@@ -54,10 +55,10 @@ def test_plot_sensitivity_cta_requirements():
 
 def test_plot_theta2():
     n = 10
-    RecoAlt = 1 + np.random.rand(n)
-    RecoAz = 1.5 + np.random.rand(n)
-    SimuAlt = np.ones(n)
-    SimuAz = 1.5 * np.ones(n)
+    RecoAlt = (1 + np.random.rand(n)) * u.rad
+    RecoAz = (1.5 + np.random.rand(n)) * u.rad
+    SimuAlt = np.ones(n) * u.rad
+    SimuAz = (1.5 * np.ones(n)) * u.rad
     plots.plot_theta2(RecoAlt, RecoAz, SimuAlt, SimuAz)
 
 
