@@ -8,7 +8,6 @@ import numpy as np
 from ..io import dataset as ds
 from scipy.stats import binned_statistic, norm
 from astropy.io.ascii import read
-import astropy.units as u
 
 _relative_scaling_method = 's1'
 
@@ -574,8 +573,8 @@ def theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False):
         bias_alt = bias(simu_alt, reco_alt)
         bias_az = bias(simu_az, reco_az)
     else:
-        bias_alt = 0 * u.rad
-        bias_az = 0 * u.rad
+        bias_alt = 0
+        bias_az = 0
     return angular_separation_altaz(reco_alt-bias_alt, reco_az-bias_az, simu_alt, simu_az) ** 2
 
 
@@ -603,8 +602,8 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
         b_alt = bias(simu_alt, reco_alt)
         b_az = bias(simu_az, reco_az)
     else:
-        b_alt = 0 * u.rad
-        b_az = 0 * u.rad
+        b_alt = 0
+        b_az = 0
 
     reco_alt_corr = reco_alt - b_alt
     reco_az_corr = reco_az - b_az

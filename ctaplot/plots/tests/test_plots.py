@@ -1,12 +1,11 @@
 from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
-import astropy.units as u
 
 np.random.seed(42)
 
 
-def plot_energy_distribution():
+def test_plot_energy_distribution():
     SimuE = np.random.rand(100)
     RecoE = np.random.rand(10)
     maskSimuDetected = np.ones(100, dtype=bool)
@@ -55,30 +54,12 @@ def test_plot_sensitivity_cta_requirements():
 
 def test_plot_theta2():
     n = 10
-    RecoAlt = (1 + np.random.rand(n)) * u.rad
-    RecoAz = (1.5 + np.random.rand(n)) * u.rad
-    SimuAlt = np.ones(n) * u.rad
-    SimuAz = (1.5 * np.ones(n)) * u.rad
+    RecoAlt = (1 + np.random.rand(n))
+    RecoAz = (1.5 + np.random.rand(n))
+    SimuAlt = np.ones(n)
+    SimuAz = (1.5 * np.ones(n))
     plots.plot_theta2(RecoAlt, RecoAz, SimuAlt, SimuAz)
 
-
-def test_plot_angles_map_distri():
-    n = 10
-    RecoAlt = 1 + np.random.rand(n)
-    RecoAz = 1.5 + np.random.rand(n)
-    SimuAlt = 1
-    SimuAz = 1.5
-    E = 10 ** (np.random.rand(n) * 6 - 3)
-    plots.plot_angles_map_distri(RecoAlt, RecoAz, SimuAlt, SimuAz, E)
-
-
-def test_plot_impact_point_map_distri():
-    n = 10
-    RecoX = 1000 * np.random.rand(n) - 500
-    RecoY = 1000 * np.random.rand(n) - 500
-    telX = np.array([10, 100])
-    telY = np.array([100, -10])
-    plots.plot_impact_point_map_distri(RecoX, RecoY, telX, telY)
 
 
 def test_plot_impact_point_heatmap():
@@ -283,8 +264,8 @@ def test_plot_rate():
     e_bins = np.logspace(-2, 2)
     e_min = e_bins[:-1]
     e_max = e_bins[1:]
-    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=None, color='green', ls='--')
-    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=1e-15*e_min)
+    plots.plot_rate(e_min, e_max, 1e-12 / e_min ** 2, rate_err=None, color='green', ls='--')
+    plots.plot_rate(e_min, e_max, 1e-12 / e_min ** 2, rate_err=1e-15 * e_min)
 
 
 def test_plot_background_rate_magic():
