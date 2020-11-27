@@ -261,7 +261,7 @@ def stat_per_energy(energy, y, statistic='mean'):
 
 def bias(simu, reco):
     """
-    Compute the bias of a reconstructed variable as `median(reco-simu)`
+    Compute the bias of a reconstructed variable as `median(reco-true)`
 
     Parameters
     ----------
@@ -281,7 +281,7 @@ def bias(simu, reco):
 def relative_bias(simu, reco, relative_scaling_method='s1'):
     """
     Compute the relative bias of a reconstructed variable as
-    `median(reco-simu)/relative_scaling(simu, reco)`
+    `median(reco-true)/relative_scaling(true, reco)`
 
     Parameters
     ----------
@@ -304,13 +304,13 @@ def relative_scaling(simu, reco, method='s0'):
     """
     Define the relative scaling for the relative error calculation.
     There are different ways to calculate this scaling factor.
-    The easiest and most spread one is simply `np.abs(simu)`. However this is possible only when `simu != 0`.
+    The easiest and most spread one is simply `np.abs(true)`. However this is possible only when `true != 0`.
     Possible methods:
         - None or 's0': scale = 1
-        - 's1': `scale = np.abs(simu)`
+        - 's1': `scale = np.abs(true)`
         - 's2': `scale = np.abs(reco)`
-        - 's3': `scale = (np.abs(simu) + np.abs(reco))/2.`
-        - 's4': `scale = np.max([np.abs(reco), np.abs(simu)], axis=0)`
+        - 's3': `scale = (np.abs(true) + np.abs(reco))/2.`
+        - 's4': `scale = np.max([np.abs(reco), np.abs(true)], axis=0)`
 
     This method is not exposed but kept for tests and future reference.
     The `s1` method is used in all `ctaplot` functions.
@@ -340,7 +340,7 @@ def resolution(simu, reco,
                percentile=68.27, confidence_level=0.95, bias_correction=False, relative_scaling_method='s1'):
     """
     Compute the resolution of reco as the Qth (68.27 as standard = 1 sigma) containment radius of
-    `(simu-reco)/relative_scaling` with the lower and upper confidence limits defined the values inside
+    `(true-reco)/relative_scaling` with the lower and upper confidence limits defined the values inside
      the error_percentile
 
     Parameters
@@ -354,7 +354,7 @@ def resolution(simu, reco,
     error_percentile: float
         percentile for the confidence limits
     bias_correction: bool
-        if True, the resolution is corrected with the bias computed on simu and reco
+        if True, the resolution is corrected with the bias computed on true and reco
     relative_scaling: str
         see `ctaplot.ana.relative_scaling`
 
@@ -443,7 +443,7 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the true_energy resolution of true_energy as the percentile (68 as standard) containment radius of
-    `true_energy-true_energy)/simu_energy
+    `true_energy-true_energy)/true_energy
     with the lower and upper confidence limits defined by the given confidence level
 
     Parameters
@@ -536,7 +536,7 @@ def get_angles_pipi(angles):
     return np.mod(angles + np.pi, 2 * np.pi) - np.pi
 
 
-def get_angles_0pi(angles):
+def get_angles_02pi(angles):
     """
     return angles modulo between 0 and +pi
 
@@ -548,7 +548,7 @@ def get_angles_0pi(angles):
     -------
     `numpy.ndarray`
     """
-    return np.mod(angles, np.pi)
+    return np.mod(angles, 2*np.pi)
 
 
 def theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False):
@@ -1091,7 +1091,7 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
 
 def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
     """
-    Bias between `simu` and `reco` per bin of `x`.
+    Bias between `true` and `reco` per bin of `x`.
 
     Parameters
     ----------
@@ -1118,7 +1118,7 @@ def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
 
 def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
     """
-    Bias between `simu` and `reco` per bins of true_energy
+    Bias between `true` and `reco` per bins of true_energy
 
     Parameters
     ----------
