@@ -101,10 +101,10 @@ def test_plot_effective_area_per_energy():
 
 
 def test_plot_resolution_per_energy():
-    simu = np.ones(100)
+    true = np.ones(100)
     reco = np.random.normal(loc=1, scale=1, size=100)
     energy = 10 ** (-3 + 6 * np.random.rand(100))
-    plots.plot_resolution_per_energy(reco, simu, energy)
+    plots.plot_resolution_per_energy(true, reco, energy)
 
 
 def test_plot_binned_stat():
