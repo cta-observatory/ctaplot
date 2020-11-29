@@ -258,33 +258,33 @@ def stat_per_energy(energy, y, statistic='mean'):
     return bin_stat, bin_edges, binnumber
 
 
-def bias(simu, reco):
+def bias(true, reco):
     """
-    Compute the bias of a reconstructed variable as `median(reco-simu)`
+    Compute the bias of a reconstructed variable as `median(reco-true)`
 
     Parameters
     ----------
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
     reco: `numpy.ndarray`
 
     Returns
     -------
     float
     """
-    assert len(simu) == len(reco), "both arrays should have the same size"
-    if len(simu) == 0:
+    assert len(true) == len(reco), "both arrays should have the same size"
+    if len(true) == 0:
         return 0
-    return np.median(reco - simu)
+    return np.median(reco - true)
 
 
-def relative_bias(simu, reco, relative_scaling_method='s1'):
+def relative_bias(true, reco, relative_scaling_method='s1'):
     """
     Compute the relative bias of a reconstructed variable as
-    `median(reco-simu)/relative_scaling(simu, reco)`
+    `median(reco-true)/relative_scaling(true, reco)`
 
     Parameters
     ----------
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
     reco: `numpy.ndarray`
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
@@ -293,30 +293,30 @@ def relative_bias(simu, reco, relative_scaling_method='s1'):
     -------
 
     """
-    assert len(reco) == len(simu)
-    if len(simu) == 0:
+    assert len(reco) == len(true)
+    if len(true) == 0:
         return 0
-    return np.median((reco - simu) / relative_scaling(simu, reco, method=relative_scaling_method))
+    return np.median((reco - true) / relative_scaling(true, reco, method=relative_scaling_method))
 
 
-def relative_scaling(simu, reco, method='s0'):
+def relative_scaling(true, reco, method='s0'):
     """
     Define the relative scaling for the relative error calculation.
     There are different ways to calculate this scaling factor.
-    The easiest and most spread one is simply `np.abs(simu)`. However this is possible only when `simu != 0`.
+    The easiest and most spread one is simply `np.abs(true)`. However this is possible only when `true != 0`.
     Possible methods:
         - None or 's0': scale = 1
-        - 's1': `scale = np.abs(simu)`
+        - 's1': `scale = np.abs(true)`
         - 's2': `scale = np.abs(reco)`
-        - 's3': `scale = (np.abs(simu) + np.abs(reco))/2.`
-        - 's4': `scale = np.max([np.abs(reco), np.abs(simu)], axis=0)`
+        - 's3': `scale = (np.abs(true) + np.abs(reco))/2.`
+        - 's4': `scale = np.max([np.abs(reco), np.abs(true)], axis=0)`
 
     This method is not exposed but kept for tests and future reference.
     The `s1` method is used in all `ctaplot` functions.
 
     Parameters
     ----------
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
     reco: `numpy.ndarray`
 
     Returns
@@ -325,26 +325,26 @@ def relative_scaling(simu, reco, method='s0'):
     """
     method = 's0' if method is None else method
     scaling_methods = {
-        's0': lambda simu, reco: np.ones(len(simu)),
-        's1': lambda simu, reco: np.abs(simu),
-        's2': lambda simu, reco: np.abs(reco),
-        's3': lambda simu, reco: (np.abs(simu) + np.abs(reco))/2.,
-        's4': lambda simu, reco: np.max([np.abs(reco), np.abs(simu)], axis=0)
+        's0': lambda true, reco: np.ones(len(true)),
+        's1': lambda true, reco: np.abs(true),
+        's2': lambda true, reco: np.abs(reco),
+        's3': lambda true, reco: (np.abs(true) + np.abs(reco)) / 2.,
+        's4': lambda true, reco: np.max([np.abs(reco), np.abs(true)], axis=0)
     }
 
-    return scaling_methods[method](simu, reco)
+    return scaling_methods[method](true, reco)
 
 
-def resolution(simu, reco,
+def resolution(true, reco,
                percentile=68.27, confidence_level=0.95, bias_correction=False, relative_scaling_method='s1'):
     """
     Compute the resolution of reco as the Qth (68.27 as standard = 1 sigma) containment radius of
-    `(simu-reco)/relative_scaling` with the lower and upper confidence limits defined the values inside
+    `(true-reco)/relative_scaling` with the lower and upper confidence limits defined the values inside
      the error_percentile
 
     Parameters
     ----------
-    simu: `numpy.ndarray` (1d)
+    true: `numpy.ndarray` (1d)
         simulated quantity
     reco: `numpy.ndarray` (1d)
         reconstructed quantity
@@ -353,7 +353,7 @@ def resolution(simu, reco,
     error_percentile: float
         percentile for the confidence limits
     bias_correction: bool
-        if True, the resolution is corrected with the bias computed on simu and reco
+        if True, the resolution is corrected with the bias computed on true and reco
     relative_scaling: str
         see `ctaplot.ana.relative_scaling`
 
@@ -361,14 +361,14 @@ def resolution(simu, reco,
     -------
     `numpy.ndarray` - [resolution, lower_confidence_limit, upper_confidence_limit]
     """
-    assert len(simu) == len(reco), "both arrays should have the same size"
+    assert len(true) == len(reco), "both arrays should have the same size"
 
-    b = bias(simu, reco) if bias_correction else 0
+    b = bias(true, reco) if bias_correction else 0
 
     with np.errstate(divide='ignore', invalid='ignore'):
         reco_corr = reco - b
-        res = np.nan_to_num(np.abs((reco_corr - simu) /
-                                   relative_scaling(simu, reco_corr, method=relative_scaling_method)))
+        res = np.nan_to_num(np.abs((reco_corr - true) /
+                                   relative_scaling(true, reco_corr, method=relative_scaling_method)))
 
     return np.append(_percentile(res, percentile), percentile_confidence_interval(res,
                                                                                   percentile=percentile,
@@ -417,11 +417,11 @@ def resolution_per_bin(x, y_true, y_reco,
     return x_bins, np.array(res)
 
 
-def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
+def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Parameters
     ----------
-    simu: 1d `numpy.ndarray` of simulated energies
+    true: 1d `numpy.ndarray` of simulated energies
     reco: 1d `numpy.ndarray` of reconstructed energies
 
     Returns
@@ -432,7 +432,7 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
     """
 
     irf = irf_cta()
-    return resolution_per_bin(simu_energy, simu, reco,
+    return resolution_per_bin(true_energy, true, reco,
                               percentile=percentile,
                               confidence_level=confidence_level,
                               bias_correction=bias_correction,
@@ -442,7 +442,7 @@ def resolution_per_energy(simu, reco, simu_energy, percentile=68.27, confidence_
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the true_energy resolution of true_energy as the percentile (68 as standard) containment radius of
-    `true_energy-true_energy)/simu_energy
+    `true_energy-true_energy)/true_energy
     with the lower and upper confidence limits defined by the given confidence level
 
     Parameters
@@ -463,7 +463,7 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
                       )
 
 
-def energy_resolution_per_energy(simu_energy, reco_energy,
+def energy_resolution_per_energy(true_energy, reco_energy,
                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     The energy resolution ΔE / E is obtained from the distribution of (ER – ET) / ET, where R and T refer
@@ -472,7 +472,7 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
 
     Parameters
     ----------
-    simu_energy: 1d numpy array of simulated energies
+    true_energy: 1d numpy array of simulated energies
     reco_energy: 1d numpy array of reconstructed energies
     percentile: float
         between 0 and 100
@@ -490,7 +490,7 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
     irf = irf_cta()
     for i, e in enumerate(irf.E):
         mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
-        res_e.append(energy_resolution(simu_energy[mask], reco_energy[mask],
+        res_e.append(energy_resolution(true_energy[mask], reco_energy[mask],
                                        percentile=percentile,
                                        confidence_level=confidence_level,
                                        bias_correction=bias_correction))
@@ -498,13 +498,13 @@ def energy_resolution_per_energy(simu_energy, reco_energy,
     return irf.E_bin, np.array(res_e)
 
 
-def energy_bias(simu_energy, reco_energy):
+def energy_bias(true_energy, reco_energy):
     """
     Compute the true_energy relative bias per true_energy bin.
 
     Parameters
     ----------
-    simu_energy: 1d numpy array of simulated energies
+    true_energy: 1d numpy array of simulated energies
     reco_energy: 1d numpy array of reconstructed energies
 
     Returns
@@ -515,7 +515,7 @@ def energy_bias(simu_energy, reco_energy):
     irf = irf_cta()
     for i, e in enumerate(irf.E):
         mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
-        bias_e.append(relative_bias(simu_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
+        bias_e.append(relative_bias(true_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
     return irf.E_bin, np.array(bias_e)
 
@@ -535,7 +535,7 @@ def get_angles_pipi(angles):
     return np.mod(angles + np.pi, 2 * np.pi) - np.pi
 
 
-def get_angles_0pi(angles):
+def get_angles_02pi(angles):
     """
     return angles modulo between 0 and +pi
 
@@ -547,10 +547,10 @@ def get_angles_0pi(angles):
     -------
     `numpy.ndarray`
     """
-    return np.mod(angles, np.pi)
+    return np.mod(angles, 2*np.pi)
 
 
-def theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False):
+def theta2(reco_alt, reco_az, true_alt, true_az, bias_correction=False):
     """
     Compute the theta2 in radians
 
@@ -558,27 +558,27 @@ def theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False):
     ----------
     reco_alt: 1d `numpy.ndarray` - reconstructed Altitude in radians
     reco_az: 1d `numpy.ndarray` - reconstructed Azimuth in radians
-    simu_alt: 1d `numpy.ndarray` - true Altitude in radians
-    simu_az: 1d `numpy.ndarray` -  true Azimuth in radians
+    true_alt: 1d `numpy.ndarray` - true Altitude in radians
+    true_az: 1d `numpy.ndarray` -  true Azimuth in radians
 
     Returns
     -------
     1d `numpy.ndarray`
     """
     assert (len(reco_az) == len(reco_alt))
-    assert (len(reco_alt) == len(simu_alt))
+    assert (len(reco_alt) == len(true_alt))
     if len(reco_alt) == 0:
         return np.empty(0)
     if bias_correction:
-        bias_alt = bias(simu_alt, reco_alt)
-        bias_az = bias(simu_az, reco_az)
+        bias_alt = bias(true_alt, reco_alt)
+        bias_az = bias(true_az, reco_az)
     else:
         bias_alt = 0
         bias_az = 0
-    return angular_separation_altaz(reco_alt-bias_alt, reco_az-bias_az, simu_alt, simu_az) ** 2
+    return angular_separation_altaz(reco_alt - bias_alt, reco_az - bias_az, true_alt, true_az) ** 2
 
 
-def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
+def angular_resolution(reco_alt, reco_az, true_alt, true_az,
                        percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the angular resolution as the Qth (standard being 68)
@@ -589,8 +589,8 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     ----------
     reco_alt: `numpy.ndarray` - reconstructed altitude angle in radians
     reco_az: `numpy.ndarray` - reconstructed azimuth angle in radians
-    simu_alt: `numpy.ndarray` - true altitude angle in radians
-    simu_az: `numpy.ndarray` - true azimuth angle in radians
+    true_alt: `numpy.ndarray` - true altitude angle in radians
+    true_az: `numpy.ndarray` - true azimuth angle in radians
     percentile: float - percentile, 68 corresponds to one sigma
     confidence_level: float
 
@@ -599,8 +599,8 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     `numpy.array` [angular_resolution, lower limit, upper limit]
     """
     if bias_correction:
-        b_alt = bias(simu_alt, reco_alt)
-        b_az = bias(simu_az, reco_az)
+        b_alt = bias(true_alt, reco_alt)
+        b_az = bias(true_az, reco_az)
     else:
         b_alt = 0
         b_az = 0
@@ -608,21 +608,21 @@ def angular_resolution(reco_alt, reco_az, simu_alt, simu_az,
     reco_alt_corr = reco_alt - b_alt
     reco_az_corr = reco_az - b_az
 
-    t2 = np.sort(theta2(reco_alt_corr, reco_az_corr, simu_alt, simu_az))
+    t2 = np.sort(theta2(reco_alt_corr, reco_az_corr, true_alt, true_az))
 
     ang_res = _percentile(t2, percentile)
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
 
-def angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, x,
+def angular_resolution_per_bin(true_alt, true_az, reco_alt, reco_az, x,
                                percentile=68.27, confidence_level=0.95, bias_correction=False, bins=10):
     """
     Compute the angular resolution per binning of x
 
     Parameters
     ----------
-    simu_alt: `numpy.ndarray`
-    simu_az: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
+    true_az: `numpy.ndarray`
     reco_alt: `numpy.ndarray`
     reco_az: `numpy.ndarray`
     x: `numpy.ndarray`
@@ -646,7 +646,7 @@ def angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, x,
     for ii in np.arange(1, len(x_bins)):
         mask = bin_index == ii
         ang_res.append(angular_resolution(reco_alt[mask], reco_az[mask],
-                                          simu_alt[mask], simu_az[mask],
+                                          true_alt[mask], true_az[mask],
                                           percentile=percentile,
                                           confidence_level=confidence_level,
                                           bias_correction=bias_correction,
@@ -656,7 +656,7 @@ def angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, x,
     return x_bins, np.array(ang_res)
 
 
-def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
+def angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, energy,
                                   percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Plot the angular resolution as a function of the event simulated true_energy
@@ -665,8 +665,8 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
     ----------
     reco_alt: `numpy.ndarray`
     reco_az: `numpy.ndarray`
-    simu_alt: `numpy.ndarray`
-    simu_az: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
+    true_az: `numpy.ndarray`
     energy: `numpy.ndarray`
     **kwargs: args for `angular_resolution`
 
@@ -684,7 +684,7 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
 
     for i, e in enumerate(E_bin[:-1]):
         mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
-        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], simu_alt[mask], simu_az[mask],
+        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], true_alt[mask], true_az[mask],
                                       percentile=percentile,
                                       confidence_level=confidence_level,
                                       bias_correction=bias_correction,
@@ -694,14 +694,14 @@ def angular_resolution_per_energy(reco_alt, reco_az, simu_alt, simu_az, energy,
     return E_bin, np.array(RES)
 
 
-def angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az, alt_pointing, az_pointing, bins=10):
+def angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, reco_az, alt_pointing, az_pointing, bins=10):
     """
     Compute the angular resolution as a function of separation angle for the pointing direction
 
     Parameters
     ----------
-    simu_alt: `numpy.ndarray`
-    simu_az: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
+    true_az: `numpy.ndarray`
     reco_alt: `numpy.ndarray`
     reco_az: `numpy.ndarray`
     alt_pointing: `numpy.ndarray`
@@ -714,33 +714,33 @@ def angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_
         bins: 1D `numpy.ndarray`
         res: 2D `numpy.ndarray` - resolutions with confidence intervals (output from `ctaplot.ana.resolution`)
     """
-    ang_sep_to_pointing = angular_separation_altaz(simu_alt, simu_az, alt_pointing, az_pointing)
+    ang_sep_to_pointing = angular_separation_altaz(true_alt, true_az, alt_pointing, az_pointing)
 
-    return angular_resolution_per_bin(simu_alt, simu_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
+    return angular_resolution_per_bin(true_alt, true_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
 
 
-def effective_area(simu_energy, reco_energy, simu_area):
+def effective_area(true_energy, reco_energy, simu_area):
     """
     Compute the effective area from a list of simulated energies and reconstructed energies
     Parameters
     ----------
-    simu_energy: 1d numpy array
+    true_energy: 1d numpy array
     reco_energy: 1d numpy array
     simu_area: float - area on which events are simulated
     Returns
     -------
     float = effective area
     """
-    return simu_area * len(reco_energy) / len(simu_energy)
+    return simu_area * len(reco_energy) / len(true_energy)
 
 
-def effective_area_per_energy(simu_energy, reco_energy, simu_area):
+def effective_area_per_energy(true_energy, reco_energy, simu_area):
     """
     Compute the effective area per true_energy bins from a list of simulated energies and reconstructed energies
 
     Parameters
     ----------
-    simu_energy: 1d numpy array
+    true_energy: 1d numpy array
     reco_energy: 1d numpy array
     simu_area: float - area on which events are simulated
 
@@ -752,27 +752,27 @@ def effective_area_per_energy(simu_energy, reco_energy, simu_area):
     irf = irf_cta()
 
     count_R, bin_R = np.histogram(reco_energy, bins=irf.E_bin)
-    count_S, bin_S = np.histogram(simu_energy, bins=irf.E_bin)
+    count_S, bin_S = np.histogram(true_energy, bins=irf.E_bin)
 
     np.seterr(divide='ignore', invalid='ignore')
     return irf.E_bin, np.nan_to_num(simu_area * count_R / count_S)
 
 
-def impact_parameter_error(reco_x, reco_y, simu_x, simu_y):
+def impact_parameter_error(reco_x, reco_y, true_x, true_y):
     """
-    compute the error distance between simulated and reconstructed impact parameters
+    compute the error distance between true and reconstructed impact parameters
     Parameters
     ----------
     reco_x: 1d numpy array
     reco_y: 1d numpy array
-    simu_x: 1d numpy array
-    simu_y: 1d numpy array
+    true_x: 1d numpy array
+    true_y: 1d numpy array
 
     Returns
     -------
     1d numpy array: distances
     """
-    return np.sqrt((reco_x - simu_x) ** 2 + (reco_y - simu_y) ** 2)
+    return np.sqrt((reco_x - true_x) ** 2 + (reco_y - true_y) ** 2)
 
 
 def _percentile(x, percentile=68.27):
@@ -840,7 +840,7 @@ def logbin_mean(x_bin):
     return 10 ** ((np.log10(x_bin[:-1]) + np.log10(x_bin[1:])) / 2.)
 
 
-def impact_resolution(reco_x, reco_y, simu_x, simu_y,
+def impact_resolution(reco_x, reco_y, true_x, true_y,
                       percentile=68.27, confidence_level=0.95, bias_correction=False, relative_scaling_method=None):
     """
     Compute the shower impact parameter resolution as the Qth (68 as standard) containment radius of the square distance
@@ -850,8 +850,8 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y,
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     percentile: float
         see `ctaplot.ana.resolution`
     confidence_level: float
@@ -866,7 +866,7 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y,
     (impact_resolution, lower_confidence_level, upper_confidence_level): (`numpy.array`, `numpy.array`, `numpy.array`)
     """
 
-    return distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+    return distance2d_resolution(reco_x, reco_y, true_x, true_y,
                                  percentile=percentile,
                                  confidence_level=confidence_level,
                                  bias_correction=bias_correction,
@@ -874,7 +874,7 @@ def impact_resolution(reco_x, reco_y, simu_x, simu_y,
                                  )
 
 
-def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
+def impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy,
                                  percentile=68.27,
                                  confidence_level=0.95,
                                  bias_correction=False,
@@ -886,8 +886,8 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     energy: `numpy.ndarray`
     percentile: float
         see `ctaplot.ana.resolution`
@@ -907,7 +907,7 @@ def impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy,
 
     irf = irf_cta()
 
-    return distance2d_resolution_per_bin(energy, reco_x, reco_y, simu_x, simu_y,
+    return distance2d_resolution_per_bin(energy, reco_x, reco_y, true_x, true_y,
                                          bins=irf.E_bin,
                                          percentile=percentile,
                                          confidence_level=confidence_level,
@@ -999,7 +999,7 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
         return bins, np.nan_to_num(simu_area * count_R / simu_per_bin)
 
 
-def distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+def distance2d_resolution(reco_x, reco_y, true_x, true_y,
                           percentile=68.27, confidence_level=0.95, bias_correction=False, relative_scaling_method=None):
     """
     Compute the 2D distance resolution as the Qth (standard being 68)
@@ -1010,8 +1010,8 @@ def distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
     ----------
     reco_x: `numpy.ndarray` - reconstructed x position
     reco_y: `numpy.ndarray` - reconstructed y position
-    simu_x: `numpy.ndarray` - true x position
-    simu_y: `numpy.ndarray` - true y position
+    true_x: `numpy.ndarray` - true x position
+    true_y: `numpy.ndarray` - true y position
     percentile: float - percentile, 68.27 corresponds to one sigma
     confidence_level: float
     bias_correction: bool
@@ -1023,8 +1023,8 @@ def distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
     `numpy.array` [angular_resolution, lower limit, upper limit]
     """
     if bias_correction:
-        b_x = bias(simu_x, reco_x)
-        b_y = bias(simu_y, reco_y)
+        b_x = bias(true_x, reco_x)
+        b_y = bias(true_y, reco_y)
     else:
         b_x = 0
         b_y = 0
@@ -1033,15 +1033,15 @@ def distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
     reco_y_corr = reco_y - b_y
 
     with np.errstate(divide='ignore', invalid='ignore'):
-        d = np.sort(((reco_x_corr - simu_x)/relative_scaling(simu_x, reco_x_corr, relative_scaling_method)) ** 2
-                    + ((reco_y_corr - simu_y)/relative_scaling(simu_y, reco_y_corr, relative_scaling_method)) ** 2)
+        d = np.sort(((reco_x_corr - true_x)/relative_scaling(true_x, reco_x_corr, relative_scaling_method)) ** 2
+                    + ((reco_y_corr - true_y)/relative_scaling(true_y, reco_y_corr, relative_scaling_method)) ** 2)
         res = np.nan_to_num(d)
 
     return np.sqrt(np.append(_percentile(res, percentile),
                              percentile_confidence_interval(res, percentile, confidence_level)))
 
 
-def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
+def distance2d_resolution_per_bin(x, reco_x, reco_y, true_x, true_y,
                                   bins=10,
                                   percentile=68.27,
                                   confidence_level=0.95,
@@ -1056,8 +1056,8 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
     x: `numpy.ndarray`
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     bins: bins args of `np.histogram`
     percentile: float - percentile, 68.27 corresponds to one sigma
     confidence_level: float
@@ -1077,7 +1077,7 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
     for ii in np.arange(1, len(x_bins)):
         mask = bin_index == ii
         dist_res.append(distance2d_resolution(reco_x[mask], reco_y[mask],
-                                              simu_x[mask], simu_y[mask],
+                                              true_x[mask], true_y[mask],
                                               percentile=percentile,
                                               confidence_level=confidence_level,
                                               bias_correction=bias_correction,
@@ -1088,13 +1088,13 @@ def distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y,
     return x_bins, np.array(dist_res)
 
 
-def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
+def bias_per_bin(true, reco, x, relative_scaling_method=None, bins=10):
     """
-    Bias between `simu` and `reco` per bin of `x`.
+    Bias between `true` and `reco` per bin of `x`.
 
     Parameters
     ----------
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
     reco: `numpy.ndarray`
     x: : `numpy.ndarray`
     relative_scaling_method: str
@@ -1110,18 +1110,18 @@ def bias_per_bin(simu, reco, x, relative_scaling_method=None, bins=10):
     b = []
     for ii in np.arange(1, len(x_bins)):
         mask = bin_index == ii
-        b.append(relative_bias(simu[mask], reco[mask], relative_scaling_method=relative_scaling_method))
+        b.append(relative_bias(true[mask], reco[mask], relative_scaling_method=relative_scaling_method))
 
     return x_bins, np.array(b)
 
 
-def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
+def bias_per_energy(true, reco, energy, relative_scaling_method=None):
     """
-    Bias between `simu` and `reco` per bins of true_energy
+    Bias between `true` and `reco` per bins of true_energy
 
     Parameters
     ----------
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
     reco: `numpy.ndarray`
     energy: : `numpy.ndarray`
     relative_scaling_method: str
@@ -1135,7 +1135,7 @@ def bias_per_energy(simu, reco, energy, relative_scaling_method=None):
     irf = irf_cta()
     energy_bin = irf.E_bin
 
-    return bias_per_bin(simu, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
+    return bias_per_bin(true, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
 
 
 def get_magic_sensitivity():

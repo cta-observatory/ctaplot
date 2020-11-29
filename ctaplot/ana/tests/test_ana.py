@@ -30,12 +30,12 @@ def test_class_cta_performance():
 
 
 def test_impact_resolution_per_energy():
-    simu_x = np.random.rand(100) * 1000
-    simu_y = np.random.rand(100) * 1000
-    reco_x = simu_x + 1
-    reco_y = simu_y + 1
+    true_x = np.random.rand(100) * 1000
+    true_y = np.random.rand(100) * 1000
+    reco_x = true_x + 1
+    reco_y = true_y + 1
     energy = np.logspace(-2, 2, 100)
-    E, R = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy)
+    E, R = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy)
     assert (np.isclose(R, np.sqrt(2))).all()
 
 
@@ -144,13 +144,13 @@ def test_power_law_integrated_distribution():
 
 def test_distance2d_resolution():
     size = 10000
-    simu_x = np.ones(size)
-    simu_y = np.ones(size)
+    true_x = np.ones(size)
+    true_y = np.ones(size)
     # reconstructed positions on a circle around true position
     t = np.random.rand(size) * np.pi * 2
     reco_x = 1 + 3 * np.cos(t)
     reco_y = 1 + 3 * np.sin(t)
-    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, true_x, true_y,
                                                       percentile=68.27, confidence_level=0.95, bias_correction=False)
 
     np.testing.assert_equal(res, 3)
@@ -158,7 +158,7 @@ def test_distance2d_resolution():
     # with different bias on X and Y:
     reco_x = 5 + 2 * np.cos(t)
     reco_y = 7 + 2 * np.sin(t)
-    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, simu_x, simu_y,
+    res, err_min, err_max = ana.distance2d_resolution(reco_x, reco_y, true_x, true_y,
                                                       percentile=68.27, confidence_level=0.95, bias_correction=True)
 
     assert np.isclose(res, 2, rtol=1e-1)
@@ -167,37 +167,37 @@ def test_distance2d_resolution():
 def test_distance2d_resolution_per_bin():
     size = 1000000
     x = np.random.rand(size)
-    simu_x = np.ones(size)
-    simu_y = np.ones(size)
+    true_x = np.ones(size)
+    true_y = np.ones(size)
     t = np.random.rand(size) * np.pi * 2
     reco_x = 3 * np.cos(t)
     reco_y = 3 * np.sin(t)
 
-    bin, res = ana.distance2d_resolution_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=10, bias_correction=True)
+    bin, res = ana.distance2d_resolution_per_bin(x, reco_x, reco_y, true_x, true_y, bins=10, bias_correction=True)
 
     np.testing.assert_allclose(res, 3, rtol=1e-1)
 
 
 def test_angular_resolution():
     size = 10000
-    simu_alt = np.random.rand(size)
-    simu_az = np.random.rand(size)
+    true_alt = np.random.rand(size)
+    true_az = np.random.rand(size)
     scale = 0.01
     bias = 3
 
     # test alt
-    reco_alt = simu_alt + np.random.normal(loc=bias, scale=scale, size=size)
-    reco_az = simu_az
+    reco_alt = true_alt + np.random.normal(loc=bias, scale=scale, size=size)
+    reco_az = true_az
 
-    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True)[0],
+    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True)[0],
                       scale,
                       rtol=1e-1)
 
     # test az
-    simu_alt = np.zeros(size)  # angular separation evolves linearly with az if alt=0
-    reco_alt = simu_alt
-    reco_az = simu_az + np.random.normal(loc=-1, scale=scale, size=size)
-    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True)[0],
+    true_alt = np.zeros(size)  # angular separation evolves linearly with az if alt=0
+    reco_alt = true_alt
+    reco_az = true_az + np.random.normal(loc=-1, scale=scale, size=size)
+    assert np.isclose(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True)[0],
                       scale,
                       rtol=1e-1)
 
@@ -207,21 +207,21 @@ def test_angular_resolution_small_angles():
     At small angles, the angular resolution should be equal to the distance2d resolution
     """
     size = 1000
-    simu_az = np.ones(size)
-    simu_alt = np.random.rand(size)
-    reco_alt = simu_alt + np.random.normal(1, 0.05, size)
-    reco_az = 2 * simu_az
-    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
-                               ana.distance2d_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+    true_az = np.ones(size)
+    true_alt = np.random.rand(size)
+    reco_alt = true_alt + np.random.normal(1, 0.05, size)
+    reco_az = 2 * true_az
+    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True),
+                               ana.distance2d_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True),
                                rtol=1e-1,
                                )
 
-    simu_az = np.random.rand(size)
-    simu_alt = np.zeros(size)
-    reco_alt = simu_alt
-    reco_az = simu_az + np.random.normal(-3, 2, size)
-    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
-                               ana.distance2d_resolution(reco_alt, reco_az, simu_alt, simu_az, bias_correction=True),
+    true_az = np.random.rand(size)
+    true_alt = np.zeros(size)
+    reco_alt = true_alt
+    reco_az = true_az + np.random.normal(-3, 2, size)
+    np.testing.assert_allclose(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True),
+                               ana.distance2d_resolution(reco_alt, reco_az, true_alt, true_az, bias_correction=True),
                                rtol=1e-1,
                                )
 
@@ -233,19 +233,19 @@ def test_bias_empty():
 
 def test_bias_per_bin():
     size = 100000
-    simu = np.ones(size)
+    true = np.ones(size)
     reco = np.random.normal(loc=2, scale=0.5, size=size)
     x = np.linspace(0, 10, size)
-    bins, bias = ana.bias_per_bin(simu, reco, x)
+    bins, bias = ana.bias_per_bin(true, reco, x)
     np.testing.assert_allclose(bias, 1, rtol=1e-1)
 
 
 def test_bias_per_energy():
     size = 100000
-    simu = np.ones(size)
+    true = np.ones(size)
     reco = np.random.normal(loc=2, scale=0.5, size=size)
     energy = np.logspace(-2, 2, size)
-    bins, bias = ana.bias_per_energy(simu, reco, energy)
+    bins, bias = ana.bias_per_energy(true, reco, energy)
     np.testing.assert_allclose(bias, 1, rtol=1e-1)
 
 

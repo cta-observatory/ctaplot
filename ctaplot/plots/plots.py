@@ -8,9 +8,8 @@ Functions to make IRF and other reconstruction quality-check plots
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from scipy.stats import gaussian_kde, binned_statistic
+from scipy.stats import binned_statistic
 from ..ana import ana
-from astropy.utils import deprecated
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
@@ -26,8 +25,6 @@ __all__ = ['plot_resolution',
            'plot_layout_map',
            'plot_multiplicity_per_telescope_type',
            'plot_multiplicity_hist',
-           'plot_angles_distribution',
-           'plot_angles_map_distri',
            'plot_angular_resolution_cta_performance',
            'plot_angular_resolution_cta_requirement',
            'plot_angular_resolution_per_energy',
@@ -43,14 +40,11 @@ __all__ = ['plot_resolution',
            'plot_energy_resolution_cta_performance',
            'plot_energy_resolution_cta_requirement',
            'plot_feature_importance',
-           'plot_field_of_view_map',
+           'scatter_events_field_of_view',
            'plot_impact_map',
-           'plot_impact_parameter_error_per_energy',
-           'plot_impact_parameter_error_per_multiplicity',
            'plot_impact_parameter_error_site_center',
            'plot_impact_parameter_resolution_per_energy',
            'plot_impact_point_heatmap',
-           'plot_impact_point_map_distri',
            'plot_impact_resolution_per_energy',
            'plot_migration_matrix',
            'plot_multiplicity_per_energy',
@@ -72,14 +66,14 @@ __all__ = ['plot_resolution',
            ]
 
 
-def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
+def plot_energy_distribution(true_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
     """
     Plot the true_energy distribution of the simulated particles, detected particles and reconstructed particles
     The plot might be saved automatically if `outfile` is provided.
 
     Parameters
     ----------
-    mc_energy: `numpy.ndarray`
+    true_energy: `numpy.ndarray`
         simulated energies
     reco_energy: `numpy.ndarray`
         reconstructed energies
@@ -100,8 +94,8 @@ def plot_energy_distribution(mc_energy, reco_energy, ax=None, outfile=None, mask
     ax.set_ylabel('Count')
 
     ax.set_xscale('log')
-    count_S, bin_S, o = ax.hist(mc_energy, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
-    count_D, bin_D, o = ax.hist(mc_energy[mask_mc_detected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
+    count_S, bin_S, o = ax.hist(true_energy, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
+    count_D, bin_D, o = ax.hist(true_energy[mask_mc_detected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
     count_R, bin_R, o = ax.hist(reco_energy, log=True, bins=np.logspace(-3, 3, 30), label="Reconstructed")
     if outfile is not None:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -154,7 +148,7 @@ def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     return ax
 
 
-def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, color_scale=None, ax=None):
+def scatter_events_field_of_view(reco_alt, reco_az, source_alt, source_az, color_scale=None, ax=None):
     """
     Plot a map in angles [in degrees] of the photons seen by the telescope (after reconstruction)
 
@@ -206,62 +200,9 @@ def plot_field_of_view_map(reco_alt, reco_az, source_alt, source_az, color_scale
     return ax
 
 
-def plot_angles_distribution(reco_alt, reco_az, source_alt, source_az, outfile=None):
-    """
-    Plot the distribution of reconstructed angles in two axes.
-    Save figure to `outfile` in png format.
-
-    Parameters
-    ----------
-    reco_alt: `numpy.ndarray`
-        reconstructed altitudes
-    reco_az: `numpy.ndarray`
-        reconstructed azimuths
-    source_alt: `float`
-        altitude of the source
-    source_az: `float`
-        azimiuth of the source
-    outfile: `string`
-        path of the output file. If None, the figure is not saved.
-
-    Returns
-    -------
-    fig: `matplotlib.pyplot.figure`
-    """
-    fig = plt.figure()
-    dx = 1
-
-    ax1 = plt.subplot(211)
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
-
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-
-    ax1.set_xlabel('Az [deg]')
-    ax1.set_ylabel('Count')
-    ax1.set_xlim(source_az - dx, source_az + dx)
-
-    ax1.hist(reco_az, bins=60, range=(source_az - dx, source_az + dx))
-
-    ax2 = plt.subplot(212)
-    ax2.spines["top"].set_visible(False)
-    ax2.spines["right"].set_visible(False)
-
-    ax2.get_xaxis().tick_bottom()
-    ax2.get_yaxis().tick_left()
-
-    ax2.set_xlim(source_alt - dx, source_alt + dx)
-
-    ax2.hist(reco_alt, bins=60, range=(source_alt - dx, source_alt + dx))
-
-    if type(outfile) is str:
-        fig.savefig(outfile + ".png", bbox_inches="tight", format='png', dpi=200)
-
-    return fig
 
 
-def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=None, **kwargs):
+def plot_theta2(reco_alt, reco_az, true_alt, true_az, bias_correction=False, ax=None, **kwargs):
     """
     Plot the theta2 distribution and display the corresponding angular resolution in degrees.
     The input must be given in radians.
@@ -272,9 +213,9 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
         reconstructed altitude angle in radians
     reco_az: `numpy.ndarray`
         reconstructed azimuth angle in radians
-    simu_alt: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
         true altitude angle in radians
-    simu_az: `numpy.ndarray`
+    true_az: `numpy.ndarray`
         true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
     **kwargs:
@@ -288,156 +229,27 @@ def plot_theta2(reco_alt, reco_az, simu_alt, simu_az, bias_correction=False, ax=
     ax = plt.gca() if ax is None else ax
 
     if bias_correction:
-        bias_alt = ana.bias(simu_alt, reco_alt)
-        bias_az = ana.bias(simu_az, reco_az)
+        bias_alt = ana.bias(true_alt, reco_alt)
+        bias_az = ana.bias(true_az, reco_az)
         reco_alt = reco_alt - bias_alt
         reco_az = reco_az - bias_az
 
-    theta2 = (np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, simu_alt, simu_az))))** 2
-    ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, simu_alt, simu_az))
+    theta2 = np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, true_alt, true_az)))**2
+    ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az))
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
     ax.set_ylabel('Count')
 
     ax.hist(theta2, **kwargs)
-    ax.set_title(r'angular resolution: {:.3f}(+{:.2f}/-{:.2f}) deg'.format(ang_res[0], ang_res[2], ang_res[1]))
+
+    err_max = (ang_res[2] - ang_res[0])
+    err_min = (ang_res[0] - ang_res[1])
+    ax.set_title(rf'angular resolution: {ang_res[0]:.3f}(+{err_max:.1e}/-{err_min:.1e})deg')
 
     return ax
 
 
-def plot_angles_map_distri(reco_alt, reco_az, source_alt, source_az, energies, outfile=None):
-    """
-    Plot the angles map distribution
-
-    Parameters
-    ----------
-    reco_alt: `numpy.ndarray`
-        reconstructed altitudes
-    reco_az: `numpy.ndarray`
-        reconstructed azimuths
-    source_alt: float
-        altitude of the source
-    source_az: float
-        azimuth of the source
-    energies: `numpy.ndarray`
-        events energies
-    outfile: str
-        path to the output file. If None, no figure is saved.
-
-    Returns
-    -------
-    fig: `matplotlib.pyplot.figure`
-    """
-
-    dx = 0.01
-
-    fig = plt.figure()
-
-    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-
-    ax1.set_xlim(source_az - dx, source_az + dx)
-    ax1.set_ylim(source_alt - dx, source_alt + dx)
-
-    plt.xlabel("Az [deg]")
-    plt.ylabel("Alt [deg]")
-
-    if len(reco_alt) > 1000:
-        ax1.hist2d(reco_alt, reco_az, bins=60,
-                   range=([source_alt - dx, source_alt + dx], [source_az - dx, source_az + dx]))
-    else:
-        ax1.scatter(reco_az, reco_alt, c=np.log10(energies))
-    ax1.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='black')
-
-    ax1.xaxis.set_label_position('top')
-    ax1.xaxis.set_ticks_position('top')
-    plt.legend('', 'Source position')
-
-    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
-    ax2.set_xlim(source_az - dx, source_az + dx)
-    ax2.yaxis.tick_right()
-    ax2.xaxis.set_ticklabels([])
-    ax2.xaxis.tick_bottom()
-    ax2.hist(reco_az, bins=60, range=(source_az - dx, source_az + dx))
-    plt.locator_params(nbins=4)
-
-    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
-    ax3.set_ylim(source_alt - dx, source_alt + dx)
-    ax3.yaxis.set_ticklabels([])
-    plt.locator_params(nbins=4)
-
-    ax3.spines["left"].set_visible(False)
-    ax3.hist(reco_alt, bins=60, range=(source_alt - dx, source_alt + dx), orientation=u'horizontal')
-
-    if type(outfile) is str:
-        fig.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
-
-    return fig
-
-
-def plot_impact_point_map_distri(reco_x, reco_y, tel_x, tel_y, fit=False, outfile=None, **kwargs):
-    """
-    Map and distributions of the reconstructed impact points.
-
-    Parameters
-    ----------
-    reco_x: `numpy.ndarray`
-        reconstructed x positions
-    reco_y: `numpy.ndarray`
-        reconstructed y positions
-    tel_x: `numpy.ndarray`
-        X positions of the telescopes
-    tel_y: `numpy.ndarray`
-        Y positions of the telescopes
-    kde: bool
-        if True, makes a gaussian fit of the point density
-    outfile: str
-        save a png image of the plot under 'string.png'
-
-    Returns
-    -------
-    fig: `matplotlib.pyplot.figure`
-    """
-    fig = plt.figure()
-
-    ax1 = plt.subplot2grid((4, 4), (0, 0), colspan=3, rowspan=3)
-
-    plt.xlabel("X [m]")
-    plt.ylabel("Y [m]")
-
-    if fit:
-        kde = gaussian_kde([reco_x, reco_y])
-        density = kde([reco_x, reco_y])
-        ax1.scatter(reco_x, reco_y, c=density, s=2)
-    else:
-        ax1.hist2d(reco_x, reco_y, bins=80, norm=LogNorm())
-
-    ax1.xaxis.set_label_position('top')
-    ax1.xaxis.set_ticks_position('top')
-    plt.legend('', 'Source position')
-
-    ax1.scatter(tel_x, tel_y, c='tomato', marker='+', s=90, linewidths=10)
-
-    ax2 = plt.subplot2grid((4, 4), (3, 0), colspan=3)
-    ax2.yaxis.tick_right()
-    ax2.xaxis.set_ticklabels([])
-    ax2.xaxis.tick_bottom()
-    ax2.hist(reco_x, bins=60)
-    plt.locator_params(nbins=4)
-
-    ax3 = plt.subplot2grid((4, 4), (0, 3), rowspan=3)
-    ax3.yaxis.set_ticklabels([])
-    plt.locator_params(nbins=4)
-
-    ax3.spines["left"].set_visible(False)
-    ax3.hist(reco_y, bins=60, orientation=u'horizontal')
-
-    if outfile is not None:
-        fig.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
-
-    return fig
-
-
-def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None):
+def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
     """
     Plot the heatmap of the impact points on the site ground and save it under Outfile
 
@@ -458,8 +270,10 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None):
     ax.set_ylabel("Y [m]")
     ax.axis('equal')
 
-    cm = plt.cm.get_cmap('OrRd')
-    h = ax.hist2d(reco_x, reco_y, bins=75, norm=LogNorm(), cmap=cm)
+    kwargs.setdefault('norm', LogNorm())
+    kwargs.setdefault('cmap', plt.cm.get_cmap('PuBu'))
+    kwargs.setdefault('bins', 50)
+    h = ax.hist2d(reco_x, reco_y, **kwargs)
     cb = plt.colorbar(h[3], ax=ax)
     cb.set_label('Event count')
 
@@ -483,8 +297,6 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     from matplotlib.ticker import MaxNLocator
 
     ax = plt.gca() if ax is None else ax
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
     m = np.sort(multiplicity)
     xmin = multiplicity.min()
@@ -505,6 +317,8 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
         ax.vlines(x90, 0, n[int(m[int(np.floor(0.9 * len(m)))])], label='90%')
 
     ax.set_title("Telescope multiplicity")
+    ax.grid(True)
+
     if type(outfile) is str:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
@@ -533,13 +347,10 @@ def plot_multiplicity_per_telescope_type(multiplicity, telescope_type, ax=None, 
     from matplotlib.ticker import MaxNLocator
 
     ax = plt.gca() if ax is None else ax
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
     m = np.sort(multiplicity)
     xmin = multiplicity.min()
     xmax = multiplicity.max()
-
 
     if 'label' not in kwargs:
         kwargs['label'] = [str(type) for type in set(telescope_type)]
@@ -610,13 +421,13 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     return ax
 
 
-def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=None, **kwargs):
+def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, **kwargs):
     """
     Plot the effective area as a function of the true energy
 
     Parameters
     ----------
-    simu_energy: `numpy.ndarray`
+    true_energy: `numpy.ndarray`
         all simulated event energies
     reco_energy: `numpy.ndarray`
         all reconstructed event energies
@@ -633,9 +444,9 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
     >>> import numpy as np
     >>> import ctaplot
     >>> irf = ctaplot.ana.irf_cta()
-    >>> simu_e = 10**(-2 + 4*np.random.rand(1000))
+    >>> true_e = 10**(-2 + 4*np.random.rand(1000))
     >>> reco_e = 10**(-2 + 4*np.random.rand(100))
-    >>> ax = ctaplot.plots.plot_effective_area_per_energy(simu_e, reco_e, irf.LaPalmaArea_prod3)
+    >>> ax = ctaplot.plots.plot_effective_area_per_energy(true_e, reco_e, irf.LaPalmaArea_prod3)
     """
 
     ax = plt.gca() if ax is None else ax
@@ -649,7 +460,7 @@ def plot_effective_area_per_energy(simu_energy, reco_energy, simulated_area, ax=
     ax.set_xscale('log')
     ax.set_yscale('log')
 
-    E_bin, Seff = ana.effective_area_per_energy(simu_energy, reco_energy, simulated_area)
+    E_bin, Seff = ana.effective_area_per_energy(true_energy, reco_energy, simulated_area)
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
@@ -830,7 +641,7 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
     return ax
 
 
-def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
+def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     """
     Plot a variable resolution as a function of the true_energy
 
@@ -838,7 +649,7 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     ----------
     reco: `numpy.ndarray`
         reconstructed values of a variable
-    simu: `numpy.ndarray`
+    true: `numpy.ndarray`
         true values of the variable
     energy: `numpy.ndarray`
         event energies in TeV
@@ -860,7 +671,7 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     ax.set_xlabel('Energy [TeV]')
     ax.set_xscale('log')
 
-    energy_bin, resolution = ana.resolution_per_energy(simu, reco, energy)
+    energy_bin, resolution = ana.resolution_per_energy(true, reco, energy)
 
     E = ana.logbin_mean(energy_bin)
 
@@ -874,7 +685,7 @@ def plot_resolution_per_energy(reco, simu, energy, ax=None, **kwargs):
     return ax
 
 
-def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_energy,
+def plot_angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, reco_energy,
                                        percentile=68.27, confidence_level=0.95, bias_correction=False,
                                        ax=None, **kwargs):
     """
@@ -886,9 +697,9 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_en
         reconstructed altitudes in radians
     reco_az: `numpy.ndarray`
         reconstructed azimuths in radians
-    mc_alt: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
         true altitudes in radians
-    mc_az: `numpy.ndarray`
+    true_az: `numpy.ndarray`
         true azimuths in radians
     reco_energy: `numpy.ndarray`
         energies in TeV
@@ -903,7 +714,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_en
     ax = plt.gca() if ax is None else ax
 
     try:
-        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, mc_alt, mc_az, reco_energy,
+        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, reco_energy,
                                                        percentile=percentile,
                                                        confidence_level=confidence_level,
                                                        bias_correction=bias_correction
@@ -998,18 +809,18 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     return ax
 
 
-def hist_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
+def hist_impact_parameter_error(reco_x, reco_y, true_x, true_y, ax=None, **kwargs):
     """
     plot impact parameter error distribution and save it under Outfile
     Parameters
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     Outfile: string
     """
-    d = ana.impact_parameter_error(reco_x, reco_y, simu_x, simu_y)
+    d = ana.impact_parameter_error(reco_x, reco_y, true_x, true_y)
 
     ax = plt.gca() if ax is None else ax
 
@@ -1026,76 +837,16 @@ def hist_impact_parameter_error(reco_x, reco_y, simu_x, simu_y, ax=None, **kwarg
     ax.hist(d, **kwargs)
     return ax
 
-@deprecated('18/08/2019', message='`plot_impact_parameter_error_per_energy` will be removed in a future release.'
-                                  'Use `plot_impact_parameter_resolution_per_energy` instead')
-def plot_impact_parameter_error_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
-    """
-    plot the impact parameter error distance as a function of true_energy and save the plot as Outfile
-    
-    Parameters
-    ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
-    energy: `numpy.ndarray`
-    ax: `matplotlib.pyplot.axes`
-    kwargs: args for `matplotlib.pyplot.errorbar`
 
-    Returns
-    -------
-    true_energy, err_mean : numpy arrays
-    """
-    irf = ana.irf_cta()
-    E_bin = irf.E_bin
-    E = []
-    err_mean = []
-    err_min = []
-    err_max = []
-    err_std = []
-    for i, eb in enumerate(E_bin[:-1]):
-        mask = (energy > E_bin[i]) & (energy < E_bin[i + 1])
-        E.append(np.mean([E_bin[i], E_bin[i + 1]]))
-        if True in mask:
-            d = ana.impact_parameter_error(reco_x[mask], reco_y[mask], simu_x[mask], simu_y[mask])
-            err_mean.append(d.mean())
-            err_min.append(d.min())
-            err_max.append(d.max())
-            err_std.append(np.std(d))
-        else:
-            err_mean.append(0)
-            err_min.append(0)
-            err_max.append(0)
-            err_std.append(0)
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel('Error on Impact Parameter [m]')
-    ax.set_xlabel('Energy [TeV]')
-
-    ax.set_xscale('log')
-
-    ax.fill_between(E, err_min, err_max)
-    ax.errorbar(E, err_mean, err_std, color="red", label="mean+std")
-
-    ax.set_title('Impact parameter resolution')
-
-    return E, np.array(err_mean)
-
-
-def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy, ax=None, **kwargs):
+def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy, ax=None, **kwargs):
     """
 
     Parameters
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `ctaplot.plots.plot_resolution`
@@ -1104,69 +855,13 @@ def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, 
     -------
     `matplotlib.pyplot.axes`
     """
-    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, energy)
+    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy)
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
     ax.set_xlabel("Energy")
     ax.set_ylabel("Impact parameter resolution")
     ax.set_title("Impact parameter resolution as a function of the true_energy")
     ax.grid('on', which='both')
     return ax
-
-
-def plot_impact_parameter_error_per_multiplicity(reco_x, reco_y, simu_x, simu_y, multiplicity,
-                                                 max_mult=None, ax=None, **kwargs):
-    """
-    Plot the impact parameter error as a function of multiplicity
-    TODO: refactor and clean code
-
-    Parameters
-    ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
-    multiplicity: `numpy.ndarray`
-    max_mult: optional, max multiplicity - float
-    ax: `matplotlib.pyplot.axes`
-
-    Returns
-    -------
-
-    """
-    max_mult = multiplicity.max() + 1 if max_mult is None else max_mult
-
-    M = np.arange(multiplicity.min(), max_mult)
-    e_mean = []
-    e_min = []
-    e_max = []
-    e_std = []
-    for m in M:
-        mask = (multiplicity == m)
-        if True in mask:
-            d = ana.impact_parameter_error(reco_x[mask], reco_y[mask], simu_x[mask], simu_y[mask])
-            e_mean.append(d.mean())
-            e_min.append(d.min())
-            e_max.append(d.max())
-            e_std.append(np.std(d))
-        else:
-            e_mean.append(0)
-            e_min.append(0)
-            e_max.append(0)
-            e_std.append(0)
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_ylabel('Error on Impact Parameter [m]')
-    ax.set_xlabel('Multiplicity')
-
-    ax.fill_between(M, e_min, e_max)
-    ax.errorbar(M, e_mean, e_std, color="red", label="mean+std")
-
-    return M, np.array(e_mean)
 
 
 def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
@@ -1217,13 +912,13 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
     return ax
 
 
-def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
+def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
     """
     Plot the true_energy bias
 
     Parameters
     ----------
-    simu_energy: `numpy.ndarray`
+    true_energy: `numpy.ndarray`
     reco_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
@@ -1232,17 +927,17 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
+    assert len(true_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, biasE = ana.energy_bias(simu_energy, reco_energy)
+    E_bin, biasE = ana.energy_bias(true_energy, reco_energy)
     E = ana.logbin_mean(E_bin)
 
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
-    ax.set_ylabel("bias (median($E_{reco}/E_{simu}$ - 1)")
+    ax.set_ylabel("bias (median($E_{reco}/E_{true}$ - 1)")
     ax.set_xlabel(r'$E_R$ [TeV]')
     ax.set_xscale('log')
     ax.set_title('Energy bias')
@@ -1253,7 +948,7 @@ def plot_energy_bias(simu_energy, reco_energy, ax=None, **kwargs):
     return ax
 
 
-def plot_energy_resolution(simu_energy, reco_energy,
+def plot_energy_resolution(true_energy, reco_energy,
                            percentile=68.27, confidence_level=0.95, bias_correction=False,
                            ax=None, **kwargs):
     """
@@ -1261,7 +956,7 @@ def plot_energy_resolution(simu_energy, reco_energy,
 
     Parameters
     ----------
-    simu_energy: `numpy.ndarray`
+    true_energy: `numpy.ndarray`
     reco_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     bias_correction: `bool`
@@ -1271,12 +966,12 @@ def plot_energy_resolution(simu_energy, reco_energy,
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(simu_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
+    assert len(true_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
     try:
-        E_bin, Eres = ana.energy_resolution_per_energy(simu_energy, reco_energy,
+        E_bin, Eres = ana.energy_resolution_per_energy(true_energy, reco_energy,
                                                        percentile=percentile,
                                                        confidence_level=confidence_level,
                                                        bias_correction=bias_correction,
@@ -1366,7 +1061,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     return ax
 
 
-def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=None, **kwargs):
+def plot_impact_parameter_error_site_center(reco_x, reco_y, true_x, true_y, ax=None, **kwargs):
     """
     Plot the impact parameter error as a function of the distance to the site center.
 
@@ -1374,8 +1069,8 @@ def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=N
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: kwargs for `matplotlib.pyplot.hist2d`
 
@@ -1386,8 +1081,8 @@ def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=N
 
     ax = plt.gca() if ax is None else ax
 
-    imp_err = ana.impact_parameter_error(reco_x, reco_y, simu_x, simu_y)
-    distance_center = np.sqrt(simu_x ** 2 + simu_y ** 2)
+    imp_err = ana.impact_parameter_error(reco_x, reco_y, true_x, true_y)
+    distance_center = np.sqrt(true_x ** 2 + true_y ** 2)
 
     ax.hist2d(distance_center, imp_err, **kwargs)
     ax.set_xlabel("Distance to site center")
@@ -1396,7 +1091,7 @@ def plot_impact_parameter_error_site_center(reco_x, reco_y, simu_x, simu_y, ax=N
     return ax
 
 
-def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
+def plot_impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energy,
                                       percentile=68.27, confidence_level=0.95, bias_correction=False,
                                       ax=None, **kwargs):
     """
@@ -1406,9 +1101,9 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
     ----------
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: float
-    simu_y: float
-    simu_energy: `numpy.ndarray`
+    true_x: float
+    true_y: float
+    true_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -1419,7 +1114,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energ
 
     ax = plt.gca() if ax is None else ax
     try:
-        E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, simu_x, simu_y, simu_energy,
+        E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energy,
                                                       percentile=percentile,
                                                       confidence_level=confidence_level,
                                                       bias_correction=bias_correction,
@@ -1491,18 +1186,18 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     return ax
 
 
-def plot_dispersion(simu_x, reco_x, x_log=False, ax=None, **kwargs):
+def plot_dispersion(true_x, reco_x, x_log=False, ax=None, **kwargs):
     """
-    Plot the dispersion around an expected value X_true: `(simu_x-reco_x)` as a function of `simu_x`
+    Plot the dispersion around an expected value X_true: `(true_x-reco_x)` as a function of `true_x`
 
     Parameters
     ----------
-    simu_x: `numpy.ndarray`
+    true_x: `numpy.ndarray`
         true value of a variable x
     reco_x: `numpy.ndarray`
         reconstructed value of a variable x
     x_log: bool
-        if True, the dispersion is plotted as a function of `log10(simu_x)`
+        if True, the dispersion is plotted as a function of `log10(true_x)`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.hist2d`
 
@@ -1516,9 +1211,9 @@ def plot_dispersion(simu_x, reco_x, x_log=False, ax=None, **kwargs):
     if not 'bins' in kwargs:
         kwargs['bins'] = 50
 
-    x = np.log10(simu_x) if x_log else simu_x
+    x = np.log10(true_x) if x_log else true_x
 
-    ax.hist2d(x, simu_x - reco_x, **kwargs)
+    ax.hist2d(x, true_x - reco_x, **kwargs)
     return ax
 
 
@@ -1671,7 +1366,7 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     return ax
 
 
-def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+def plot_angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, reco_az,
                                                    alt_pointing, az_pointing, res_degree=False, bins=10, ax=None,
                                                    **kwargs):
     """
@@ -1681,8 +1376,8 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
 
     Parameters
     ----------
-    simu_alt: `numpy.ndarray`
-    simu_az: `numpy.ndarray`
+    true_alt: `numpy.ndarray`
+    true_az: `numpy.ndarray`
     reco_alt: `numpy.ndarray`
     reco_az: `numpy.ndarray`
     alt_pointing: `numpy.ndarray`
@@ -1697,7 +1392,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    res_bins, res = ana.angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, reco_az,
+    res_bins, res = ana.angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, reco_az,
                                                                   alt_pointing, az_pointing, bins=bins)
     res_unit = 'rad'
     if res_degree:
@@ -1711,7 +1406,7 @@ def plot_angular_resolution_per_off_pointing_angle(simu_alt, simu_az, reco_alt, 
     return ax
 
 
-def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=10, ax=None, **kwargs):
+def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, true_x, true_y, bins=10, ax=None, **kwargs):
     """
     Plot the impact parameter error per bin
 
@@ -1720,8 +1415,8 @@ def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=
     x: `numpy.ndarray`
     reco_x: `numpy.ndarray`
     reco_y: `numpy.ndarray`
-    simu_x: `numpy.ndarray`
-    simu_y: `numpy.ndarray`
+    true_x: `numpy.ndarray`
+    true_y: `numpy.ndarray`
     bins: arg for `np.histogram`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `plot_resolution`
@@ -1731,7 +1426,7 @@ def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=
     ax: `matplotlib.pyplot.axes`
     """
 
-    bin, res = ana.distance_per_bin(x, reco_x, reco_y, simu_x, simu_y)
+    bin, res = ana.distance_per_bin(x, reco_x, reco_y, true_x, true_y)
     ax = plot_resolution(bin, res, bins=bins, ax=ax, **kwargs)
 
     return ax
@@ -1739,7 +1434,7 @@ def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, simu_x, simu_y, bins=
 
 def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=10, log=False, **kwargs):
     """
-    Plot the bias between `simu` and `reco` as a function of bins of `x`
+    Plot the bias between `true` and `reco` as a function of bins of `x`
 
     Parameters
     ----------
@@ -1759,9 +1454,9 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
     ax: `matplotlib.pyplot.axis`
     """
     assert len(simu) == len(reco), \
-        "simu and reco arrays should have the same length"
+        "true and reco arrays should have the same length"
     assert len(simu) == len(x), \
-        "simu and true_energy arrays should have the same length"
+        "true and true_energy arrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1806,9 +1501,9 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
     ax: `matplotlib.pyplot.axis`
     """
     assert len(simu) == len(reco), \
-        "simu and reco arrays should have the same length"
+        "true and reco arrays should have the same length"
     assert len(simu) == len(energy), \
-        "simu and true_energy arrays should have the same length"
+        "true and true_energy arrays should have the same length"
 
     ax = plt.gca() if ax is None else ax
 
@@ -1856,14 +1551,14 @@ def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=No
     return ax
 
 
-def plot_roc_curve(simu_type, reco_proba,
+def plot_roc_curve(true_type, reco_proba,
                    pos_label=None, sample_weight=None, drop_intermediate=True,
                    ax=None, **kwargs):
     """
 
     Parameters
     ----------
-    simu_type: `numpy.ndarray`
+    true_type: `numpy.ndarray`
         true labels: must contain only two labels of type int, float or str
     reco_proba: `numpy.ndarray`
         reconstruction probability, values must be between 0 and 1
@@ -1886,14 +1581,14 @@ def plot_roc_curve(simu_type, reco_proba,
     """
     ax = plt.gca() if ax is None else ax
 
-    auc_score = metrics.roc_auc_score(simu_type, reco_proba)
+    auc_score = metrics.roc_auc_score(true_type, reco_proba)
     if auc_score < 0.5:
         auc_score = 1 - auc_score
 
     if 'label' not in kwargs:
         kwargs['label'] = "auc score = {:.3f}".format(auc_score)
 
-    fpr, tpr, thresholds = metrics.roc_curve(simu_type,
+    fpr, tpr, thresholds = metrics.roc_curve(true_type,
                                              reco_proba,
                                              pos_label=pos_label,
                                              sample_weight=sample_weight,
@@ -1911,7 +1606,7 @@ def plot_roc_curve(simu_type, reco_proba,
     return ax
 
 
-def plot_roc_curve_multiclass(simu_type, reco_proba,
+def plot_roc_curve_multiclass(true_type, reco_proba,
                               pos_label=None,
                               sample_weight=None, drop_intermediate=True,
                               ax=None, **kwargs):
@@ -1920,10 +1615,10 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
 
     Parameters
     ----------
-    simu_type: `numpy.ndarray`
+    true_type: `numpy.ndarray`
         true labels: int, float or str
-    reco_proba: `dict` of `numpy.ndarray` of shape `(len(simu_type), len(set(simu_type))`
-        reconstruction probability for each class in `simu_type`, values must be between 0 and 1
+    reco_proba: `dict` of `numpy.ndarray` of shape `(len(true_type), len(set(true_type))`
+        reconstruction probability for each class in `true_type`, values must be between 0 and 1
     pos_label : int or str, default=None
         The label of the positive class.
         When ``pos_label=None``, the ROC curve of each class is ploted.
@@ -1944,11 +1639,11 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     ax = plt.gca() if ax is None else ax
 
     label_binarizer = LabelBinarizer()
-    binarized_classes = label_binarizer.fit_transform(simu_type)
+    binarized_classes = label_binarizer.fit_transform(true_type)
 
     if pos_label is not None:
-        if pos_label not in set(simu_type) or pos_label not in reco_proba:
-            raise ValueError(f"simu_type and reco_proba must contain pos_label {pos_label}")
+        if pos_label not in set(true_type) or pos_label not in reco_proba:
+            raise ValueError(f"true_type and reco_proba must contain pos_label {pos_label}")
         ii = np.where(label_binarizer.classes_ == pos_label)[0][0]
 
         auc_score = metrics.roc_auc_score(binarized_classes[:, ii], reco_proba[pos_label])
@@ -1963,7 +1658,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
                             )
 
     else:
-        for st in set(simu_type):
+        for st in set(true_type):
             if st not in reco_proba:
                 raise ValueError("the class {} is not in reco_proba".format(st))
 
@@ -1991,7 +1686,7 @@ def plot_roc_curve_multiclass(simu_type, reco_proba,
     return ax
 
 
-def plot_roc_curve_gammaness(simu_type, gammaness,
+def plot_roc_curve_gammaness(true_type, gammaness,
                              gamma_label=0,
                              sample_weight=None,
                              drop_intermediate=True,
@@ -2000,11 +1695,11 @@ def plot_roc_curve_gammaness(simu_type, gammaness,
 
     Parameters
     ----------
-    simu_type: `numpy.ndarray`
+    true_type: `numpy.ndarray`
         true labels: int, float or str
     gammaness: `numpy.ndarray`
         probability of each event to be a gamma, values must be between 0 and 1
-    gamma_label: the label of the gamma class in `simu_type`.
+    gamma_label: the label of the gamma class in `true_type`.
     sample_weight : array-like of shape = [n_samples], optional
         Sample weights.
     drop_intermediate : boolean, optional (default=True)
@@ -2021,8 +1716,8 @@ def plot_roc_curve_gammaness(simu_type, gammaness,
 
     ax = plt.gca() if ax is None else ax
 
-    if len(set(simu_type)) == 2:
-        ax = plot_roc_curve(simu_type, gammaness,
+    if len(set(true_type)) == 2:
+        ax = plot_roc_curve(true_type, gammaness,
                             pos_label=gamma_label,
                             sample_weight=sample_weight,
                             drop_intermediate=drop_intermediate,
@@ -2030,7 +1725,7 @@ def plot_roc_curve_gammaness(simu_type, gammaness,
                             **kwargs,
                             )
     else:
-        ax = plot_roc_curve_multiclass(simu_type, {gamma_label: gammaness},
+        ax = plot_roc_curve_multiclass(true_type, {gamma_label: gammaness},
                                        pos_label=gamma_label,
                                        sample_weight=sample_weight,
                                        drop_intermediate=drop_intermediate,
@@ -2045,7 +1740,7 @@ def plot_roc_curve_gammaness(simu_type, gammaness,
     return ax
 
 
-def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma_label=0, energy_bins=None,
+def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma_label=0, energy_bins=None,
                                         ax=None,
                                         **kwargs):
     """
@@ -2053,14 +1748,14 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
 
     Parameters
     ----------
-    simu_type: `numpy.ndarray`
+    true_type: `numpy.ndarray`
         true labels: int, float or str
     gammaness: `numpy.ndarray`
         probability of each event to be a gamma, values must be between 0 and 1
-    simu_energy: `numpy.ndarray`
+    true_energy: `numpy.ndarray`
         true_energy of the gamma events in TeV
-        simu_energy.shape == simu_type.shape (but energies for events that are not gammas are not considered)
-    gamma_label: the label of the gamma class in `simu_type`.
+        true_energy.shape == true_type.shape (but energies for events that are not gammas are not considered)
+    gamma_label: the label of the gamma class in `true_type`.
     energy_bins: None or int or `numpy.ndarray`
         bins in true_energy.
         If `bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
@@ -2083,10 +1778,10 @@ def plot_roc_curve_gammaness_per_energy(simu_type, gammaness, simu_energy, gamma
     """
     ax = plt.gca() if ax is None else ax
 
-    gammas = simu_type == gamma_label
-    non_gammas = simu_type != gamma_label
-    gamma_energy = simu_energy[gammas]
-    binarized_label = (simu_type == gamma_label).astype(int)  # binarize in a gamma vs all fashion
+    gammas = true_type == gamma_label
+    non_gammas = true_type != gamma_label
+    gamma_energy = true_energy[gammas]
+    binarized_label = (true_type == gamma_label).astype(int)  # binarize in a gamma vs all fashion
 
     if energy_bins is None:
         irf = ana.irf_cta()
