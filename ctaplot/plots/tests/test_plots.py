@@ -1,17 +1,16 @@
 from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
-import astropy.units as u
 
 np.random.seed(42)
 
 
-def plot_energy_distribution():
-    SimuE = np.random.rand(100)
-    RecoE = np.random.rand(10)
-    maskSimuDetected = np.ones(100, dtype=bool)
-    maskSimuDetected[50:] = False
-    plots.plot_energy_distribution(SimuE, RecoE, mask_mc_detected=maskSimuDetected)
+def test_plot_energy_distribution():
+    true_e = np.random.rand(100)
+    reco_e = np.random.rand(10)
+    mask_simu_detected = np.ones(100, dtype=bool)
+    mask_simu_detected[50:] = False
+    plots.plot_energy_distribution(true_e, reco_e, mask_mc_detected=mask_simu_detected)
 
 
 def test_plot_energy_resolution():
@@ -55,37 +54,19 @@ def test_plot_sensitivity_cta_requirements():
 
 def test_plot_theta2():
     n = 10
-    RecoAlt = (1 + np.random.rand(n)) * u.rad
-    RecoAz = (1.5 + np.random.rand(n)) * u.rad
-    SimuAlt = np.ones(n) * u.rad
-    SimuAz = (1.5 * np.ones(n)) * u.rad
-    plots.plot_theta2(RecoAlt, RecoAz, SimuAlt, SimuAz)
+    reco_alt = (1 + np.random.rand(n))
+    reco_az = (1.5 + np.random.rand(n))
+    true_alt = np.ones(n)
+    true_az = (1.5 * np.ones(n))
+    plots.plot_theta2(reco_alt, reco_az, true_alt, true_az)
 
-
-def test_plot_angles_map_distri():
-    n = 10
-    RecoAlt = 1 + np.random.rand(n)
-    RecoAz = 1.5 + np.random.rand(n)
-    SimuAlt = 1
-    SimuAz = 1.5
-    E = 10 ** (np.random.rand(n) * 6 - 3)
-    plots.plot_angles_map_distri(RecoAlt, RecoAz, SimuAlt, SimuAz, E)
-
-
-def test_plot_impact_point_map_distri():
-    n = 10
-    RecoX = 1000 * np.random.rand(n) - 500
-    RecoY = 1000 * np.random.rand(n) - 500
-    telX = np.array([10, 100])
-    telY = np.array([100, -10])
-    plots.plot_impact_point_map_distri(RecoX, RecoY, telX, telY)
 
 
 def test_plot_impact_point_heatmap():
     n = 10
-    RecoX = np.random.rand(n)
-    RecoY = np.random.rand(n)
-    plots.plot_impact_point_heatmap(RecoX, RecoY)
+    reco_x = np.random.rand(n)
+    reco_y = np.random.rand(n)
+    plots.plot_impact_point_heatmap(reco_x, reco_y)
 
 
 def test_plot_multiplicity_hist():
@@ -94,10 +75,10 @@ def test_plot_multiplicity_hist():
 
 
 def test_plot_effective_area_per_energy():
-    SimuE = 10 ** (6 * np.random.rand(100) - 3)
-    RecoE = 10 ** (6 * np.random.rand(10) - 3)
+    true_e = 10 ** (6 * np.random.rand(100) - 3)
+    reco_e = 10 ** (6 * np.random.rand(10) - 3)
     simuArea = 1000
-    plots.plot_effective_area_per_energy(SimuE, RecoE, simuArea)
+    plots.plot_effective_area_per_energy(true_e, reco_e, simuArea)
 
 
 def test_plot_resolution_per_energy():
@@ -105,6 +86,7 @@ def test_plot_resolution_per_energy():
     reco = np.random.normal(loc=1, scale=1, size=100)
     energy = 10 ** (-3 + 6 * np.random.rand(100))
     plots.plot_resolution_per_energy(true, reco, energy)
+
 
 
 def test_plot_binned_stat():
@@ -283,8 +265,8 @@ def test_plot_rate():
     e_bins = np.logspace(-2, 2)
     e_min = e_bins[:-1]
     e_max = e_bins[1:]
-    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=None, color='green', ls='--')
-    plots.plot_rate(e_min, e_max, 1e-12/e_min**2, rate_err=1e-15*e_min)
+    plots.plot_rate(e_min, e_max, 1e-12 / e_min ** 2, rate_err=None, color='green', ls='--')
+    plots.plot_rate(e_min, e_max, 1e-12 / e_min ** 2, rate_err=1e-15 * e_min)
 
 
 def test_plot_background_rate_magic():
