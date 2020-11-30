@@ -320,7 +320,7 @@ def stat_per_energy(energy, y, statistic='mean'):
     Parameters
     ----------
     energy: `numpy.ndarray` (1d)
-        event energies
+        event energy
     y: `numpy.ndarray` (1d)
     statistic: string
         see `scipy.stat.binned_statistic`
@@ -493,15 +493,20 @@ def resolution_per_bin(x, y_true, y_reco,
                               )
                    )
 
-    return x_bins, np.array(res)
+    if type(res[0]) == u.Quantity:
+        res = u.Quantity(res)
+    else:
+        res = np.array(res)
+
+    return x_bins, res
 
 @u.quantity_input(true_energy=u.TeV)
 def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Parameters
     ----------
-    true: 1d `numpy.ndarray` of simulated energies
-    reco: 1d `numpy.ndarray` of reconstructed energies
+    true: 1d `numpy.ndarray` of simulated energy
+    reco: 1d `numpy.ndarray` of reconstructed energy
 
     Returns
     -------
@@ -526,8 +531,8 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
 
     Parameters
     ----------
-    true_energy: 1d numpy array of simulated energies
-    reco_energy: 1d numpy array of reconstructed energies
+    true_energy: 1d numpy array of simulated energy
+    reco_energy: 1d numpy array of reconstructed energy
     percentile: float
         <= 100
 
@@ -547,13 +552,13 @@ def energy_resolution_per_energy(true_energy, reco_energy,
                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     The true_energy resolution ΔE / E is obtained from the distribution of (ER – ET) / ET, where R and T refer
-    to the reconstructed and true energies of gamma-ray events.
+    to the reconstructed and true energy of gamma-ray events.
      ΔE/E is the half-width of the interval around 0 which contains given percentile of the distribution.
 
     Parameters
     ----------
-    true_energy: 1d numpy array of simulated energies
-    reco_energy: 1d numpy array of reconstructed energies
+    true_energy: 1d numpy array of simulated energy
+    reco_energy: 1d numpy array of reconstructed energy
     percentile: float
         between 0 and 100
     confidence_level: float
@@ -585,8 +590,8 @@ def energy_bias(true_energy, reco_energy):
 
     Parameters
     ----------
-    true_energy: 1d numpy array of simulated energies
-    reco_energy: 1d numpy array of reconstructed energies
+    true_energy: 1d numpy array of simulated energy
+    reco_energy: 1d numpy array of reconstructed energy
 
     Returns
     -------
@@ -736,7 +741,7 @@ def angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x,
                                           )
                        )
 
-    return x_bins, np.array(ang_res)
+    return x_bins, u.Quantity(ang_res)
 
 
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, energy=u.TeV)
@@ -763,19 +768,19 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
 
     irf = irf_cta()
 
-    E_bin = irf.E_bin
-    RES = []
+    e_bin = irf.E_bin
+    res = []
 
-    for i, e in enumerate(E_bin[:-1]):
-        mask = (energy > E_bin[i]) & (energy <= E_bin[i + 1])
-        RES.append(angular_resolution(reco_alt[mask], reco_az[mask], true_alt[mask], true_az[mask],
+    for i, e in enumerate(e_bin[:-1]):
+        mask = (energy > e_bin[i]) & (energy <= e_bin[i + 1])
+        res.append(angular_resolution(reco_alt[mask], reco_az[mask], true_alt[mask], true_az[mask],
                                       percentile=percentile,
                                       confidence_level=confidence_level,
                                       bias_correction=bias_correction,
                                       )
                    )
 
-    return E_bin, np.array(RES)
+    return e_bin, u.Quantity(res)
 
 
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, alt_pointing=u.rad, az_pointing=u.rad)
@@ -807,7 +812,7 @@ def angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m)
 def effective_area(true_energy, reco_energy, simu_area):
     """
-    Compute the effective area from a list of simulated energies and reconstructed energies
+    Compute the effective area from a list of simulated energy and reconstructed energy
     Parameters
     ----------
     true_energy: 1d numpy array
@@ -823,7 +828,7 @@ def effective_area(true_energy, reco_energy, simu_area):
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m)
 def effective_area_per_energy(true_energy, reco_energy, simu_area):
     """
-    Compute the effective area per true_energy bins from a list of simulated energies and reconstructed energies
+    Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
 
     Parameters
     ----------
@@ -1064,7 +1069,7 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
 @u.quantity_input(emin=u.eV, emax=u.eV, reco_energy=u.eV, simu_area=u.m)
 def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, true_energy, simu_area):
     """
-    Compute the effective area per true_energy bins from a list of simulated energies and reconstructed energies
+    Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
 
     Parameters
     ----------
@@ -1175,7 +1180,7 @@ def distance2d_resolution_per_bin(x, true_x, reco_x, true_y, reco_y,
                                               )
                         )
     if type(dist_res[0]) == u.Quantity:
-        dist_res = np.array(dist_res) * dist_res[0].unit
+        dist_res = u.Quantity(dist_res)
     else:
         dist_res = np.array(dist_res)
 
@@ -1206,7 +1211,12 @@ def bias_per_bin(true, reco, x, relative_scaling_method=None, bins=10):
         mask = bin_index == ii
         b.append(relative_bias(true[mask], reco[mask], relative_scaling_method=relative_scaling_method))
 
-    return x_bins, np.array(b)
+    if type(b[0]) == u.Quantity:
+        b = u.Quantity(b)
+    else:
+        b = np.array(b)
+
+    return x_bins, b
 
 
 @u.quantity_input(energy=u.eV)
