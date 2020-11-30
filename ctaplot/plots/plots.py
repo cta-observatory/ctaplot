@@ -14,6 +14,7 @@ from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
 from ..io.dataset import load_any_resource
 import astropy.units as u
+from astropy.visualization import quantity_support
 
 
 __all__ = ['plot_resolution',
@@ -21,9 +22,8 @@ __all__ = ['plot_resolution',
            'plot_energy_resolution',
            'plot_binned_bias',
            'plot_energy_bias',
-           'plot_impact_parameter_error_per_bin',
+           'plot_impact_parameter_resolution_per_bin',
            'plot_layout_map',
-           'plot_multiplicity_per_telescope_type',
            'plot_multiplicity_hist',
            'plot_angular_resolution_cta_performance',
            'plot_angular_resolution_cta_requirement',
@@ -66,45 +66,50 @@ __all__ = ['plot_resolution',
            ]
 
 
-def plot_energy_distribution(true_energy, reco_energy, ax=None, outfile=None, mask_mc_detected=True):
+@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
+def plot_energy_distribution(true_energy, reco_energy, bins=10, ax=None, outfile=None, mask_mc_detected=True):
     """
     Plot the true_energy distribution of the simulated particles, detected particles and reconstructed particles
     The plot might be saved automatically if `outfile` is provided.
 
     Parameters
     ----------
-    true_energy: `numpy.ndarray`
-        simulated energies
-    reco_energy: `numpy.ndarray`
-        reconstructed energies
+    true_energy: `astropy.Quantity`
+        array of simulated energy
+    reco_energy: `astropy.Quantity`
+        array of reconstructed energy
+    bins: int or `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     outfile: string
         output file path
     mask_mc_detected: `numpy.ndarray`
         mask of detected particles for the SimuE array
+        if True (default), no mask is applied
     """
 
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel(f'Energy {true_energy.unit.to_string("latex")}')
     ax.set_ylabel('Count')
 
     ax.set_xscale('log')
-    count_S, bin_S, o = ax.hist(true_energy, log=True, bins=np.logspace(-3, 3, 30), label="Simulated")
-    count_D, bin_D, o = ax.hist(true_energy[mask_mc_detected], log=True, bins=np.logspace(-3, 3, 30), label="Detected")
-    count_R, bin_R, o = ax.hist(reco_energy, log=True, bins=np.logspace(-3, 3, 30), label="Reconstructed")
+
+    if type(bins) is u.Quantity:
+        bins = bins.to_value(true_energy.unit)
+
+    with quantity_support():
+        _, bins, _ = ax.hist(true_energy, log=True, bins=bins, label="Simulated")
+        ax.hist(true_energy[mask_mc_detected], log=True, bins=bins, label="Detected")
+        ax.hist(reco_energy, log=True, bins=bins, label="Reconstructed")
+
     if outfile is not None:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
-        plt.close()
 
     return ax
 
 
-def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
+@u.quantity_input(energy=u.TeV)
+def plot_multiplicity_per_energy(energy, multiplicity, bins=10, ax=None, outfile=None, **kwargs):
     """
     Plot the telescope multiplicity as a function of the true_energy
     The plot might be saved automatically if `outfile` is provided.
@@ -113,34 +118,40 @@ def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     ----------
     multiplicity: `numpy.ndarray`
         telescope multiplcity
-    energies: `numpy.ndarray`
+    energy: `numpy.ndarray`
         event energies
     ax: `matplotlib.pyplot.axes`
     outfile: string
         path to the output file to save the figure
     """
 
-    assert len(multiplicity) == len(energies), "arrays should have same length"
-    assert len(multiplicity) > 0, "arrays are empty"
-
-    E, m_mean, m_min, m_max, m_per = ana.multiplicity_stat_per_energy(multiplicity, energies)
-
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel('Energy [TeV]')
+    if not len(multiplicity) == len(energy) > 0:
+        raise ValueError("arrays should have same length > 0")
+
+    if type(bins) is int:
+        bins = np.geomspace(energy.min(), energy.max(), bins)
+
+    if type(bins) is u.Quantity:
+        bins = bins.to_value(energy.unit)
+
+    kwargs.setdefault('marker', 'o')
+
+    with quantity_support():
+        ax = plot_binned_stat(energy.value, multiplicity, bins=bins, errorbar=True, ax=ax, **kwargs)
+
+        if 'ls' not in kwargs and 'linestyle' not in kwargs:
+            kwargs.setdefault('ls', '--')
+        kwargs.setdefault('alpha', 0.5)
+        kwargs['label'] = 'min multiplicity'
+        plot_binned_stat(energy.value, multiplicity, bins=bins, statistic='min', ax=ax, **kwargs)
+        kwargs['label'] = 'max multiplicity'
+        plot_binned_stat(energy.value, multiplicity, bins=bins, statistic='max', ax=ax, **kwargs)
+        ax.set_xscale('log')
+
+    ax.set_xlabel(f'Energy [{energy.unit}]')
     ax.set_ylabel('Multiplicity')
-
-    ax.fill_between(E, m_min, m_max, alpha=0.5)
-    ax.plot(E, m_min, '--')
-    ax.plot(E, m_max, '--')
-    ax.plot(E, m_mean, color='red')
-
-    ax.set_xscale('log')
-    ax.set_title("Multiplicity")
 
     if type(outfile) is str:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -148,20 +159,21 @@ def plot_multiplicity_per_energy(multiplicity, energies, ax=None, outfile=None):
     return ax
 
 
+@u.quantity_input(reco_alt=u.rad, reco_az=u.rad, source_alt=u.rad, source_az=u.rad)
 def scatter_events_field_of_view(reco_alt, reco_az, source_alt, source_az, color_scale=None, ax=None):
     """
     Plot a map in angles [in degrees] of the photons seen by the telescope (after reconstruction)
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray`
-        reconstructed altitudes
-    reco_az: `numpy.ndarray`
-        reconstructed azimuths
-    source_alt: float, source Altitude
-        altitude of the source
-    source_az: float, source Azimuth
-        azimuth of the source
+    reco_alt: `astropy.Quantity`
+        array of reconstructed altitudes
+    reco_az: `astropy.Quantity`
+        array of reconstructed azimuths
+    source_alt: `astropy.Quantity`
+        single altitude of the source
+    source_az: `astropy.Quantity`
+        single azimuth of the source
     color_scale: `numpy.ndarray`
         if given, set the colorbar
     ax: `matplotlib.pyplot.axes`
@@ -172,14 +184,12 @@ def scatter_events_field_of_view(reco_alt, reco_az, source_alt, source_az, color
     -------
     ax: `matplitlib.pyplot.axes`
     """
-    dx = 0.05
+    dx = 1 * u.deg
 
     ax = plt.gca() if ax is None else ax
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
 
-    ax.set_xlim(source_az - dx, source_az + dx)
-    ax.set_ylim(source_alt - dx, source_alt + dx)
+    ax.set_xlim(source_az.to(u.deg) - dx, source_az.to(u.deg) + dx)
+    ax.set_ylim(source_alt.to(u.deg) - dx, source_alt.to(u.deg) + dx)
 
     ax.set_xlabel("Az [deg]")
     ax.set_ylabel("Alt [deg]")
@@ -192,17 +202,17 @@ def scatter_events_field_of_view(reco_alt, reco_az, source_alt, source_az, color
     else:
         c = 'blue'
 
-    ax.scatter(reco_az, reco_alt, c=c)
-    ax.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='orange', label="Source position")
+    with quantity_support():
+        ax.scatter(reco_az, reco_alt, c=c)
+        ax.scatter(source_az, source_alt, marker='+', linewidths=3, s=200, c='orange', label="Source position")
 
     ax.legend()
 
     return ax
 
 
-
-
-def plot_theta2(reco_alt, reco_az, true_alt, true_az, bias_correction=False, ax=None, **kwargs):
+@u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad)
+def plot_theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False, ax=None, **kwargs):
     """
     Plot the theta2 distribution and display the corresponding angular resolution in degrees.
     The input must be given in radians.
@@ -234,24 +244,26 @@ def plot_theta2(reco_alt, reco_az, true_alt, true_az, bias_correction=False, ax=
         reco_alt = reco_alt - bias_alt
         reco_az = reco_az - bias_az
 
-    theta2 = np.rad2deg(np.sqrt(ana.theta2(reco_alt, reco_az, true_alt, true_az)))**2
-    ang_res = np.rad2deg(ana.angular_resolution(reco_alt, reco_az, true_alt, true_az))
+    theta2 = ana.theta2(true_alt, reco_alt, true_az, reco_az).to(u.deg**2)
+    ang_res = ana.angular_resolution(true_alt, reco_alt, true_az, reco_az).to(u.deg)
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
     ax.set_ylabel('Count')
 
-    ax.hist(theta2, **kwargs)
+    with quantity_support():
+        ax.hist(theta2, **kwargs)
 
     err_max = (ang_res[2] - ang_res[0])
     err_min = (ang_res[0] - ang_res[1])
-    ax.set_title(rf'angular resolution: {ang_res[0]:.3f}(+{err_max:.1e}/-{err_min:.1e})deg')
+    ax.set_title(rf'angular resolution: {ang_res[0].value:.3f}(+{err_max.value:.1e}/-{err_min.value:.1e})deg')
 
     return ax
 
 
+@u.quantity_input(reco_x=u.m, reco_y=u.m)
 def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
     """
-    Plot the heatmap of the impact points on the site ground and save it under Outfile
+    Plot the heatmap of the impact points on the site ground and save it under outfile
 
     Parameters
     ----------
@@ -266,16 +278,18 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    ax.set_xlabel("X [m]")
-    ax.set_ylabel("Y [m]")
-    ax.axis('equal')
+    unit = reco_x.unit
 
     kwargs.setdefault('norm', LogNorm())
     kwargs.setdefault('cmap', plt.cm.get_cmap('PuBu'))
     kwargs.setdefault('bins', 50)
-    h = ax.hist2d(reco_x, reco_y, **kwargs)
+    h = ax.hist2d(reco_x.to_value(unit), reco_y.to_value(unit), **kwargs)
     cb = plt.colorbar(h[3], ax=ax)
     cb.set_label('Event count')
+
+    ax.set_xlabel(f"X [{unit.to_string('latex')}]")
+    ax.set_ylabel(f"Y [{unit.to_string('latex')}]")
+    ax.axis('equal')
 
     if type(outfile) is str:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -325,57 +339,6 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     return ax
 
 
-def plot_multiplicity_per_telescope_type(multiplicity, telescope_type, ax=None, outfile=None, quartils=False, **kwargs):
-    """
-    Plot the multiplicity for each telescope type
-
-    Parameters
-    ----------
-    multiplicity: `numpy.ndarray`
-    telescope_type: `numpy.ndarray`
-        same shape as `multiplicity`
-    ax: `matplotlib.pyplot.axes`
-    outfile: str
-        path to the output figure. If None, the figure is not saved.
-    quartils: bool - True to plot 50% and 90% quartil mark
-    kwargs: args for `matplotlib.pyplot.hist`
-
-    Returns
-    -------
-    ax: `matplotlib.pyplot.axes`
-    """
-    from matplotlib.ticker import MaxNLocator
-
-    ax = plt.gca() if ax is None else ax
-
-    m = np.sort(multiplicity)
-    xmin = multiplicity.min()
-    xmax = multiplicity.max()
-
-    if 'label' not in kwargs:
-        kwargs['label'] = [str(type) for type in set(telescope_type)]
-    if 'stacked' not in kwargs:
-        kwargs['stacked'] = True
-    kwargs['rwidth'] = 0.7 if 'rwidth' not in kwargs else kwargs['rwidth']
-    kwargs['align'] = 'left'
-
-    mult_by_type = np.array([multiplicity[telescope_type==type] for type in set(telescope_type)])
-    ax.hist(mult_by_type, bins=(xmax-xmin), range=(xmin, xmax), **kwargs)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-    x50 = m[int(np.floor(0.5 * len(m)))]
-    x90 = m[int(np.floor(0.9 * len(m)))]
-    if quartils and (xmin < x50 < xmax):
-        ax.vlines(x50+0.5, 0, len(multiplicity[multiplicity==x50]), label='50%')
-    if quartils and (xmin < x90 < xmax):
-        ax.vlines(x90+0.5, 0, len(multiplicity[multiplicity==x90]), label='90%')
-
-    ax.set_title("Telescope multiplicity")
-    if type(outfile) is str:
-        plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
-
-    return ax
-
 
 def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     """
@@ -421,16 +384,17 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     return ax
 
 
+@u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m)
 def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, **kwargs):
     """
-    Plot the effective area as a function of the true energy
+    Plot the effective area as a function of the true true_energy
 
     Parameters
     ----------
     true_energy: `numpy.ndarray`
-        all simulated event energies
+        all simulated event energy
     reco_energy: `numpy.ndarray`
-        all reconstructed event energies
+        all reconstructed event energy
     simulated_area: float
     ax: `matplotlib.pyplot.axes`
     kwargs: options for `maplotlib.pyplot.errorbar`
@@ -444,36 +408,34 @@ def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=
     >>> import numpy as np
     >>> import ctaplot
     >>> irf = ctaplot.ana.irf_cta()
-    >>> true_e = 10**(-2 + 4*np.random.rand(1000))
-    >>> reco_e = 10**(-2 + 4*np.random.rand(100))
+    >>> true_e = 10**(-2 + 4*np.random.rand(1000)) * u.TeV
+    >>> reco_e = 10**(-2 + 4*np.random.rand(100)) * u.TeV
     >>> ax = ctaplot.plots.plot_effective_area_per_energy(true_e, reco_e, irf.LaPalmaArea_prod3)
     """
 
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel(r'$E_T$ [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-
-    E_bin, Seff = ana.effective_area_per_energy(true_energy, reco_energy, simulated_area)
-    E = ana.logbin_mean(E_bin)
+    e_bin, seff = ana.effective_area_per_energy(true_energy, reco_energy, simulated_area)
+    E = ana.logbin_mean(e_bin)
 
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
-    ax.errorbar(E, Seff, xerr=(E_bin[1:] - E_bin[:-1]) / 2., **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.errorbar(E, seff, xerr=(e_bin[1:] - e_bin[:-1]) / 2., **kwargs)
+
+    ax.set_xlabel(rf'$E_T$ [{E.unit}]')
+    ax.set_ylabel(f'Effective Area [{seff.unit}]')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.grid(True, which='both')
     return ax
 
 
 def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
     """
-    Plot the CTA requirement for the effective area as a function of the true energy
+    Plot the CTA requirement for the effective area as a function of the true true_energy
 
     Parameters
     ----------
@@ -491,23 +453,23 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel(r'$E_T$ [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
-    ax.plot(e_cta, ef_cta, **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.plot(e_cta, ef_cta, **kwargs)
+    ax.grid(True, which='both')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel(rf'$E_T$ [{e_cta.unit}]')
+    ax.set_ylabel(f'Effective Area [{ef_cta.unit}]')
     ax.legend()
     return ax
 
 
 def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
     """
-    Plot the CTA performances for the effective area as a function of the true energy
+    Plot the CTA performances for the effective area as a function of the true true_energy
 
     Parameters
     ----------
@@ -522,19 +484,19 @@ def plot_effective_area_cta_performance(cta_site, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    cta_req = ana.cta_performance(cta_site)
-    e_cta, ef_cta = cta_req.get_effective_area()
+    cta_perf = ana.cta_performance(cta_site)
+    e_cta, ef_cta = cta_perf.get_effective_area()
 
+    kwargs.setdefault('label', f'CTA performance {cta_site}')
+
+    with quantity_support():
+        ax.plot(e_cta, ef_cta, **kwargs)
+
+    ax.grid(True, which='both')
+    ax.set_xlabel(rf"$E_T$ [{e_cta.unit.to_string('latex')}]")
+    ax.set_ylabel(f"Effective Area [{ef_cta.unit.to_string('latex')}]")
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel(r'$E_T$ [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performance {}".format(cta_site)
-
-    ax.plot(e_cta, ef_cta, **kwargs)
-    ax.grid('on', which='both')
     ax.legend()
     return ax
 
@@ -559,16 +521,17 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
-    ax.plot(e_cta, ef_cta, **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.plot(e_cta, ef_cta, **kwargs)
+    ax.grid(True, which='both')
+    ax.set_xlabel(rf"$E_R$ [{e_cta.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"$E^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
+    ax.set_xscale('log')
+    ax.set_yscale('log')
     ax.legend()
     return ax
 
@@ -595,20 +558,23 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
     e_cta, ef_cta = cta_perf.get_sensitivity()
     e_bin = cta_perf.E_bin
 
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
 
     if not 'label' in kwargs:
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
-    ax.errorbar(e_cta, ef_cta, xerr=np.array([e_cta-e_bin[:-1], e_bin[1:]-e_cta]), **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.errorbar(e_cta, ef_cta, xerr=u.Quantity([e_cta-e_bin[:-1], e_bin[1:]-e_cta]), **kwargs)
+
+    ax.grid(True, which='both')
+    ax.set_xlabel(rf"$E_R$ [{e_cta.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"$E^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
+    ax.set_xscale('log')
+    ax.set_yscale('log')
     ax.legend()
     return ax
 
 
+@u.quantity_input(tel_x=u.m, tel_y=u.m)
 def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
     """
     Plot the layout map of telescopes positions
@@ -641,6 +607,7 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
     return ax
 
 
+@u.quantity_input(energy=u.eV)
 def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     """
     Plot a variable resolution as a function of the true_energy
@@ -652,7 +619,7 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     true: `numpy.ndarray`
         true values of the variable
     energy: `numpy.ndarray`
-        event energies in TeV
+        event energy in TeV
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -663,12 +630,8 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
     ax.set_ylabel(r'res')
-    ax.set_xlabel('Energy [TeV]')
+    ax.set_xlabel(f'Energy [{energy.unit.to_string("latex")}]')
     ax.set_xscale('log')
 
     energy_bin, resolution = ana.resolution_per_energy(true, reco, energy)
@@ -678,31 +641,36 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
-    ax.errorbar(E, resolution[:, 0], xerr=(energy_bin[1:] - energy_bin[:-1]) / 2.,
-                yerr=(resolution[:, 0] - resolution[:, 1], resolution[:, 2] - resolution[:, 0]), **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.errorbar(E, resolution[:, 0],
+                    xerr=(energy_bin[1:] - energy_bin[:-1]) / 2.,
+                    yerr=(resolution[:, 0] - resolution[:, 1], resolution[:, 2] - resolution[:, 0]),
+                    **kwargs,
+                    )
+    ax.grid(True, which='both')
     ax.set_title('Resolution')
     return ax
 
 
-def plot_angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, reco_energy,
+@u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, true_energy=u.eV)
+def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, true_energy,
                                        percentile=68.27, confidence_level=0.95, bias_correction=False,
                                        ax=None, **kwargs):
     """
-    Plot the angular resolution as a function of the reconstructed energy
+    Plot the angular resolution as a function of the reconstructed true_energy
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray`
-        reconstructed altitudes in radians
-    reco_az: `numpy.ndarray`
-        reconstructed azimuths in radians
-    true_alt: `numpy.ndarray`
-        true altitudes in radians
-    true_az: `numpy.ndarray`
-        true azimuths in radians
-    reco_energy: `numpy.ndarray`
-        energies in TeV
+    reco_alt: `astropy.Quantity`
+        array of reconstructed altitudes in radians
+    reco_az: `astropy.Quantity`
+        array of reconstructed azimuths in radians
+    true_alt: `astropy.Quantity`
+        array of true altitudes in radians
+    true_az: `astropy.Quantity`
+        array of true azimuths in radians
+    reco_energy: `astropy.Quantity`
+        array of energy in TeV
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
@@ -714,7 +682,7 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, rec
     ax = plt.gca() if ax is None else ax
 
     try:
-        e_bin, RES = ana.angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, reco_energy,
+        e_bin, res = ana.angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, true_energy,
                                                        percentile=percentile,
                                                        confidence_level=confidence_level,
                                                        bias_correction=bias_correction
@@ -723,21 +691,24 @@ def plot_angular_resolution_per_energy(reco_alt, reco_az, true_alt, true_az, rec
         print('Angular resolution ', e)
     else:
         # Angular resolution is traditionally presented in degrees
-        RES = np.degrees(RES)
+        res = res.to(u.deg)
 
-        E = ana.logbin_mean(e_bin)
+        energy = ana.logbin_mean(e_bin)
 
         if 'fmt' not in kwargs:
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel('Angular Resolution [deg]')
-        ax.set_xlabel(r'$E_R$ [TeV]')
+        ax.set_xlabel(rf'$E_R$ [{energy.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Angular resolution')
 
-        ax.errorbar(E, RES[:, 0], xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
-                    yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]), **kwargs)
-        ax.grid('on', which='both')
+        ax.errorbar(energy, res[:, 0],
+                    xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
+                    yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]),
+                    **kwargs,
+                    )
+        ax.grid(True, which='both')
     finally:
         return ax
 
@@ -764,14 +735,15 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
-    ax.plot(e_cta, ar_cta, **kwargs)
+    with quantity_support():
+        ax.plot(e_cta, ar_cta, **kwargs)
 
-    ax.set_ylabel(r'Angular Resolution [deg]')
-    ax.set_xlabel(r'$E_R$ [TeV]')
+    ax.set_ylabel(rf'Angular Resolution [{ar_cta.unit.to_string("latex")}]')
+    ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
 
     ax.set_xscale('log')
     ax.set_title('Angular resolution')
-    ax.grid('on', which='both')
+    ax.grid(True, which='both')
     ax.legend()
     return ax
 
@@ -801,52 +773,24 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
-    ax.set_ylabel('Angular resolution [deg]')
-    ax.set_xlabel(r'$E_R$ [TeV]')
+    ax.set_ylabel(f'Angular resolution [{ar_cta.unit.to_string("latex")}]')
+    ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
     ax.set_title('Angular resolution')
-    ax.grid('on', which='both')
+    ax.grid(True, which='both')
     ax.legend()
     return ax
 
 
-def hist_impact_parameter_error(reco_x, reco_y, true_x, true_y, ax=None, **kwargs):
-    """
-    plot impact parameter error distribution and save it under Outfile
-    Parameters
-    ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
-    Outfile: string
-    """
-    d = ana.impact_parameter_error(reco_x, reco_y, true_x, true_y)
-
-    ax = plt.gca() if ax is None else ax
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel('Error on impact parameter [m]')
-    ax.set_ylabel('Count')
-    ax.set_title('Impact parameter resolution')
-
-    kwargs['bins'] = 40 if 'bins' not in kwargs else kwargs['bins']
-
-    ax.hist(d, **kwargs)
-    return ax
-
-
-def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy, ax=None, **kwargs):
+@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.TeV)
+def plot_impact_parameter_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy, ax=None, **kwargs):
     """
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
     true_x: `numpy.ndarray`
+    reco_x: `numpy.ndarray`
     true_y: `numpy.ndarray`
+    reco_y: `numpy.ndarray`
     energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `ctaplot.plots.plot_resolution`
@@ -855,18 +799,19 @@ def plot_impact_parameter_resolution_per_energy(reco_x, reco_y, true_x, true_y, 
     -------
     `matplotlib.pyplot.axes`
     """
-    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy)
+    bin, res = ana.impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy)
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
-    ax.set_xlabel("Energy")
-    ax.set_ylabel("Impact parameter resolution")
+    ax.set_xlabel(fr"$E_T$ [{true_energy.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"Impact parameter resolution [{reco_x.unit.to_string('latex')}]")
     ax.set_title("Impact parameter resolution as a function of the true_energy")
     ax.grid('on', which='both')
     return ax
 
 
+@u.quantity_input(impact_x=u.m, impact_y=u.m, tel_x=u.m, tel_y=u.m)
 def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
                     ax=None,
-                    Outfile="ImpactMap.png",
+                    outfile=None,
                     hist_kwargs={},
                     scatter_kwargs={},
                     ):
@@ -875,43 +820,49 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
 
     Parameters
     ----------
-    impact_x: `numpy.ndarray`
-    impact_y: `numpy.ndarray`
-    tel_x: `numpy.ndarray`
-    tel_y: `numpy.ndarray`
+    impact_x: `astropy.Quantity`
+    impact_y: `astropy.Quantity`
+    tel_x: `astropy.Quantity`
+    tel_y: `astropy.Quantity`
     tel_types: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     hist_kwargs: `kwargs` for `matplotlib.pyplot.hist`
     scatter_kwargs: `kwargs` for `matplotlib.pyplot.scatter`
-    Outfile: string - name of the output file
+    outfile (optional): string - name of the output file
     """
     ax = plt.gca() if ax is None else ax
 
-    hist_kwargs['bins'] = 40 if 'bins' not in hist_kwargs else hist_kwargs['bins']
-    ax.hist2d(impact_x, impact_y, **hist_kwargs)
+    hist_kwargs.setdefault('bins', 40)
+    unit = impact_x.value
+    ax.hist2d(impact_x.to_value(unit), impact_y.to_value(unit), **hist_kwargs)
     pcm = ax.get_children()[0]
     plt.colorbar(pcm, ax=ax)
 
-    assert (len(tel_x) == len(tel_y)), "tel_x and tel_y should have the same length"
+    if not len(tel_x) == len(tel_y):
+        raise ValueError("tel_x and tel_y should have the same length")
 
-    scatter_kwargs['s'] = 50 if 's' not in scatter_kwargs else scatter_kwargs['s']
+    scatter_kwargs.setdefault('s', 50)
 
     if tel_types and 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
         scatter_kwargs['color'] = tel_types
         assert (len(tel_types) == len(tel_x)), "tel_types and tel_x should have the same length"
-        ax.scatter(tel_x, tel_y, **scatter_kwargs)
+        with quantity_support():
+            ax.scatter(tel_x, tel_y, **scatter_kwargs)
     else:
         if 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
             scatter_kwargs['color'] = 'black'
         scatter_kwargs['marker'] = '+' if 'marker' not in scatter_kwargs else scatter_kwargs['marker']
-        ax.scatter(tel_x, tel_y, **scatter_kwargs)
+        with quantity_support():
+            ax.scatter(tel_x, tel_y, **scatter_kwargs)
 
     ax.axis('equal')
-    plt.savefig(Outfile, bbox_inches="tight", format='png', dpi=200)
+    if outfile is not None:
+        plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
     return ax
 
 
+@u.quantity_input(true_energy=u.eV, reco_energy=u.eV)
 def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
     """
     Plot the true_energy bias
@@ -927,27 +878,30 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(true_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
+    if not len(true_energy) ==  len(reco_energy):
+        raise ValueError("simulated and reconstructured true_energy arrrays should have the same length")
 
     ax = plt.gca() if ax is None else ax
 
-    E_bin, biasE = ana.energy_bias(true_energy, reco_energy)
-    E = ana.logbin_mean(E_bin)
+    e_bin, bias_e = ana.energy_bias(true_energy, reco_energy)
+    energy_center = ana.logbin_mean(e_bin)
 
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
-    ax.set_ylabel("bias (median($E_{reco}/E_{true}$ - 1)")
-    ax.set_xlabel(r'$E_R$ [TeV]')
+    ax.set_ylabel(r"bias (median($E_{reco}/E_{true}$ - 1)")
+    ax.set_xlabel(rf'$E_R$ [{energy_center.unit.to_string("latex")}]')
     ax.set_xscale('log')
     ax.set_title('Energy bias')
 
-    ax.errorbar(E, biasE, xerr=(E - E_bin[:-1], E_bin[1:] - E), **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.errorbar(energy_center, bias_e, xerr=(energy_center - e_bin[:-1], e_bin[1:] - energy_center), **kwargs)
+    ax.grid(True, which='both')
 
     return ax
 
 
+@u.quantity_input(true_energy=u.eV, reco_energy=u.eV)
 def plot_energy_resolution(true_energy, reco_energy,
                            percentile=68.27, confidence_level=0.95, bias_correction=False,
                            ax=None, **kwargs):
@@ -956,8 +910,8 @@ def plot_energy_resolution(true_energy, reco_energy,
 
     Parameters
     ----------
-    true_energy: `numpy.ndarray`
-    reco_energy: `numpy.ndarray`
+    true_energy: `astropy.Quantity`
+    reco_energy: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
     bias_correction: `bool`
     kwargs: args for `matplotlib.pyplot.plot`
@@ -966,33 +920,38 @@ def plot_energy_resolution(true_energy, reco_energy,
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    assert len(true_energy) == len(reco_energy), "simulated and reconstructured true_energy arrrays should have the same length"
+    if not len(true_energy) == len(reco_energy) > 0:
+        raise ValueError("simulated and reconstructured true_energy arrrays should have the same length > 0")
 
     ax = plt.gca() if ax is None else ax
 
     try:
-        E_bin, Eres = ana.energy_resolution_per_energy(true_energy, reco_energy,
-                                                       percentile=percentile,
-                                                       confidence_level=confidence_level,
-                                                       bias_correction=bias_correction,
-                                                       )
+        e_bin, e_res = ana.energy_resolution_per_energy(true_energy, reco_energy,
+                                                        percentile=percentile,
+                                                        confidence_level=confidence_level,
+                                                        bias_correction=bias_correction,
+                                                        )
     except Exception as e:
         print('Energy resolution ', e)
     else:
-        E = ana.logbin_mean(E_bin)
+        energy_center = ana.logbin_mean(e_bin)
 
         if 'fmt' not in kwargs:
             kwargs['fmt'] = 'o'
 
         ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-        ax.set_xlabel(r'$E_R$ [TeV]')
+        ax.set_xlabel(rf'$E_R$ [{energy_center.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Energy resolution')
 
-        ax.errorbar(E, Eres[:, 0], xerr=(E - E_bin[:-1], E_bin[1:] - E),
-                    yerr=(Eres[:, 0] - Eres[:, 1], Eres[:, 2] - Eres[:, 0]), **kwargs)
+        with quantity_support():
+            ax.errorbar(energy_center, e_res[:, 0],
+                        xerr=(energy_center - e_bin[:-1], e_bin[1:] - energy_center),
+                        yerr=(e_res[:, 0] - e_res[:, 1], e_res[:, 2] - e_res[:, 0]),
+                        **kwargs,
+                        )
 
-        ax.grid('on', which='both')
+        ax.grid(True, which='both')
     finally:
         return ax
 
@@ -1021,10 +980,12 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
+
+    with quantity_support():
+        ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
-    ax.grid('on', which='both')
+    ax.grid(True, which='both')
     ax.legend()
     return ax
 
@@ -1053,56 +1014,60 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
     ax.set_ylabel(r"$(\Delta E/E)_{68}$")
-    ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.plot(e_cta, ar_cta, **kwargs)
+    ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
+
+    with quantity_support():
+        ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
-    ax.grid('on', which='both')
+    ax.grid(True, which='both')
     ax.legend()
     return ax
 
 
-def plot_impact_parameter_error_site_center(reco_x, reco_y, true_x, true_y, ax=None, **kwargs):
+@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
+def plot_impact_parameter_error_site_center(true_x, reco_x, true_y, reco_y, ax=None, **kwargs):
     """
     Plot the impact parameter error as a function of the distance to the site center.
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
     kwargs: kwargs for `matplotlib.pyplot.hist2d`
 
     Returns
     -------
-    ax
+    `matplotlib.pyplot.axes`
     """
 
     ax = plt.gca() if ax is None else ax
 
-    imp_err = ana.impact_parameter_error(reco_x, reco_y, true_x, true_y)
+    imp_err = ana.impact_parameter_error(true_x, reco_x, true_y, reco_y)
     distance_center = np.sqrt(true_x ** 2 + true_y ** 2)
 
-    ax.hist2d(distance_center, imp_err, **kwargs)
-    ax.set_xlabel("Distance to site center")
-    ax.set_ylabel("Impact point error")
-    ax.grid('on', which='both')
+    ax.hist2d(distance_center.value, imp_err.value, **kwargs)
+    ax.set_xlabel(f"Distance to site center [{distance_center.unit.to_string('latex')}]")
+    ax.set_ylabel(f"Impact point error [{imp_err.unit.to_string('latex')}]")
+    ax.grid(True, which='both')
     return ax
 
 
-def plot_impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energy,
+@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.eV)
+def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
                                       percentile=68.27, confidence_level=0.95, bias_correction=False,
                                       ax=None, **kwargs):
     """
-    Plot the angular resolution as a function of the true_energy
+    Plot the impact resolution as a function of the true_energy
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: float
-    true_y: float
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
     true_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
@@ -1114,7 +1079,7 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energ
 
     ax = plt.gca() if ax is None else ax
     try:
-        E_bin, RES = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energy,
+        e_bin, res = ana.impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
                                                       percentile=percentile,
                                                       confidence_level=confidence_level,
                                                       bias_correction=bias_correction,
@@ -1122,22 +1087,19 @@ def plot_impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energ
     except Exception as e:
         print('Impact resolution ', e)
     else:
-        E = ana.logbin_mean(E_bin)
+        energy_center = ana.logbin_mean(e_bin)
 
         if 'fmt' not in kwargs:
             kwargs['fmt'] = 'o'
-        ax.set_ylabel('Impact Resolution [m]')
-        ax.set_xlabel('Energy [TeV]')
+        ax.set_ylabel(f'Impact Resolution [{res.unit.to_string("latex")}]')
+        ax.set_xlabel(f'Energy [{energy_center.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Impact resolution')
 
-        ax.errorbar(
-            E, RES[:, 0],
-            xerr=(E - E_bin[:-1], E_bin[1:] - E),
-            yerr=(RES[:, 0] - RES[:, 1], RES[:, 2] - RES[:, 0]),
-            **kwargs,
-            )
-        ax.grid('on', which='both')
+        with quantity_support():
+            plot_resolution(e_bin, res, **kwargs)
+
+        ax.grid(True, which='both')
     finally:
         return ax
 
@@ -1169,7 +1131,7 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     In this example, the colorbar will be log normed
     """
 
-    if 'bins' not in hist2d_args:
+    if 'bins_x' not in hist2d_args:
         hist2d_args['bins'] = 50
     if 'color' not in line_args:
         line_args['color'] = 'black'
@@ -1177,12 +1139,15 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
         line_args['lw'] = 0.4
 
     ax = plt.gca() if ax is None else ax
-    h = ax.hist2d(x, y, **hist2d_args)
-    if colorbar:
-        plt.colorbar(h[3], ax=ax)
 
-    if xy_line:
-        ax.plot(x, x, **line_args)
+    with quantity_support():
+        h = ax.hist2d(x, y, **hist2d_args)
+        if colorbar:
+            plt.colorbar(h[3], ax=ax)
+
+        if xy_line:
+            ax.plot(x, x, **line_args)
+
     return ax
 
 
@@ -1206,10 +1171,12 @@ def plot_dispersion(true_x, reco_x, x_log=False, ax=None, **kwargs):
     ax: `maptlotlib.pyplot.axes`
     """
 
+    if type(true_x) is u.Quantity or type(reco_x) is u.Quantity:
+        raise TypeError("astropy quantities are not supported for that plot yet")
+
     ax = plt.gca() if ax is None else ax
 
-    if not 'bins' in kwargs:
-        kwargs['bins'] = 50
+    kwargs.setdefault('bins', 40)
 
     x = np.log10(true_x) if x_log else true_x
 
@@ -1275,6 +1242,9 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95, line=False, color='red', errorbar=True, s=0)
     """
 
+    if type(x) is u.Quantity or type(y) is u.Quantity:
+        raise TypeError("astropy quantities not supported for this function at the moment")
+
     ax = plt.gca() if ax is None else ax
 
     bin_stat, bin_edges, binnumber = binned_statistic(x, y, statistic=statistic, bins=bins)
@@ -1315,25 +1285,26 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     return ax
 
 
+@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m)
 def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                              true_energy, simu_area, ax=None, **kwargs):
     """
-    Plot the effective area as a function of the true energy.
+    Plot the effective area as a function of the true true_energy.
     The effective area is computed using the `ctaplot.ana.effective_area_per_energy_power_law`.
 
     Parameters
     ----------
-    emin: float
-        min simulated reco_energy
-    emax: float
-        max simulated reco_energy
+    emin: `astropy.Quantity`
+        min simulated true_energy
+    emax: `astropy.Quantity`
+        max simulated true_energy
     total_number_events: int
         total number of simulated events
     spectral_index: float
         spectral index of the simulated power-law
-    true_energy: `numpy.ndarray`
-        true energies of the reconstructed events
-    simu_area: float
+    true_energy: `astropy.Quantity`
+        array of reconstructed events' true energy
+    simu_area: `astropy.Quantity`
         simulated core area
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
@@ -1345,34 +1316,31 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
 
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-    ax.set_xlabel(r'$E_T$ [TeV]')
-    ax.set_ylabel(r'Effective Area $[m^2]$')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-
     ebin, seff = ana.effective_area_per_energy_power_law(emin, emax, total_number_events,
                                                          spectral_index, true_energy, simu_area)
 
     energy_nodes = ana.logbin_mean(ebin)
 
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
-    ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., **kwargs)
-    ax.grid('on', which='both')
+    kwargs.setdefault('fmt', 'o')
+    with quantity_support():
+        ax.errorbar(energy_nodes, seff, xerr=(ebin[1:] - ebin[:-1]) / 2., **kwargs)
+
+    ax.set_xlabel(rf'$E_T$ [{energy_nodes.unit.to_string("latex")}]')
+    ax.set_ylabel(f'Effective Area [{seff.unit.to_string("latex")}]')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.grid(True, which='both')
     return ax
 
 
-def plot_angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, reco_az,
-                                                   alt_pointing, az_pointing, res_degree=False, bins=10, ax=None,
+@u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, alt_pointing=u.rad, az_pointing=u.rad)
+def plot_angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_az,
+                                                   alt_pointing, az_pointing, res_unit=u.deg, bins=10, ax=None,
                                                    **kwargs):
     """
     Plot the angular resolution as a function of the angular separation between events true position and the
     pointing direction. Angles must be given in radians.
-
 
     Parameters
     ----------
@@ -1392,31 +1360,30 @@ def plot_angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, 
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    res_bins, res = ana.angular_resolution_per_off_pointing_angle(true_alt, true_az, reco_alt, reco_az,
+    res_bins, res = ana.angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_az,
                                                                   alt_pointing, az_pointing, bins=bins)
-    res_unit = 'rad'
-    if res_degree:
-        res = np.rad2deg(res)
-        res_unit = 'deg'
+    res = res.to(res_unit)
 
-    ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
-    ax.set_xlabel("Angular separation to pointing direction [rad]")
-    ax.set_ylabel("Angular resolution [{}]".format(res_unit))
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax = plot_resolution(res_bins, res, ax=ax, **kwargs)
+    ax.set_xlabel(f"Angular separation to pointing direction [{res_bins.unit.to_string('latex')}]")
+    ax.set_ylabel(f"Angular resolution [{res.unit.to_string('latex')}]")
+    ax.grid(True, which='both')
     return ax
 
 
-def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, true_x, true_y, bins=10, ax=None, **kwargs):
+@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
+def plot_impact_parameter_resolution_per_bin(x, true_x, reco_x, true_y, reco_y, bins=10, ax=None, **kwargs):
     """
     Plot the impact parameter error per bin
 
     Parameters
     ----------
     x: `numpy.ndarray`
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
     bins: arg for `np.histogram`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `plot_resolution`
@@ -1426,8 +1393,9 @@ def plot_impact_parameter_error_per_bin(x, reco_x, reco_y, true_x, true_y, bins=
     ax: `matplotlib.pyplot.axes`
     """
 
-    bin, res = ana.distance_per_bin(x, reco_x, reco_y, true_x, true_y)
-    ax = plot_resolution(bin, res, bins=bins, ax=ax, **kwargs)
+    bin, res = ana.distance_per_bin(x, true_x, reco_x, true_y, reco_y)
+    with quantity_support():
+        ax = plot_resolution(bin, res, bins=bins, ax=ax, **kwargs)
 
     return ax
 
@@ -1481,7 +1449,7 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
     return ax
 
 
-
+@u.quantity_input(energy=u.eV)
 def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=None, **kwargs):
     """
     Plot the bias per bins of true_energy
@@ -1514,11 +1482,12 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
         kwargs['fmt'] = 'o'
 
     ax.set_ylabel("bias")
-    ax.set_xlabel("log(E/TeV)")
+    ax.set_xlabel(fr"Energy [{mean_bins.unit.to_string('latex')}]")
     ax.set_xscale('log')
 
-    ax.errorbar(mean_bins, bias, xerr=(mean_bins - bins[:-1], bins[1:] - mean_bins), **kwargs)
-    ax.grid('on', which='both')
+    with quantity_support():
+        ax.errorbar(mean_bins, bias, xerr=(mean_bins - bins[:-1], bins[1:] - mean_bins), **kwargs)
+    ax.grid(True, which='both')
     return ax
 
 
@@ -1544,7 +1513,8 @@ def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=No
     ax = plt.gca() if ax is None else ax
     delta_res = new_resolution - reference_resolution
     delta_res[:, 1:] = 0    # the condidence intervals have no meaning here
-    plot_resolution(bins, delta_res, ax=ax, **kwargs)
+    with quantity_support():
+        plot_resolution(bins, delta_res, ax=ax, **kwargs)
     ax.set_ylabel(r"$\Delta$ res")
     ax.set_title("Resolution difference")
 
@@ -1754,14 +1724,13 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
         probability of each event to be a gamma, values must be between 0 and 1
     true_energy: `numpy.ndarray`
         true_energy of the gamma events in TeV
-        true_energy.shape == true_type.shape (but energies for events that are not gammas are not considered)
+        true_energy.shape == true_type.shape (but energy for events that are not gammas are not considered)
     gamma_label: the label of the gamma class in `true_type`.
     energy_bins: None or int or `numpy.ndarray`
         bins in true_energy.
-        If `bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
-        If `bins` is an int, it defines the number of equal-width
-        bins in the given range.
-        If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
+        If `energy_bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
+        If `energy_bins` is an int, it defines the number of equal-width energy_bins in the given range.
+        If `energy_bins` is a sequence, it defines a monotonically increasing array of bin edges,
         including the rightmost edge, allowing for non-uniform bin widths.
     sample_weight : array-like of shape = [n_samples], optional
         Sample weights.
@@ -1912,16 +1881,17 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
     kwargs.setdefault('label', f'MAGIC {key} (Aleksić et al, 2016)')
 
     k = 'sensitivity_' + key
-    ax.errorbar(
-        magic_table['e_center'].to_value(u.TeV),
-        y=(magic_table['e_center'] ** 2 * magic_table[k]).to_value(u.Unit('erg cm-2 s-1')),
-        xerr=[magic_table['e_err_lo'].to_value(u.TeV), magic_table['e_err_hi'].to_value(u.TeV)],
-        yerr=(magic_table['e_center'] ** 2 * magic_table[f'{k}_err']).to_value(u.Unit('erg cm-2 s-1')),
-        **kwargs
-    )
+    with quantity_support():
+        ax.errorbar(
+            magic_table['e_center'].to(u.TeV),
+            y=(magic_table['e_center'] ** 2 * magic_table[k]).to(u.Unit('erg cm-2 s-1')),
+            xerr=[magic_table['e_err_lo'].to(u.TeV), magic_table['e_err_hi'].to(u.TeV)],
+            yerr=(magic_table['e_center'] ** 2 * magic_table[f'{k}_err']).to(u.Unit('erg cm-2 s-1')),
+            **kwargs
+        )
 
     ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.set_ylabel(r'Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
+    ax.set_ylabel(r'$E^2 \cdot$ Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.grid(True, which='both')
@@ -1929,17 +1899,17 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
 
     return ax
 
-
+@u.quantity_input(e_min=u.eV, e_max=u.eV, rate=u.Hz, rate_err=u.Hz)
 def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
     """
-    Plot the background rate [Hz] as a function of the energy [TeV]
+    Plot the background rate [Hz] as a function of the true_energy [TeV]
 
     Parameters
     ----------
     e_min: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     e_max: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     background_rate: `numpy.ndarray`
         Background rate in Hz
     ax: `matplotlib.pyplot.axis`
@@ -1953,10 +1923,11 @@ def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
 
     e_center = np.sqrt(e_min * e_max)
 
-    ax.errorbar(e_center, rate, xerr=[e_center-e_min, e_max-e_center], yerr=rate_err, **kwargs)
+    with quantity_support():
+        ax.errorbar(e_center, rate, xerr=[e_center-e_min, e_max-e_center], yerr=rate_err, **kwargs)
 
-    ax.set_xlabel(r"$E_\mathrm{Reco} [\mathrm{TeV}]$")
-    ax.set_ylabel("Event rate [Hz]")
+    ax.set_xlabel(fr"$E_R$ [{e_center.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"Event rate [{rate.unit.to_string('latex')}]")
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.grid(True, which='both')
@@ -1965,16 +1936,17 @@ def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
     return ax
 
 
+@u.quantity_input(e_min=u.eV, e_max=u.eV, background_rate=u.Hz, background_rate_err=u.Hz)
 def plot_background_rate(e_min, e_max, background_rate, background_rate_err=None, ax=None, **kwargs):
     """
-    Plot the background rate [Hz] as a function of the energy [TeV]
+    Plot the background rate [Hz] as a function of the true_energy [TeV]
 
     Parameters
     ----------
     e_min: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     e_max: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     background_rate: `numpy.ndarray`
         Background rate in Hz
     ax: `matplotlib.pyplot.axis`
@@ -1985,22 +1957,23 @@ def plot_background_rate(e_min, e_max, background_rate, background_rate_err=None
     `matplotlib.pyplot.axis`
     """
 
-    ax = plot_rate(e_min, e_max, background_rate, rate_err=background_rate_err, ax=ax, **kwargs)
-    ax.set_ylabel("Background rate [Hz]")
+    with quantity_support():
+        ax = plot_rate(e_min, e_max, background_rate, rate_err=background_rate_err, ax=ax, **kwargs)
+    ax.set_ylabel(f"Background rate [{background_rate.unit.to_string('latex')}]")
 
     return ax
 
-
+@u.quantity_input(e_min=u.eV, e_max=u.eV, gamma_rate=u.Hz, gamma_rate_err=u.Hz)
 def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kwargs):
     """
-    Plot the gamma rate [Hz] as a function of the energy [TeV]
+    Plot the gamma rate [Hz] as a function of the true_energy [TeV]
 
     Parameters
     ----------
     e_min: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     e_max: `numpy.ndarray`
-        Reconstructed energy in TeV
+        Reconstructed true_energy in TeV
     gamma_rate: `numpy.ndarray`
         gamma rate in Hz
     ax: `matplotlib.pyplot.axis`
@@ -2011,8 +1984,9 @@ def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kw
     `matplotlib.pyplot.axis`
     """
 
-    ax = plot_rate(e_min, e_max, gamma_rate, rate_err=gamma_rate_err, ax=ax, **kwargs)
-    ax.set_ylabel("Gamma rate [Hz]")
+    with quantity_support():
+        ax = plot_rate(e_min, e_max, gamma_rate, rate_err=gamma_rate_err, ax=ax, **kwargs)
+    ax.set_ylabel(fr"Gamma rate [{gamma_rate.unit.to_string('latex')}]")
 
     return ax
 
@@ -2031,13 +2005,14 @@ def plot_background_rate_magic(ax=None, **kwargs):
 
     kwargs.setdefault('label', 'MAGIC (Aleksić et al, 2016)')
 
-    ax = plot_background_rate(magic_table['e_min'].to_value(u.TeV),
-                              magic_table['e_max'].to_value(u.TeV),
-                              magic_table['background_rate'].to_value(u.Hz),
-                              magic_table['background_rate_err'].to_value(u.Hz),
-                              ax=ax,
-                              **kwargs
-                              )
+    with quantity_support():
+        ax = plot_background_rate(magic_table['e_min'].to(u.TeV),
+                                  magic_table['e_max'].to(u.TeV),
+                                  magic_table['background_rate'].to(u.Hz),
+                                  magic_table['background_rate_err'].to(u.Hz),
+                                  ax=ax,
+                                  **kwargs
+                                  )
 
     return ax
 
@@ -2055,12 +2030,13 @@ def plot_gamma_rate_magic(ax=None, **kwargs):
 
     kwargs.setdefault('label', 'MAGIC (Aleksić et al, 2016)')
 
-    ax = plot_gamma_rate(magic_table['e_min'].to_value(u.TeV),
-                         magic_table['e_max'].to_value(u.TeV),
-                         magic_table['gamma_rate'].to_value(u.Hz),
-                         magic_table['gamma_rate_err'].to_value(u.Hz),
-                         ax=ax,
-                         **kwargs
-                         )
+    with quantity_support():
+        ax = plot_gamma_rate(magic_table['e_min'].to(u.TeV),
+                             magic_table['e_max'].to(u.TeV),
+                             magic_table['gamma_rate'].to(u.Hz),
+                             magic_table['gamma_rate_err'].to(u.Hz),
+                             ax=ax,
+                             **kwargs
+                             )
 
     return ax
