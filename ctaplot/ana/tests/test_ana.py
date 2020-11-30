@@ -106,7 +106,7 @@ def test_resolution_per_bin():
 
 def test_resolution_per_bin_empty():
     '''
-    testing for empty bins
+    testing for empty bins_x
     '''
     # For a normal distribution, the resolution at `percentile=68.27` is equal to 1 sigma
     size = 1000000
