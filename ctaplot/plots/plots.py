@@ -219,13 +219,13 @@ def plot_theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False, ax=
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray`
+    reco_alt: `astropy.Quantity`
         reconstructed altitude angle in radians
-    reco_az: `numpy.ndarray`
+    reco_az: `astropy.Quantity`
         reconstructed azimuth angle in radians
-    true_alt: `numpy.ndarray`
+    true_alt: `astropy.Quantity`
         true altitude angle in radians
-    true_az: `numpy.ndarray`
+    true_az: `astropy.Quantity`
         true azimuth angle in radians
     ax: `matplotlib.pyplot.axes`
     **kwargs:
@@ -267,9 +267,9 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
+    reco_x: `astropy.Quantity`
         reconstructed x positions
-    reco_y: `numpy.ndarray`
+    reco_y: `astropy.Quantity`
         reconstructed y positions
     ax: `matplotlib.pyplot.axes`
     outfile: string
@@ -391,11 +391,11 @@ def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=
 
     Parameters
     ----------
-    true_energy: `numpy.ndarray`
+    true_energy: `astropy.Quantity`
         all simulated event energy
-    reco_energy: `numpy.ndarray`
+    reco_energy: `astropy.Quantity`
         all reconstructed event energy
-    simulated_area: float
+    simulated_area: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
     kwargs: options for `maplotlib.pyplot.errorbar`
 
@@ -529,7 +529,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
         ax.plot(e_cta, ef_cta, **kwargs)
     ax.grid(True, which='both')
     ax.set_xlabel(rf"$E_R$ [{e_cta.unit.to_string('latex')}]")
-    ax.set_ylabel(fr"$E^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"$energy^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.legend()
@@ -556,7 +556,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     cta_perf = ana.cta_performance(cta_site)
     e_cta, ef_cta = cta_perf.get_sensitivity()
-    e_bin = cta_perf.E_bin
+    e_bin = cta_perf.energy_bin
 
 
     if not 'label' in kwargs:
@@ -567,7 +567,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     ax.grid(True, which='both')
     ax.set_xlabel(rf"$E_R$ [{e_cta.unit.to_string('latex')}]")
-    ax.set_ylabel(fr"$E^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
+    ax.set_ylabel(fr"$energy^2 \cdot$ Flux Sensitivity [{ef_cta.unit.to_string('latex')}]")
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.legend()
@@ -581,9 +581,9 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
 
     Parameters
     ----------
-    tel_x: `numpy.ndarray`
+    tel_x: `astropy.Quantity`
         telescopes x positions
-    tel_y: `numpy.ndarray`
+    tel_y: `astropy.Quantity`
         telescopes y positions
     tel_type: `numpy.ndarray`
         telescopes types
@@ -618,7 +618,7 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
         reconstructed values of a variable
     true: `numpy.ndarray`
         true values of the variable
-    energy: `numpy.ndarray`
+    energy: `astropy.Quantity`
         event energy in TeV
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.errorbar`
@@ -869,8 +869,8 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
 
     Parameters
     ----------
-    true_energy: `numpy.ndarray`
-    reco_energy: `numpy.ndarray`
+    true_energy: `astropy.Quantity`
+    reco_energy: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
     kwargs: args for `matplotlib.pyplot.plot`
 
@@ -939,7 +939,7 @@ def plot_energy_resolution(true_energy, reco_energy,
         if 'fmt' not in kwargs:
             kwargs['fmt'] = 'o'
 
-        ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+        ax.set_ylabel(r"$(\Delta energy/energy)_{68}$")
         ax.set_xlabel(rf'$E_R$ [{energy_center.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Energy resolution')
@@ -979,7 +979,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+    ax.set_ylabel(r"$(\Delta energy/energy)_{68}$")
     ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
 
     with quantity_support():
@@ -1013,7 +1013,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     if not 'label' in kwargs:
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
-    ax.set_ylabel(r"$(\Delta E/E)_{68}$")
+    ax.set_ylabel(r"$(\Delta energy/energy)_{68}$")
     ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
 
     with quantity_support():
@@ -1458,7 +1458,7 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
     ----------
     simu: `numpy.ndarray`
     reco: `numpy.ndarray`
-    energy: `numpy.ndarray`
+    energy: `astropy.Quantity`
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
     ax: `matplotlib.pyplot.axis`
@@ -1710,6 +1710,7 @@ def plot_roc_curve_gammaness(true_type, gammaness,
     return ax
 
 
+@u.quantity_input(true_energy=u.eV)
 def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma_label=0, energy_bins=None,
                                         ax=None,
                                         **kwargs):
@@ -1722,13 +1723,13 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
         true labels: int, float or str
     gammaness: `numpy.ndarray`
         probability of each event to be a gamma, values must be between 0 and 1
-    true_energy: `numpy.ndarray`
+    true_energy: `astropy.Quantity`
         true_energy of the gamma events in TeV
         true_energy.shape == true_type.shape (but energy for events that are not gammas are not considered)
     gamma_label: the label of the gamma class in `true_type`.
     energy_bins: None or int or `numpy.ndarray`
         bins in true_energy.
-        If `energy_bins` is None, the default binning given by `ctaplot.ana.irf_cta().E_bin` if used.
+        If `energy_bins` is None, the default binning given by `ctaplot.ana.irf_cta().energy_bin` if used.
         If `energy_bins` is an int, it defines the number of equal-width energy_bins in the given range.
         If `energy_bins` is a sequence, it defines a monotonically increasing array of bin edges,
         including the rightmost edge, allowing for non-uniform bin widths.
@@ -1754,7 +1755,7 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
 
     if energy_bins is None:
         irf = ana.irf_cta()
-        energy_bins = irf.E_bin
+        energy_bins = irf.energy_bin
     elif type(energy_bins) is int:
         energy_bins = np.logspace(np.log10(gamma_energy).min(), np.log10(gamma_energy).max(), energy_bins + 1)
 
@@ -1891,7 +1892,7 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
         )
 
     ax.set_xlabel(r'$E_R$ [TeV]')
-    ax.set_ylabel(r'$E^2 \cdot$ Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
+    ax.set_ylabel(r'$energy^2 \cdot$ Flux Sensitivity $[erg.cm^{-2}.s^{-1}]$')
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.grid(True, which='both')
@@ -1906,12 +1907,14 @@ def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
 
     Parameters
     ----------
-    e_min: `numpy.ndarray`
+    e_min: `astropy.Quantity`
         Reconstructed true_energy in TeV
-    e_max: `numpy.ndarray`
+    e_max: `astropy.Quantity`
         Reconstructed true_energy in TeV
-    background_rate: `numpy.ndarray`
-        Background rate in Hz
+    rate: `astropy.Quantity`
+        rate in Hz
+    rate_err: `astropy.Quantity`
+        error bar on the rate, either 1D (symmetrical) or 2D
     ax: `matplotlib.pyplot.axis`
     kwargs: kwargs for  `matplotlib.pyplot.errobar`
 
@@ -1947,8 +1950,10 @@ def plot_background_rate(e_min, e_max, background_rate, background_rate_err=None
         Reconstructed true_energy in TeV
     e_max: `numpy.ndarray`
         Reconstructed true_energy in TeV
-    background_rate: `numpy.ndarray`
+    background_rate: `astropy.Quantity`
         Background rate in Hz
+    background_rate_err: `astropy.Quantity`
+        error bar on the rate, either either 1D (symmetrical) or 2D
     ax: `matplotlib.pyplot.axis`
     kwargs: kwargs for  `matplotlib.pyplot.errobar`
 
@@ -1974,8 +1979,10 @@ def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kw
         Reconstructed true_energy in TeV
     e_max: `numpy.ndarray`
         Reconstructed true_energy in TeV
-    gamma_rate: `numpy.ndarray`
+    gamma_rate: `astropy.Quantity`
         gamma rate in Hz
+    gamma_rate_err: `astropy.Quantity`
+        error bar on the rate, either either 1D (symmetrical) or 2D
     ax: `matplotlib.pyplot.axis`
     kwargs: kwargs for  `matplotlib.pyplot.errobar`
 
@@ -1994,11 +2001,16 @@ def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kw
 
 def plot_background_rate_magic(ax=None, **kwargs):
     """
-    Plot the  MAGIC sensitivity from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+    Plot the  MAGIC background rate from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+
+    Parameters
+    ----------
+    ax: `matplotlib.pyplot.axis` or None
+    kwargs: kwargs for `ctaplot.plots.plot_background_rate`
 
     Returns
     -------
-
+    `matplotlib.pyplot.axis`
     """
 
     magic_table = ana.get_magic_sensitivity()
@@ -2019,11 +2031,16 @@ def plot_background_rate_magic(ax=None, **kwargs):
 
 def plot_gamma_rate_magic(ax=None, **kwargs):
     """
-    Plot the  MAGIC sensitivity from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+    Plot the  MAGIC gamma rate from Aleksić, Jelena, et al. 2016, DOI: 10.1016/j.astropartphys.2015.02.005
+
+    Parameters
+    ----------
+    ax: `matplotlib.pyplot.axis` or None
+    kwargs: kwargs for `ctaplot.plots.plot_gamma_rate`
 
     Returns
     -------
-
+    `matplotlib.pyplot.axis`
     """
 
     magic_table = ana.get_magic_sensitivity()

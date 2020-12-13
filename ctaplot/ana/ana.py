@@ -58,24 +58,24 @@ class irf_cta:
 
     def __init__(self):
         self.site = ''
-        self.E_bin = np.logspace(np.log10(2.51e-02), 2, 19) * u.TeV
-        self.E = logbin_mean(self.E_bin)
+        self.energy_bin = np.logspace(np.log10(2.51e-02), 2, 19) * u.TeV
+        self.energy = logbin_mean(self.energy_bin)
 
         # Area of CTA sites in meters
         self.ParanalArea_prod3 = 19.63e6 * u.m ** 2
         self.LaPalmaArea_prod3 = 11341149 * u.m ** 2  # 6.61e6
 
     @u.quantity_input(E_bin=u.TeV)
-    def set_E_bin(self, E_bin):
-        self.E_bin = E_bin
-        self.E = logbin_mean(self.E_bin)
+    def set_ebin(self, energy_bin):
+        self.energy_bin = energy_bin
+        self.energy = logbin_mean(self.energy_bin)
 
 
 class cta_performance:
     def __init__(self, site):
         self.site = site
-        self.E = np.empty(0) * u.TeV
-        self.E_bin = np.empty(0) * u.TeV
+        self.energy = np.empty(0) * u.TeV
+        self.energy_bin = np.empty(0) * u.TeV
         self.effective_area = np.empty(0) * u.m
         self.angular_resolution = np.empty(0) * u.deg
         self.energy_resolution = np.empty(0)
@@ -97,32 +97,32 @@ class cta_performance:
         """
         if self.site in _south_site_names:
             if observation_time == 50*u.h:
-                E, effective_area = np.loadtxt(
+                energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
-                self.E = E * u.TeV
+                self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
             elif observation_time == 0.5*u.h:
-                E, effective_area = np.loadtxt(
+                energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
-                self.E = E * u.TeV
+                self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
             else:
                 raise ValueError("no effective area for this observation time")
 
         elif self.site in _north_site_names:
             if observation_time == 50*u.h:
-                E, effective_area = np.loadtxt(
+                energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
-                self.E = E * u.TeV
+                self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
             elif observation_time == 0.5*u.h:
-                E, effective_area = np.loadtxt(
+                energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
-                self.E = E * u.TeV
+                self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
             else:
                 raise ValueError("no effective area for this observation time")
@@ -130,15 +130,15 @@ class cta_performance:
         else:
             raise ValueError(f'incorrect site specified, \
             accepted values are {_north_site_names} or {_south_site_names}')
-        return self.E, self.effective_area
+        return self.energy, self.effective_area
 
     def get_angular_resolution(self):
         if self.site in _south_site_names:
-            E, angular_resolution = np.loadtxt(
+            energy, angular_resolution = np.loadtxt(
                 ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Angres.txt'),
                 skiprows=11, unpack=True)
         elif self.site in _north_site_names:
-            E, angular_resolution = np.loadtxt(
+            energy, angular_resolution = np.loadtxt(
                 ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Angres.txt'),
                 skiprows=11, unpack=True)
 
@@ -146,25 +146,25 @@ class cta_performance:
             raise ValueError(f'incorrect site specified, \
                     accepted values are {_north_site_names} or {_south_site_names}')
 
-        self.E = E * u.TeV
+        self.energy = energy * u.TeV
         self.angular_resolution = angular_resolution * u.deg
 
-        return self.E, self.angular_resolution
+        return self.energy, self.angular_resolution
 
     def get_energy_resolution(self):
         if self.site in _south_site_names:
-            E, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Eres.txt'),
+            energy, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Eres.txt'),
                                               skiprows=11, unpack=True)
         elif self.site in _north_site_names:
-            E, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Eres.txt'),
+            energy, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Eres.txt'),
                                               skiprows=11, unpack=True)
         else:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
-        self.E = E * u.TeV
+        self.energy = energy * u.TeV
         self.energy_resolution = energy_resolution
 
-        return self.E, self.energy_resolution
+        return self.energy, self.energy_resolution
 
     @u.quantity_input(observation_time=u.h)
     def get_sensitivity(self, observation_time=50*u.h):
@@ -175,8 +175,8 @@ class cta_performance:
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
-            self.E_bin = np.append(Emin, Emax[-1]) * u.TeV
-            self.E = logbin_mean(self.E_bin)
+            self.energy_bin = np.append(Emin, Emax[-1]) * u.TeV
+            self.energy = logbin_mean(self.energy_bin)
             self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
 
         elif self.site in _north_site_names:
@@ -186,21 +186,21 @@ class cta_performance:
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
-            self.E_bin = np.append(Emin, Emax[-1]) * u.TeV
-            self.E = logbin_mean(self.E_bin)
+            self.energy_bin = np.append(Emin, Emax[-1]) * u.TeV
+            self.energy = logbin_mean(self.energy_bin)
             self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
 
         else:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
 
-        return self.E, self.sensitivity
+        return self.energy, self.sensitivity
 
 
 class cta_requirement:
     def __init__(self, site):
         self.site = site
-        self.E = np.empty(0) * u.TeV
+        self.energy = np.empty(0) * u.TeV
         self.effective_area = np.empty(0) * u.m
         self.angular_resolution = np.empty(0) * u.deg
         self.energy_resolution = np.empty(0)
@@ -222,10 +222,10 @@ class cta_requirement:
         """
         if observation_time == 50 * u.h:
             if self.site in _south_site_names:
-                E, effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
+                energy, effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
                                                          unpack=True)
             elif self.site in _north_site_names:
-                E, effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
+                energy, effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
                                                          unpack=True)
             else:
                 raise ValueError(
@@ -233,48 +233,63 @@ class cta_requirement:
         else:
             raise ValueError(f"no effective area for an observation time of {observation_time}")
 
-        self.E = E * u.TeV
+        self.energy = energy * u.TeV
         self.effective_area = effective_area * u.m
-        return self.E, self.effective_area
+        return self.energy, self.effective_area
 
     def get_angular_resolution(self):
         if self.site in _south_site_names:
-            E, angular_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-AngRes.dat'), unpack=True)
+            energy, angular_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-AngRes.dat'), unpack=True)
         elif self.site in _north_site_names:
-            E, angular_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-AngRes.dat'), unpack=True)
+            energy, angular_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-AngRes.dat'), unpack=True)
         else:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
-        self.E = E * u.TeV
+        self.energy = energy * u.TeV
         self.angular_resolution = angular_resolution * u.deg
-        return self.E, self.angular_resolution
+        return self.energy, self.angular_resolution
 
     def get_energy_resolution(self):
         if self.site in _south_site_names:
-            E, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-ERes.dat'), unpack=True)
+            energy, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_South-50h-ERes.dat'), unpack=True)
         elif self.site in _north_site_names:
-            E, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-ERes.dat'), unpack=True)
+            energy, self.energy_resolution = np.loadtxt(ds.get('cta_requirements_North-50h-ERes.dat'), unpack=True)
         else:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
-        self.E = E * u.TeV
-        return self.E, self.energy_resolution
+        self.energy = energy * u.TeV
+        return self.energy, self.energy_resolution
 
     @u.quantity_input(observation_time=u.h)
     def get_sensitivity(self, observation_time=50*u.h):
         if observation_time == 50*u.h:
             if self.site in _south_site_names:
-                E, sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
+                energy, sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
             elif self.site in _north_site_names:
-                E, sensitivity = np.loadtxt(ds.get('cta_requirements_North-50h.dat'), unpack=True)
+                energy, sensitivity = np.loadtxt(ds.get('cta_requirements_North-50h.dat'), unpack=True)
             else:
                 raise ValueError(
                     f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
         else:
             raise ValueError(f"no sensitivity for an observation time of {observation_time}")
-        self.E = E * u.TeV
+        self.energy = energy * u.TeV
         self.sensitivity = sensitivity * u.erg/(u.cm**2 * u.s)
-        return self.E, self.sensitivity
+        return self.energy, self.sensitivity
+
+
+def assert_unit_equivalency(x, y):
+    """
+    Assert that two quantities are equivalent.
+    Raises an error if not.
+
+    Parameters
+    ----------
+    x: `astropy.Quantity`
+    y: `astropy.Quantity`
+    """
+
+    if not x.unit.is_equivalent(y.unit):
+        raise ValueError(f"Units {x.unit} and {y.unit} are not equivalent")
 
 
 def logspace_decades_nbin(x_min, x_max, n=5):
@@ -292,8 +307,7 @@ def logspace_decades_nbin(x_min, x_max, n=5):
     """
 
     if type(x_min) == u.Quantity or type(x_max) == u.Quantity:
-        if not x_min.unit.is_equivalent(x_max.unit):
-            raise ValueError(f"Units {x_min.unit} and {x_max.unit} are not equivalent")
+        assert_unit_equivalency(x_min, x_max)
 
         unit = x_min.unit
         bins = 10 ** np.arange(np.log10(x_min.to_value(unit)),
@@ -314,28 +328,34 @@ def logspace_decades_nbin(x_min, x_max, n=5):
 @u.quantity_input(energy=u.TeV)
 def stat_per_energy(energy, y, statistic='mean'):
     """
-    Return statistic for the given quantity per true_energy bins.
+    Return statistic for the given quantity per energy bins.
     The binning is given by irf_cta
 
     Parameters
     ----------
-    energy: `numpy.ndarray` (1d)
+    energy: `astropy.Quantity` (1d array)
         event energy
-    y: `numpy.ndarray` (1d)
+    y: `astropy.Quantity` or `numpy.ndarray` (1d array)
+        len(y) == len(energy)
     statistic: string
         see `scipy.stat.binned_statistic`
 
     Returns
     -------
-    `numpy.ndarray, numpy.ndarray, numpy.ndarray`
+    `astropy.Quantity` or `numpy.ndarray`, `astropy.Quantity`, `numpy.ndarray`
         bin_stat, bin_edges, binnumber
     """
 
     irf = irf_cta()
 
-    bin_stat, bin_edges, binnumber = binned_statistic(energy, y, statistic=statistic, bins=irf.E)
+    bin_stat, bin_edges, binnumber = binned_statistic(energy.to_value(u.TeV),
+                                                      y,
+                                                      statistic=statistic,
+                                                      bins=irf.energy_bin.to_value(u.TeV))
+    if type(y==u.Quantity):
+        bin_stat = u.Quantity(bin_stat, y.unit)
 
-    return bin_stat, bin_edges, binnumber
+    return bin_stat, u.Quantity(bin_edges, u.TeV), binnumber
 
 
 def bias(true, reco):
@@ -351,7 +371,8 @@ def bias(true, reco):
     -------
     float
     """
-    assert len(true) == len(reco), "both arrays should have the same size"
+    if not len(true) == len(reco):
+        raise ValueError("both arrays should have the same size")
     if len(true) == 0:
         return 0
     return np.median(reco - true)
@@ -520,7 +541,7 @@ def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_
                               percentile=percentile,
                               confidence_level=confidence_level,
                               bias_correction=bias_correction,
-                              bins=irf.E_bin)
+                              bins=irf.energy_bin)
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
@@ -551,9 +572,9 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
 def energy_resolution_per_energy(true_energy, reco_energy,
                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
-    The true_energy resolution ΔE / E is obtained from the distribution of (ER – ET) / ET, where R and T refer
+    The true_energy resolution ΔE / energy is obtained from the distribution of (ER – ET) / ET, where R and T refer
     to the reconstructed and true energy of gamma-ray events.
-     ΔE/E is the half-width of the interval around 0 which contains given percentile of the distribution.
+     ΔE/energy is the half-width of the interval around 0 which contains given percentile of the distribution.
 
     Parameters
     ----------
@@ -573,14 +594,14 @@ def energy_resolution_per_energy(true_energy, reco_energy,
 
     res_e = []
     irf = irf_cta()
-    for i, e in enumerate(irf.E):
-        mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
+    for i, e in enumerate(irf.energy):
+        mask = (reco_energy > irf.energy_bin[i]) & (reco_energy < irf.energy_bin[i + 1])
         res_e.append(energy_resolution(true_energy[mask], reco_energy[mask],
                                        percentile=percentile,
                                        confidence_level=confidence_level,
                                        bias_correction=bias_correction))
 
-    return irf.E_bin, np.array(res_e)
+    return irf.energy_bin, np.array(res_e)
 
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
@@ -599,11 +620,11 @@ def energy_bias(true_energy, reco_energy):
     """
     bias_e = []
     irf = irf_cta()
-    for i, e in enumerate(irf.E):
-        mask = (reco_energy > irf.E_bin[i]) & (reco_energy < irf.E_bin[i + 1])
+    for i, e in enumerate(irf.energy):
+        mask = (reco_energy > irf.energy_bin[i]) & (reco_energy < irf.energy_bin[i + 1])
         bias_e.append(relative_bias(true_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
-    return irf.E_bin, np.array(bias_e)
+    return irf.energy_bin, np.array(bias_e)
 
 
 def get_angles_pipi(angles):
@@ -643,10 +664,10 @@ def theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False):
 
     Parameters
     ----------
-    reco_alt: 1d `numpy.ndarray` - reconstructed Altitude in radians
-    reco_az: 1d `numpy.ndarray` - reconstructed Azimuth in radians
-    true_alt: 1d `numpy.ndarray` - true Altitude in radians
-    true_az: 1d `numpy.ndarray` -  true Azimuth in radians
+    reco_alt: 1d `astropy.Quantity` - reconstructed Altitude in radians
+    reco_az: 1d `astropy.Quantity` - reconstructed Azimuth in radians
+    true_alt: 1d `astropy.Quantity`- true Altitude in radians
+    true_az: 1d `astropy.Quantity` -  true Azimuth in radians
 
     Returns
     -------
@@ -674,10 +695,10 @@ def angular_resolution(true_alt, reco_alt, true_az, reco_az,
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray` - reconstructed altitude angle in radians
-    reco_az: `numpy.ndarray` - reconstructed azimuth angle in radians
-    true_alt: `numpy.ndarray` - true altitude angle in radians
-    true_az: `numpy.ndarray` - true azimuth angle in radians
+    reco_alt: `astropy.Quantity` - reconstructed altitude angle in radians
+    reco_az: `astropy.Quantity` - reconstructed azimuth angle in radians
+    true_alt: `astropy.Quantity` - true altitude angle in radians
+    true_az: `astropy.Quantity` - true azimuth angle in radians
     percentile: float - percentile, 68 corresponds to one sigma
     confidence_level: float
 
@@ -709,10 +730,10 @@ def angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x,
 
     Parameters
     ----------
-    true_alt: `numpy.ndarray`
-    true_az: `numpy.ndarray`
-    reco_alt: `numpy.ndarray`
-    reco_az: `numpy.ndarray`
+    true_alt: `astropy.Quantity`
+    true_az: `astropy.Quantity`
+    reco_alt: `astropy.Quantity`
+    reco_az: `astropy.Quantity`
     x: `numpy.ndarray`
     percentile: float
         0 < percentile < 100
@@ -752,23 +773,23 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
 
     Parameters
     ----------
-    reco_alt: `numpy.ndarray`
-    reco_az: `numpy.ndarray`
-    true_alt: `numpy.ndarray`
-    true_az: `numpy.ndarray`
-    energy: `numpy.ndarray`
+    reco_alt: `astropy.Quantity`
+    reco_az: `astropy.Quantity`
+    true_alt: `astropy.Quantity`
+    true_az: `astropy.Quantity`
+    energy: `astropy.Quantity`
     **kwargs: args for `angular_resolution`
 
     Returns
     -------
-    (E, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
+    (energy, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
     """
     if not len(reco_alt) == len(reco_az) == len(energy) > 0:
         raise ValueError("reco_alt, reco_az and true_energy must have the same length")
 
     irf = irf_cta()
 
-    e_bin = irf.E_bin
+    e_bin = irf.energy_bin
     res = []
 
     for i, e in enumerate(e_bin[:-1]):
@@ -790,18 +811,18 @@ def angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_
 
     Parameters
     ----------
-    true_alt: `numpy.ndarray`
-    true_az: `numpy.ndarray`
-    reco_alt: `numpy.ndarray`
-    reco_az: `numpy.ndarray`
-    alt_pointing: `numpy.ndarray`
-    az_pointing: `numpy.ndarray`
-    bins: float or `numpy.ndarray`
+    true_alt: `astropy.Quantity`
+    true_az: `astropy.Quantity`
+    reco_alt: `astropy.Quantity`
+    reco_az: `astropy.Quantity`
+    alt_pointing: `astropy.Quantity`
+    az_pointing: `astropy.Quantity`
+    bins: float or `astropy.Quantity`
 
     Returns
     -------
     (bins, res):
-        bins: 1D `numpy.ndarray`
+        bins: 1D `astropy.Quantity`
         res: 2D `numpy.ndarray` - resolutions with confidence intervals (output from `ctaplot.ana.resolution`)
     """
     ang_sep_to_pointing = angular_separation_altaz(true_alt, true_az, alt_pointing, az_pointing)
@@ -832,22 +853,23 @@ def effective_area_per_energy(true_energy, reco_energy, simu_area):
 
     Parameters
     ----------
-    true_energy: 1d numpy array
-    reco_energy: 1d numpy array
-    simu_area: float - area on which events are simulated
+    true_energy: `astropy.Quantity`
+    reco_energy: `astropy.Quantity`
+    simu_area: `astropy.Quantity`
+        area on which events are simulated
 
     Returns
     -------
-    (E, Seff) : (1d numpy array, 1d numpy array)
+    (energy, Seff) : (1d numpy array, 1d numpy array)
     """
 
     irf = irf_cta()
 
-    count_R, bin_R = np.histogram(reco_energy, bins=irf.E_bin)
-    count_S, bin_S = np.histogram(true_energy, bins=irf.E_bin)
+    count_R, bin_R = np.histogram(reco_energy, bins=irf.energy_bin)
+    count_S, bin_S = np.histogram(true_energy, bins=irf.energy_bin)
 
     np.seterr(divide='ignore', invalid='ignore')
-    return irf.E_bin, np.nan_to_num(simu_area * count_R / count_S)
+    return irf.energy_bin, np.nan_to_num(simu_area * count_R / count_S)
 
 
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
@@ -856,10 +878,10 @@ def impact_parameter_error(true_x, reco_x, true_y, reco_y):
     compute the error distance between true and reconstructed impact parameters
     Parameters
     ----------
-    reco_x: 1d numpy array
-    reco_y: 1d numpy array
-    true_x: 1d numpy array
-    true_y: 1d numpy array
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
 
     Returns
     -------
@@ -894,11 +916,10 @@ def angular_separation_altaz(alt1, az1, alt2, az2):
 
     Parameters
     ----------
-    alt1: 1d `numpy.ndarray`, altitude of the first pointing direction
-    az1: 1d `numpy.ndarray` azimuth of the first pointing direction
-    alt2: 1d `numpy.ndarray`, altitude of the second pointing direction
-    az2: 1d `numpy.ndarray`, azimuth of the second pointing direction
-    unit: 'deg' or 'rad'
+    alt1: 1d `astropy.Quantity`, altitude of the first pointing direction
+    az1: 1d `astropy.Quantity` azimuth of the first pointing direction
+    alt2: 1d `astropy.Quantity`, altitude of the second pointing direction
+    az2: 1d `astropy.Quantity`, azimuth of the second pointing direction
 
     Returns
     -------
@@ -942,10 +963,10 @@ def impact_resolution(true_x, reco_x, true_y, reco_y,
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
     percentile: float
         see `ctaplot.ana.resolution`
     confidence_level: float
@@ -979,11 +1000,11 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
 
     Parameters
     ----------
-    reco_x: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    true_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
-    true_energy: `numpy.ndarray`
+    reco_x: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
+    true_energy: `astropy.Quantity`
     percentile: float
         see `ctaplot.ana.resolution`
     confidence_level: float
@@ -1003,7 +1024,7 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
     irf = irf_cta()
 
     return distance2d_resolution_per_bin(true_energy, reco_x, reco_y, true_x, true_y,
-                                         bins=irf.E_bin,
+                                         bins=irf.energy_bin,
                                          percentile=percentile,
                                          confidence_level=confidence_level,
                                          bias_correction=bias_correction,
@@ -1073,12 +1094,13 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
 
     Parameters
     ----------
-    emin: float
-    emax: float
+    emin: `astropy.Quantity`
+    emax: `astropy.Quantity`
     total_number_events: int
     spectral_index: float
-    true_energy: 1d numpy array
-    simu_area: float - area on which events are simulated
+    true_energy: 1d `astropy.Quantity`
+    simu_area: `astropy.Quantity`
+        area on which events are simulated
 
     Returns
     -------
@@ -1086,7 +1108,7 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
     """
 
     irf = irf_cta()
-    bins = irf.E_bin
+    bins = irf.energy_bin
     simu_per_bin = power_law_integrated_distribution(emin, emax, total_number_events, spectral_index, bins)
     count_R, bin_R = np.histogram(true_energy, bins=bins)
 
@@ -1228,17 +1250,17 @@ def bias_per_energy(true, reco, energy, relative_scaling_method=None):
     ----------
     true: `numpy.ndarray`
     reco: `numpy.ndarray`
-    energy: : `numpy.ndarray`
+    energy: : `astropy.Quantity`
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
 
     Returns
     -------
-    bins, bias: `numpy.ndarray, numpy.ndarray`
+    bins, bias: `astropy.Quantity`, `numpy.ndarray`
     """
 
     irf = irf_cta()
-    energy_bin = irf.E_bin
+    energy_bin = irf.energy_bin
 
     return bias_per_bin(true, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
 
