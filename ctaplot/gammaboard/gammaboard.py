@@ -11,11 +11,12 @@ from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown, Text, Label
 from sklearn.metrics import roc_auc_score, precision_recall_curve
 from sklearn.multiclass import LabelBinarizer
+from astropy.table import Table
+import astropy.units as u
 from .. import plots
 from .. import ana
 from ..io.dataset import get
 from ..io import read_lst_dl2_data
-
 
 __all__ = ['open_dashboard',
            'load_data_from_h5',
@@ -60,6 +61,30 @@ def load_data_from_h5(experiment, experiments_directory):
     """
     assert experiment in os.listdir(experiments_directory)
 
+    unit_map = {
+        'mc_impact_x': u.m,
+        'mc_impact_y': u.m,
+        'reco_impact_x': u.m,
+        'reco_impact_y': u.m,
+        'mc_energy': u.TeV,
+        'reco_energy': u.TeV,
+        'mc_alt': u.rad,
+        'reco_alt': u.rad,
+        'mc_az': u.rad,
+        'reco_az': u.rad,
+        'mc_altitude': u.rad,
+        'reco_altitude': u.rad,
+        'mc_azimuth': u.rad,
+        'reco_azimuth': u.rad,
+    }
+
+    def add_unit(data):
+        for name, unit in unit_map.items():
+            if name in data.columns:
+                data[name] *= unit
+        return data
+
+
     result_files = find_data_files(experiment, experiments_directory)
     result_data = []
     for r_file in result_files:
@@ -72,7 +97,9 @@ def load_data_from_h5(experiment, experiments_directory):
                 print(e)
                 continue
         result_data.append(data)
-    return pd.concat(result_data)
+    data = Table.from_pandas(pd.concat(result_data))
+    data = add_unit(data)
+    return data
 
 
 # TODO Find a more suitable naming
@@ -130,7 +157,8 @@ def load_run_configs(experiment, experiments_directory):
                             r_config[col] = None
                         else:
                             r_config[col] = np.unique(run_config[:][col])
-                r_config['scattering_surface'] = r_config['max_scatter_range']**2 * np.pi * np.sin(r_config['max_alt'])
+                r_config['scattering_surface'] = r_config['max_scatter_range'] ** 2 * np.pi * np.sin(
+                    r_config['max_alt'])
             except:
                 print('Could not load run config info from file {}'.format(file))
             else:
@@ -232,11 +260,12 @@ class Experiment(object):
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_particle' in self.data:
-                self.gamma_data = self.data[self.data.mc_particle == GAMMA_ID]
-                self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == GAMMA_ID]
-                noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
+                self.gamma_data = self.data[self.data['mc_particle'] == GAMMA_ID]
+                self.reco_gamma_data = self.gamma_data[self.gamma_data['reco_particle'] == GAMMA_ID]
+                noise_mask = (self.data['mc_particle'] != GAMMA_ID) & (self.data['reco_particle'] == GAMMA_ID)
                 self.noise_reco_gamma = self.data[noise_mask]
-                self.gammaness_cut = 1/len(np.unique(self.data.mc_particle)) if 'reco_gammaness' in self.data else None
+                self.gammaness_cut = 1 / len(np.unique(self.data['mc_particle']))\
+                    if 'reco_gammaness' in self.data.columns else None
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -245,8 +274,8 @@ class Experiment(object):
     def update_gammaness_cut(self, new_cut):
 
         self.gammaness_cut = new_cut
-        self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-        noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_gammaness >= self.gammaness_cut)
+        self.reco_gamma_data = self.gamma_data[self.gamma_data['reco_particle'] >= self.gammaness_cut]
+        noise_mask = (self.data['mc_particle'] != GAMMA_ID) & (self.data['reco_particle'] >= self.gammaness_cut)
         self.noise_reco_gamma = self.data[noise_mask]
 
     def get_data(self):
@@ -266,11 +295,11 @@ class Experiment(object):
 
     def plot_angular_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.gamma_data.reco_altitude,
-                                                                       self.gamma_data.reco_azimuth,
-                                                                       self.gamma_data.mc_altitude,
-                                                                       self.gamma_data.mc_azimuth,
-                                                                       self.gamma_data.mc_energy,
+            self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.gamma_data['reco_altitude'],
+                                                                       self.gamma_data['reco_azimuth'],
+                                                                       self.gamma_data['mc_altitude'],
+                                                                       self.gamma_data['mc_azimuth'],
+                                                                       self.gamma_data['mc_energy'],
                                                                        bias_correction=self.bias_correction,
                                                                        ax=ax,
                                                                        label=self.name,
@@ -281,11 +310,11 @@ class Experiment(object):
     def plot_angular_resolution_reco(self, ax=None):
         if self.get_loaded():
             if self.reco_gamma_data is not None:
-                self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
-                                                                           self.reco_gamma_data.reco_azimuth,
-                                                                           self.reco_gamma_data.mc_altitude,
-                                                                           self.reco_gamma_data.mc_azimuth,
-                                                                           self.reco_gamma_data.mc_energy,
+                self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data['reco_altitude'],
+                                                                           self.reco_gamma_data['reco_azimuth'],
+                                                                           self.reco_gamma_data['mc_altitude'],
+                                                                           self.reco_gamma_data['mc_azimuth'],
+                                                                           self.reco_gamma_data['mc_energy'],
                                                                            bias_correction=self.bias_correction,
                                                                            ax=ax,
                                                                            label=self.name + '_reco',
@@ -301,8 +330,8 @@ class Experiment(object):
 
     def plot_energy_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data.mc_energy,
-                                                           self.gamma_data.reco_energy,
+            self.ax_ene_res = plots.plot_energy_resolution(self.gamma_data['mc_energy'],
+                                                           self.gamma_data['reco_energy'],
                                                            bias_correction=self.bias_correction,
                                                            ax=ax,
                                                            label=self.name,
@@ -312,8 +341,8 @@ class Experiment(object):
     def plot_energy_resolution_reco(self, ax=None):
         if self.get_loaded():
             if self.reco_gamma_data is not None:
-                self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data.mc_energy,
-                                                               self.reco_gamma_data.reco_energy,
+                self.ax_ene_res = plots.plot_energy_resolution(self.reco_gamma_data['mc_energy'],
+                                                               self.reco_gamma_data['reco_energy'],
                                                                bias_correction=self.bias_correction,
                                                                ax=ax,
                                                                label=self.name + '_reco',
@@ -329,11 +358,11 @@ class Experiment(object):
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data.reco_impact_x,
-                                                                      self.gamma_data.reco_impact_y,
-                                                                      self.gamma_data.mc_impact_x,
-                                                                      self.gamma_data.mc_impact_y,
-                                                                      self.gamma_data.mc_energy,
+            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data['reco_impact_x'],
+                                                                      self.gamma_data['reco_impact_y'],
+                                                                      self.gamma_data['mc_impact_x'],
+                                                                      self.gamma_data['mc_impact_y'],
+                                                                      self.gamma_data['mc_energy'],
                                                                       bias_correction=self.bias_correction,
                                                                       ax=ax,
                                                                       label=self.name,
@@ -347,11 +376,11 @@ class Experiment(object):
     def plot_impact_resolution_reco(self, ax=None):
         if self.get_loaded():
             if self.reco_gamma_data is not None:
-                self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
-                                                                          self.reco_gamma_data.reco_impact_y,
-                                                                          self.reco_gamma_data.mc_impact_x,
-                                                                          self.reco_gamma_data.mc_impact_y,
-                                                                          self.reco_gamma_data.mc_energy,
+                self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data['reco_impact_x'],
+                                                                          self.reco_gamma_data['reco_impact_y'],
+                                                                          self.reco_gamma_data['mc_impact_x'],
+                                                                          self.reco_gamma_data['mc_impact_y'],
+                                                                          self.reco_gamma_data['mc_energy'],
                                                                           bias_correction=self.bias_correction,
                                                                           ax=ax,
                                                                           label=self.name + '_reco',
@@ -384,7 +413,7 @@ class Experiment(object):
                                                                self.run_configs[0]['energy_range_max'],
                                                                self.run_configs[0]['num_showers'],
                                                                self.run_configs[0]['spectral_index'],
-                                                               self.gamma_data.reco_energy,
+                                                               self.gamma_data['reco_energy'],
                                                                self.run_configs[0]['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
@@ -401,7 +430,7 @@ class Experiment(object):
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.reco_gamma_data['reco_energy'],
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
@@ -409,7 +438,7 @@ class Experiment(object):
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        self.noise_reco_gamma['reco_energy'],
                         self.run_configs[0]['scattering_surface']
                     )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
@@ -446,7 +475,7 @@ class Experiment(object):
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             self.reco_gamma_data['reco_energy'],
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
@@ -454,11 +483,11 @@ class Experiment(object):
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        self.noise_reco_gamma['reco_energy'],
                         self.run_configs[0]['scattering_surface']
                     )
                     assert np.all(E_reco_prot == E_max) and np.all(E_reco == E_max), \
-                        'To compute effective area ratio, the energy bins must be the same'
+                        'To compute effective area ratio, the true_energy bins must be the same'
 
                     self.ax_eff_area_ratio.plot(E_reco[:-1], S_reco / S_max,
                                                 label=self.name + '_ratio_gamma',
@@ -480,14 +509,14 @@ class Experiment(object):
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded() and 'reco_gammaness' in self.data:
-            self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
-                                                         self.data.reco_gammaness,
+            self.ax_roc = plots.plot_roc_curve_gammaness(self.data['mc_particle'],
+                                                         self.data['reco_gammaness'],
                                                          label=self.name,
                                                          ax=ax,
                                                          color=self.color)
-            binarized_class = np.ones_like(self.data.mc_particle)
-            binarized_class[self.data.mc_particle != GAMMA_ID] = 0
-            self.auc = roc_auc_score(binarized_class, self.data.reco_gammaness,)
+            binarized_class = np.ones_like(self.data['mc_particle'])
+            binarized_class[self.data['mc_particle'] != GAMMA_ID] = 0
+            self.auc = roc_auc_score(binarized_class, self.data['reco_gammaness'], )
             self.set_plotted(True)
 
     def plot_pr_curve(self, ax=None):
@@ -495,10 +524,10 @@ class Experiment(object):
             self.ax_pr = plt.gca() if ax is None else ax
             if 'reco_gammaness' in self.data:
                 label_binarizer = LabelBinarizer()
-                binarized_classes = label_binarizer.fit_transform(self.data.mc_particle)
+                binarized_classes = label_binarizer.fit_transform(self.data['mc_particle'])
                 ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
                 precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
-                                                              self.data.reco_gammaness,
+                                                              self.data['reco_gammaness'],
                                                               pos_label=GAMMA_ID)
             else:
                 raise ValueError
@@ -508,9 +537,9 @@ class Experiment(object):
     def plot_gammaness_cut(self):
         if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
             if 'reco_gammaness' in self.data:
-                true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-                noise = self.data[self.data.mc_particle != GAMMA_ID]
-                false_positive = noise[noise.reco_gammaness >= self.gammaness_cut]
+                true_positive = self.gamma_data[self.gamma_data['reco_gammaness'] >= self.gammaness_cut]
+                noise = self.data[self.data['mc_particle'] != GAMMA_ID]
+                false_positive = noise[noise['reco_gammaness'] >= self.gammaness_cut]
             else:
                 raise ValueError
             try:
@@ -600,7 +629,7 @@ class Experiment(object):
         if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
             self.visibility_angular_resolution_plot(visible)
             self.visibility_angular_resolution_reco_plot(visible)
-        if 'reco_energy' in self.data:
+        if 'true_energy' in self.data:
             self.visibility_energy_resolution_plot(visible)
             self.visibility_energy_resolution_reco_plot(visible)
         if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
@@ -610,13 +639,13 @@ class Experiment(object):
             self.visibility_roc_curve_plot(visible)
             self.visibility_pr_curve_plot(visible)
             self.visibility_gammaness_cut(visible)
-        if 'mc_energy' in self.data:
+        if 'true_energy' in self.data:
             self.visibility_effective_area_plot(visible)
             self.visibility_effective_area_ratio_plot(visible)
 
     def plot_energy_matrix(self, ax=None, colorbar=True):
         """
-        Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
+        Plot the diffusion matrix (reco vs true) for the log of the energy of the experiment
         Args
             ax (`matplotlib.pyplot.Axes`)
 
@@ -626,26 +655,28 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = np.log10(self.gamma_data.mc_energy)
-            reco = np.log10(self.gamma_data.reco_energy)
-            ax = plots.plot_migration_matrix(mc, reco,
+            simu = np.log10(self.gamma_data['mc_energy'])
+            reco = np.log10(self.gamma_data['reco_energy'])
+            ax = plots.plot_migration_matrix(simu, reco,
                                              ax=ax,
                                              colorbar=colorbar,
                                              hist2d_args={
                                                  'bins': 100,
-                                                 'cmap': self.cm, 'cmin': 1})
-            ax.plot(mc, mc, color='teal')
+                                                 'cmap': self.cm,
+                                                 'cmin': 1},
+                                             )
+            ax.plot(simu, simu, color='teal')
             ax.axis('equal')
-            ax.set_xlim(mc.min(), mc.max())
-            ax.set_ylim(mc.min(), mc.max())
-            ax.set_xlabel('True energy [log(E/TeV)]')
-            ax.set_ylabel('Reco energy [log(E/TeV)]')
+            ax.set_xlim(simu.min(), simu.max())
+            ax.set_ylim(simu.min(), simu.max())
+            ax.set_xlabel('True energy [log(energy/TeV)]')
+            ax.set_ylabel('Reco energy [log(energy/TeV)]')
             ax.set_title(self.name)
         return ax
 
     def plot_altitude_matrix(self, ax=None, colorbar=True):
         """
-        Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
+        Plot the diffusion matrix (reco vs true) for the log of the energy of the experiment
         Args
             ax (`matplotlib.pyplot.Axes`)
 
@@ -655,18 +686,20 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_altitude
-            reco = self.gamma_data.reco_altitude
-            ax = plots.plot_migration_matrix(mc, reco,
+            simu = self.gamma_data['mc_altitude']
+            reco = self.gamma_data['reco_altitude']
+            ax = plots.plot_migration_matrix(simu, reco,
                                              ax=ax,
                                              colorbar=colorbar,
                                              hist2d_args={
                                                  'bins': 100,
-                                                 'cmap': self.cm, 'cmin': 1})
-            ax.plot(mc, mc, color='teal')
+                                                 'cmap': self.cm,
+                                                 'cmin': 1},
+                                             )
+            ax.plot(simu, simu, color='teal')
             ax.axis('equal')
-            ax.set_xlim(mc.min(), mc.max())
-            ax.set_ylim(mc.min(), mc.max())
+            ax.set_xlim(simu.min(), simu.max())
+            ax.set_ylim(simu.min(), simu.max())
             ax.set_xlabel('True altitude')
             ax.set_ylabel('Reco altitude')
             ax.set_title(self.name)
@@ -674,7 +707,7 @@ class Experiment(object):
 
     def plot_azimuth_matrix(self, ax=None, colorbar=True):
         """
-        Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
+        Plot the diffusion matrix (reco vs true) for the log of the energy of the experiment
        Args
             ax (`matplotlib.pyplot.Axes`)
 
@@ -684,18 +717,20 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_azimuth
-            reco = self.gamma_data.reco_azimuth
-            ax = plots.plot_migration_matrix(mc, reco,
+            simu = self.gamma_data['mc_azimuth']
+            reco = self.gamma_data['reco_azimuth']
+            ax = plots.plot_migration_matrix(simu, reco,
                                              ax=ax,
                                              colorbar=colorbar,
                                              hist2d_args={
                                                  'bins': 100,
-                                                 'cmap': self.cm, 'cmin': 1})
-            ax.plot(mc, mc, color='teal')
+                                                 'cmap': self.cm,
+                                                 'cmin': 1},
+                                             )
+            ax.plot(simu, simu, color='teal')
             ax.axis('equal')
-            ax.set_xlim(mc.min(), mc.max())
-            ax.set_ylim(mc.min(), mc.max())
+            ax.set_xlim(simu.min(), simu.max())
+            ax.set_ylim(simu.min(), simu.max())
             ax.set_xlabel('True azimuth')
             ax.set_ylabel('Reco azimuth')
             ax.set_title(self.name)
@@ -703,7 +738,7 @@ class Experiment(object):
 
     def plot_impact_x_matrix(self, ax=None, colorbar=True):
         """
-        Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
+        Plot the diffusion matrix (reco vs true) for the log of the energy of the experiment
         Args
             ax (`matplotlib.pyplot.Axes`)
 
@@ -713,18 +748,20 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_impact_x
-            reco = self.gamma_data.reco_impact_x
-            ax = plots.plot_migration_matrix(mc, reco,
+            simu = self.gamma_data['mc_impact_x']
+            reco = self.gamma_data['reco_impact_x']
+            ax = plots.plot_migration_matrix(simu, reco,
                                              ax=ax,
                                              colorbar=colorbar,
                                              hist2d_args={
                                                  'bins': 100,
-                                                 'cmap': self.cm, 'cmin': 1})
-            ax.plot(mc, mc, color='teal')
+                                                 'cmap': self.cm,
+                                                 'cmin': 1},
+                                             )
+            ax.plot(simu, simu, color='teal')
             ax.axis('equal')
-            ax.set_xlim(mc.min(), mc.max())
-            ax.set_ylim(mc.min(), mc.max())
+            ax.set_xlim(simu.min(), simu.max())
+            ax.set_ylim(simu.min(), simu.max())
             ax.set_xlabel('True impact X')
             ax.set_ylabel('Reco impact X')
             ax.set_title(self.name)
@@ -732,7 +769,7 @@ class Experiment(object):
 
     def plot_impact_y_matrix(self, ax=None, colorbar=True):
         """
-        Plot the diffusion matrix (reco vs simu) for the log of the energies of the experiment
+        Plot the diffusion matrix (reco vs true) for the log of the energy of the experiment
         Args
             ax (`matplotlib.pyplot.Axes`)
 
@@ -742,18 +779,20 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_impact_y
-            reco = self.gamma_data.reco_impact_y
-            ax = plots.plot_migration_matrix(mc, reco,
+            simu = self.gamma_data['mc_impact_y']
+            reco = self.gamma_data['reco_impact_y']
+            ax = plots.plot_migration_matrix(simu, reco,
                                              ax=ax,
                                              colorbar=colorbar,
                                              hist2d_args={
                                                  'bins': 100,
-                                                 'cmap': self.cm, 'cmin': 1})
-            ax.plot(mc, mc, color='teal')
+                                                 'cmap': self.cm,
+                                                 'cmin': 1},
+                                             )
+            ax.plot(simu, simu, color='teal')
             ax.axis('equal')
-            ax.set_xlim(mc.min(), mc.max())
-            ax.set_ylim(mc.min(), mc.max())
+            ax.set_xlim(simu.min(), simu.max())
+            ax.set_ylim(simu.min(), simu.max())
             ax.set_xlabel('True impact Y')
             ax.set_ylabel('Reco impact Y')
             ax.set_title(self.name)
@@ -764,7 +803,7 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     if 'figsize' not in kwargs:
         kwargs['figsize'] = (25, 5)
     fig, axes = plt.subplots(1, 5, **kwargs)
-    if 'reco_energy' in exp.data:
+    if 'true_energy' in exp.data:
         axes[0] = exp.plot_energy_matrix(ax=axes[0], colorbar=colorbar)
     if 'reco_altitude' in exp.data:
         axes[1] = exp.plot_altitude_matrix(ax=axes[1], colorbar=colorbar)
@@ -861,7 +900,7 @@ def plot_exp_on_fig(exp, fig):
     if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
         exp.plot_angular_resolution_reco(ax=ax_ang_res)
-    if 'reco_energy' in exp.data:
+    if 'true_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
         exp.plot_energy_resolution_reco(ax=ax_ene_res)
     if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
@@ -871,7 +910,7 @@ def plot_exp_on_fig(exp, fig):
         exp.plot_roc_curve(ax=ax_roc)
         exp.plot_pr_curve(ax=ax_pr)
         exp.plot_gammaness_cut()
-    if 'mc_energy' in exp.data:
+    if 'true_energy' in exp.data:
         exp.plot_effective_area(ax=ax_eff_area)
         exp.plot_effective_area_reco(ax=ax_eff_area)
         exp.plot_effective_area_ratio(ax=ax_eff_area_ratio)
@@ -883,7 +922,7 @@ def update_legend(visible_experiments, fig):
     legend_elements = [Line2D([0], [0], marker='o', color=exp.color, label=name)
                        for (name, exp) in sorted(experiments.items())]
     legend_ax.legend(handles=legend_elements, loc='best',
-               ncol=5)
+                     ncol=5)
 
 
 def update_auc_legend(visible_experiments, ax):
@@ -1004,11 +1043,11 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
 
         if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
             exp.update_angular_resolution_reco(ax_ang_res)
-        if 'reco_energy' in exp.data:
+        if 'true_energy' in exp.data:
             exp.update_energy_resolution_reco(ax_ene_res)
         if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
             exp.update_impact_resolution_reco(ax_imp_res)
-        if 'mc_energy' in exp.data:
+        if 'true_energy' in exp.data:
             exp.update_effective_area_reco(ax_eff_area)
             exp.update_effective_area_ratio(ax_eff_area_ratio)
         if 'reco_gammaness' in exp.data:
@@ -1026,6 +1065,7 @@ def create_update_color(experiments_dict, fig_resolution, visible_experiments):
         fig_resolution: the figure containing the plots
         visible_experiments: the set of plotted experiments
     """
+
     def update_color(change):
         """
         Function to be called when a `ipywidgets.Button` is clicked
@@ -1096,6 +1136,7 @@ def create_display_res(experiment):
                 experiment.visibility_energy_resolution_plot(visible)
             if experiment.ax_imp_res is not None:
                 experiment.visibility_impact_resolution_plot(visible)
+
     return display_on_click
 
 
@@ -1103,6 +1144,7 @@ def create_update_site(gb):
     def update_site(change):
         gb.site = change['new'].lower()
         update_reference_plot(gb)
+
     return update_site
 
 
@@ -1110,6 +1152,7 @@ def create_update_reference(gb):
     def update_reference(change):
         gb.ref = change['new'].lower()
         update_reference_plot(gb)
+
     return update_reference
 
 
@@ -1190,8 +1233,8 @@ class GammaBoard(object):
             site (string): 'south' for Paranal and 'north' for LaPalma
             ref (None or string): whether to plot the 'performances' or 'requirements' corresponding to the chosen site
     """
-    def __init__(self, experiments_directory, bias_correction=False, figsize=(12, 20)):
 
+    def __init__(self, experiments_directory, bias_correction=False, figsize=(12, 20)):
         self.experiments_dict = {exp_name: Experiment(exp_name, experiments_directory,
                                                       bias_correction)
                                  for exp_name in os.listdir(experiments_directory)
