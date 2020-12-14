@@ -250,22 +250,22 @@ def test_plot_roc_curve_gammaness_per_energy():
     size = 1000
     simu_classes = np.random.choice(['gamma', 'proton', 'electron', 'positron'], size=size)
     gamma_reco_proba = np.random.rand(size)
-    simu_energy = 10 ** (np.random.rand(size) * 4 - 2)
+    simu_energy = 10 ** (np.random.rand(size) * 4 - 2) * u.TeV
 
     plots.plot_roc_curve_gammaness_per_energy(simu_classes, gamma_reco_proba, simu_energy,
                                               gamma_label='gamma',
-                                              energy_bins=np.array([1e-2, 1e-1, 1, 10, 100]),
+                                              energy_bins=u.Quantity([1e-2, 1e-1, 1, 10, 100], u.TeV),
                                               alpha=0.6, lw=3,
                                               )
 
     size = 1000
     simu_classes = np.random.choice(['gamma', 'proton'], size=size)
     gamma_reco_proba = np.random.rand(size)
-    simu_energy = 10 ** (np.random.rand(size) * 4 - 2)
+    simu_energy = 10 ** (np.random.rand(size) * 4 - 2) * u.TeV
 
     plots.plot_roc_curve_gammaness_per_energy(simu_classes, gamma_reco_proba, simu_energy,
                                               gamma_label='gamma',
-                                              energy_bins=np.array([1e-2, 1e-1, 1, 10, 100]),
+                                              energy_bins=u.Quantity([1e-2, 1e-1, 1, 10, 100], u.TeV),
                                               alpha=0.6, lw=3,
                                               )
 
