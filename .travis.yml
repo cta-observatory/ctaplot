@@ -22,5 +22,11 @@ install:
   - conda activate ctaplot
   - pip install .
 
+before_script:
+  - pip install coverage
+
 script:
-  - pytest
+  - coverage run -m pytest
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
