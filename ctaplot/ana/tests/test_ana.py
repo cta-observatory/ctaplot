@@ -6,7 +6,7 @@ np.random.seed(42)
 
 
 def test_logspace_decades_nbin():
-    ca = ana.logspace_decades_nbin(0.1, 10.1, n=10)
+    ca = ana.logspace_decades_nbin(0.1, 10., n=10)
     assert len(ca) == 21
     np.testing.assert_almost_equal(np.log10(ca), np.linspace(-1, 1, 21))
     np.testing.assert_almost_equal(ca[0], 0.1)
@@ -266,7 +266,7 @@ def test_get_magic_sensitivity():
     from astropy.table.table import QTable
     import astropy.units as u
     table = ana.get_magic_sensitivity()
-    assert type(table) is QTable
+    assert isinstance(table, QTable)
     assert table['e_min'][0] == 63 * u.GeV
 
 
@@ -277,7 +277,3 @@ def test_stat_per_energy():
     stat, edges, number = ana.stat_per_energy(energy, y, statistic='mean')
     np.testing.assert_almost_equal(stat, 1, decimal=2)
 
-
-def test_logspace_decades_nbin():
-    bins = ana.logspace_decades_nbin(1, 10, 10)
-    np.testing.assert_allclose(np.linspace(0, 1, num=11), np.log10(bins))
