@@ -307,7 +307,7 @@ def logspace_decades_nbin(x_min, x_max, n=5):
     bins: 1D Numpy array
     """
     eps = 1e-10
-    if type(x_min) == u.Quantity or type(x_max) == u.Quantity:
+    if isinstance(x_min, u.Quantity) or isinstance(x_max, u.Quantity):
         assert_unit_equivalency(x_min, x_max)
 
         unit = x_min.unit
@@ -353,7 +353,7 @@ def stat_per_energy(energy, y, statistic='mean'):
                                                       y,
                                                       statistic=statistic,
                                                       bins=irf.energy_bin.to_value(u.TeV))
-    if type(y) == u.Quantity:
+    if isinstance(y, u.Quantity):
         bin_stat = u.Quantity(bin_stat, y.unit)
 
     return bin_stat, u.Quantity(bin_edges, u.TeV), binnumber
@@ -515,7 +515,7 @@ def resolution_per_bin(x, y_true, y_reco,
                               )
                    )
 
-    if type(res[0]) == u.Quantity:
+    if isinstance(res[0], u.Quantity):
         res = u.Quantity(res)
     else:
         res = np.array(res)
@@ -950,7 +950,7 @@ def logbin_mean(x_bin):
     -------
     `numpy.ndarray`
     """
-    if not type(x_bin) == u.Quantity:
+    if not isinstance(x_bin, u.Quantity):
         return 10 ** ((np.log10(x_bin[:-1]) + np.log10(x_bin[1:])) / 2.)
     else:
         unit = x_bin.unit
@@ -1204,7 +1204,7 @@ def distance2d_resolution_per_bin(x, true_x, reco_x, true_y, reco_y,
                                               relative_scaling_method=relative_scaling_method,
                                               )
                         )
-    if type(dist_res[0]) == u.Quantity:
+    if isinstance(dist_res[0], u.Quantity):
         dist_res = u.Quantity(dist_res)
     else:
         dist_res = np.array(dist_res)
@@ -1236,7 +1236,7 @@ def bias_per_bin(true, reco, x, relative_scaling_method=None, bins=10):
         mask = bin_index == ii
         b.append(relative_bias(true[mask], reco[mask], relative_scaling_method=relative_scaling_method))
 
-    if type(b[0]) == u.Quantity:
+    if isinstance(b[0], u.Quantity):
         b = u.Quantity(b)
     else:
         b = np.array(b)
