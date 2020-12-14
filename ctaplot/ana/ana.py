@@ -9,7 +9,6 @@ from ..io import dataset as ds
 from scipy.stats import binned_statistic, norm
 from astropy.io.ascii import read
 import astropy.units as u
-from astropy.utils.decorators import deprecated
 
 _relative_scaling_method = 's1'
 
@@ -48,6 +47,7 @@ __all__ = ['irf_cta',
            'percentile_confidence_interval',
            'logbin_mean',
            'get_magic_sensitivity',
+           'logspace_decades_nbin',
            ]
 
 
@@ -295,6 +295,7 @@ def assert_unit_equivalency(x, y):
 def logspace_decades_nbin(x_min, x_max, n=5):
     """
     return an array with logspace and n bins / decade
+
     Parameters
     ----------
     x_min: float
@@ -303,22 +304,22 @@ def logspace_decades_nbin(x_min, x_max, n=5):
 
     Returns
     -------
-    1D Numpy array
+    bins: 1D Numpy array
     """
-
+    eps = 1e-10
     if type(x_min) == u.Quantity or type(x_max) == u.Quantity:
         assert_unit_equivalency(x_min, x_max)
 
         unit = x_min.unit
         bins = 10 ** np.arange(np.log10(x_min.to_value(unit)),
-                               np.log10(x_max.to_value(unit)),
+                               np.log10(x_max.to_value(unit)+eps),
                                1 / n,
                                )
         return u.Quantity(bins, x_min.unit, copy=False)
 
     else:
         bins = 10 ** np.arange(np.log10(x_min),
-                               np.log10(x_max),
+                               np.log10(x_max+eps),
                                1 / n,
                                )
         return bins
@@ -352,7 +353,7 @@ def stat_per_energy(energy, y, statistic='mean'):
                                                       y,
                                                       statistic=statistic,
                                                       bins=irf.energy_bin.to_value(u.TeV))
-    if type(y==u.Quantity):
+    if type(y) == u.Quantity:
         bin_stat = u.Quantity(bin_stat, y.unit)
 
     return bin_stat, u.Quantity(bin_edges, u.TeV), binnumber
@@ -521,6 +522,7 @@ def resolution_per_bin(x, y_true, y_reco,
 
     return x_bins, res
 
+
 @u.quantity_input(true_energy=u.TeV)
 def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
@@ -542,6 +544,7 @@ def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_
                               confidence_level=confidence_level,
                               bias_correction=bias_correction,
                               bins=irf.energy_bin)
+
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):

@@ -238,6 +238,12 @@ def test_bias_empty():
     assert ana.bias(x, x) == 0
 
 
+def test_bias():
+    reco = np.random.normal(loc=0, scale=0.00001, size=100) * u.TeV
+    true = np.random.normal(loc=1, scale=0.00001, size=100) * u.TeV
+    np.testing.assert_almost_equal(ana.bias(true, reco).to_value(u.TeV), -1, decimal=3)
+
+
 def test_bias_per_bin():
     size = 100000
     true = np.ones(size)
@@ -262,3 +268,16 @@ def test_get_magic_sensitivity():
     table = ana.get_magic_sensitivity()
     assert type(table) is QTable
     assert table['e_min'][0] == 63 * u.GeV
+
+
+def test_stat_per_energy():
+    size = 10000
+    energy = 10**(np.random.uniform(-2, 2, size=size)) * u.TeV
+    y = np.random.normal(loc=1, scale=0.01, size=size)
+    stat, edges, number = ana.stat_per_energy(energy, y, statistic='mean')
+    np.testing.assert_almost_equal(stat, 1, decimal=2)
+
+
+def test_logspace_decades_nbin():
+    bins = ana.logspace_decades_nbin(1, 10, 10)
+    np.testing.assert_allclose(np.linspace(0, 1, num=11), np.log10(bins))
