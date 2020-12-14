@@ -94,7 +94,7 @@ def plot_energy_distribution(true_energy, reco_energy, bins=10, ax=None, outfile
 
     ax.set_xscale('log')
 
-    if type(bins) is u.Quantity:
+    if isinstance(bins, u.Quantity):
         bins = bins.to_value(true_energy.unit)
 
     with quantity_support():
@@ -130,10 +130,10 @@ def plot_multiplicity_per_energy(energy, multiplicity, bins=10, ax=None, outfile
     if not len(multiplicity) == len(energy) > 0:
         raise ValueError("arrays should have same length > 0")
 
-    if type(bins) is int:
+    if isinstance(bins, int):
         bins = np.geomspace(energy.min(), energy.max(), bins)
 
-    if type(bins) is u.Quantity:
+    if isinstance(bins, u.Quantity):
         bins = bins.to_value(energy.unit)
 
     kwargs.setdefault('marker', 'o')
@@ -153,7 +153,7 @@ def plot_multiplicity_per_energy(energy, multiplicity, bins=10, ax=None, outfile
     ax.set_xlabel(f'Energy [{energy.unit}]')
     ax.set_ylabel('Multiplicity')
 
-    if type(outfile) is str:
+    if isinstance(outfile, str):
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
     return ax
@@ -291,7 +291,7 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
     ax.set_ylabel(f"Y [{unit.to_string('latex')}]")
     ax.axis('equal')
 
-    if type(outfile) is str:
+    if isinstance(outfile, str):
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
     return ax
@@ -333,7 +333,7 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     ax.set_title("Telescope multiplicity")
     ax.grid(True)
 
-    if type(outfile) is str:
+    if isinstance(outfile, str):
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
     return ax
@@ -1171,7 +1171,7 @@ def plot_dispersion(true_x, reco_x, x_log=False, ax=None, **kwargs):
     ax: `maptlotlib.pyplot.axes`
     """
 
-    if type(true_x) is u.Quantity or type(reco_x) is u.Quantity:
+    if isinstance(true_x, u.Quantity) or isinstance(reco_x, u.Quantity):
         raise TypeError("astropy quantities are not supported for that plot yet")
 
     ax = plt.gca() if ax is None else ax
@@ -1242,7 +1242,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     >>> plot_binned_stat(x, y, statistic='median', bins=40, percentile=95, line=False, color='red', errorbar=True, s=0)
     """
 
-    if type(x) is u.Quantity or type(y) is u.Quantity:
+    if isinstance(x, u.Quantity) or isinstance(y, u.Quantity):
         raise TypeError("astropy quantities not supported for this function at the moment")
 
     ax = plt.gca() if ax is None else ax
@@ -1756,7 +1756,7 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
     if energy_bins is None:
         irf = ana.irf_cta()
         energy_bins = irf.energy_bin
-    elif type(energy_bins) is int:
+    elif isinstance(energy_bins, int):
         energy_bins = np.logspace(np.log10(gamma_energy).min(), np.log10(gamma_energy).max(), energy_bins + 1)
 
     bin_index = np.digitize(gamma_energy, energy_bins)
