@@ -82,7 +82,7 @@ class cta_performance:
         self.sensitivity = np.empty(0) * u.erg / (u.cm ** 2 * u.s)
 
     @u.quantity_input(observation_time=u.h)
-    def get_effective_area(self, observation_time=50*u.h):
+    def get_effective_area(self, observation_time=50 * u.h):
         """
         Return the effective area at the given observation time in hours.
         NB: Only 50h supported
@@ -96,13 +96,13 @@ class cta_performance:
         `numpy.ndarray`, `numpy.ndarray`
         """
         if self.site in _south_site_names:
-            if observation_time == 50*u.h:
+            if observation_time == 50 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
-            elif observation_time == 0.5*u.h:
+            elif observation_time == 0.5 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
@@ -112,13 +112,13 @@ class cta_performance:
                 raise ValueError("no effective area for this observation time")
 
         elif self.site in _north_site_names:
-            if observation_time == 50*u.h:
+            if observation_time == 50 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
                 self.effective_area = effective_area * u.m
-            elif observation_time == 0.5*u.h:
+            elif observation_time == 0.5 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
@@ -154,10 +154,10 @@ class cta_performance:
     def get_energy_resolution(self):
         if self.site in _south_site_names:
             energy, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-Eres.txt'),
-                                              skiprows=11, unpack=True)
+                                                   skiprows=11, unpack=True)
         elif self.site in _north_site_names:
             energy, energy_resolution = np.loadtxt(ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-Eres.txt'),
-                                              skiprows=11, unpack=True)
+                                                   skiprows=11, unpack=True)
         else:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
@@ -167,11 +167,11 @@ class cta_performance:
         return self.energy, self.energy_resolution
 
     @u.quantity_input(observation_time=u.h)
-    def get_sensitivity(self, observation_time=50*u.h):
+    def get_sensitivity(self, observation_time=50 * u.h):
         if self.site in _south_site_names:
-            observation_times = {50*u.h: 'CTA-Performance-prod3b-v2-South-20deg-50h-DiffSens.txt',
-                                 0.5*u.h: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt',
-                                 5*u.h: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt'
+            observation_times = {50 * u.h: 'CTA-Performance-prod3b-v2-South-20deg-50h-DiffSens.txt',
+                                 0.5 * u.h: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt',
+                                 5 * u.h: 'CTA-Performance-prod3b-v2-South-20deg-05h-DiffSens.txt'
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
@@ -180,9 +180,9 @@ class cta_performance:
             self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
 
         elif self.site in _north_site_names:
-            observation_times = {50*u.h: 'CTA-Performance-prod3b-v2-North-20deg-50h-DiffSens.txt',
-                                 0.5*u.h: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt',
-                                 5*u.h: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt'
+            observation_times = {50 * u.h: 'CTA-Performance-prod3b-v2-North-20deg-50h-DiffSens.txt',
+                                 0.5 * u.h: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt',
+                                 5 * u.h: 'CTA-Performance-prod3b-v2-North-20deg-05h-DiffSens.txt'
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
@@ -207,7 +207,7 @@ class cta_requirement:
         self.sensitivity = np.empty(0) * u.erg / (u.cm ** 2 * u.s)
 
     @u.quantity_input(observation_time=u.h)
-    def get_effective_area(self, observation_time=50*u.h):
+    def get_effective_area(self, observation_time=50 * u.h):
         """
         Return the effective area at the given observation time in hours.
         NB: Only 0.5h supported
@@ -223,10 +223,10 @@ class cta_requirement:
         if observation_time == 50 * u.h:
             if self.site in _south_site_names:
                 energy, effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
-                                                         unpack=True)
+                                                    unpack=True)
             elif self.site in _north_site_names:
                 energy, effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
-                                                         unpack=True)
+                                                    unpack=True)
             else:
                 raise ValueError(
                     f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
@@ -261,8 +261,8 @@ class cta_requirement:
         return self.energy, self.energy_resolution
 
     @u.quantity_input(observation_time=u.h)
-    def get_sensitivity(self, observation_time=50*u.h):
-        if observation_time == 50*u.h:
+    def get_sensitivity(self, observation_time=50 * u.h):
+        if observation_time == 50 * u.h:
             if self.site in _south_site_names:
                 energy, sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
             elif self.site in _north_site_names:
@@ -273,7 +273,7 @@ class cta_requirement:
         else:
             raise ValueError(f"no sensitivity for an observation time of {observation_time}")
         self.energy = energy * u.TeV
-        self.sensitivity = sensitivity * u.erg/(u.cm**2 * u.s)
+        self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
         return self.energy, self.sensitivity
 
 
@@ -312,18 +312,17 @@ def logspace_decades_nbin(x_min, x_max, n=5):
 
         unit = x_min.unit
         bins = 10 ** np.arange(np.log10(x_min.to_value(unit)),
-                               np.log10(x_max.to_value(unit)+eps),
+                               np.log10(x_max.to_value(unit) + eps),
                                1 / n,
                                )
         return u.Quantity(bins, x_min.unit, copy=False)
 
     else:
         bins = 10 ** np.arange(np.log10(x_min),
-                               np.log10(x_max+eps),
+                               np.log10(x_max + eps),
                                1 / n,
                                )
         return bins
-
 
 
 @u.quantity_input(energy=u.TeV)
@@ -679,14 +678,15 @@ def theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False):
     assert (len(reco_az) == len(reco_alt))
     assert (len(reco_alt) == len(true_alt))
     if len(reco_alt) == 0:
-        return np.empty(0)
+        return np.empty(0) * u.rad**2
     if bias_correction:
         bias_alt = bias(true_alt, reco_alt)
         bias_az = bias(true_az, reco_az)
     else:
-        bias_alt = 0
-        bias_az = 0
+        bias_alt = 0 * u.rad
+        bias_az = 0 * u.rad
     return angular_separation_altaz(reco_alt - bias_alt, reco_az - bias_az, true_alt, true_az) ** 2
+
 
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad)
 def angular_resolution(true_alt, reco_alt, true_az, reco_az,
@@ -713,15 +713,15 @@ def angular_resolution(true_alt, reco_alt, true_az, reco_az,
         b_alt = bias(true_alt, reco_alt)
         b_az = bias(true_az, reco_az)
     else:
-        b_alt = 0
-        b_az = 0
+        b_alt = 0 * u.rad
+        b_az = 0 * u.rad
 
     reco_alt_corr = reco_alt - b_alt
     reco_az_corr = reco_az - b_az
 
     t2 = np.sort(theta2(true_alt, reco_alt_corr, true_az, reco_az_corr))
-
     ang_res = _percentile(t2, percentile)
+
     return np.sqrt(np.append(ang_res, percentile_confidence_interval(t2, percentile, confidence_level)))
 
 
@@ -804,7 +804,8 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
                                       )
                    )
 
-    return e_bin, u.Quantity(res)
+    res_q = u.Quantity(res)
+    return e_bin, res_q.to(u.deg)
 
 
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, alt_pointing=u.rad, az_pointing=u.rad)
@@ -833,7 +834,7 @@ def angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_
     return angular_resolution_per_bin(true_alt, true_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
 
 
-@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m)
+@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m ** 2)
 def effective_area(true_energy, reco_energy, simu_area):
     """
     Compute the effective area from a list of simulated energy and reconstructed energy
@@ -849,7 +850,7 @@ def effective_area(true_energy, reco_energy, simu_area):
     return simu_area * len(reco_energy) / len(true_energy)
 
 
-@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m)
+@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m ** 2)
 def effective_area_per_energy(true_energy, reco_energy, simu_area):
     """
     Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
@@ -906,7 +907,10 @@ def _percentile(x, percentile=68.27):
     float
     """
     if len(x) == 0:
-        return 0
+        if isinstance(x, u.Quantity):
+            return 0 * x.unit
+        else:
+            return 0
     else:
         return np.percentile(x, percentile)
 
@@ -929,11 +933,13 @@ def angular_separation_altaz(alt1, az1, alt2, az2):
     1d `numpy.ndarray` or float, angular separation
     """
 
-    cosdelta = np.cos(alt1) * np.cos(alt2) * np.cos(az1 - az2) + np.sin(alt1) * np.sin(alt2)
+    cosdelta = np.cos(alt1.to_value(u.rad)) * np.cos(alt2.to_value(u.rad)) * np.cos(
+        (az1 - az2).to_value(u.rad)) + np.sin(alt1.to_value(u.rad)) * np.sin(alt2.to_value(u.rad))
+
     cosdelta[cosdelta > 1] = 1.
     cosdelta[cosdelta < -1] = -1.
 
-    ang_sep = np.arccos(cosdelta)
+    ang_sep = np.arccos(cosdelta) * u.rad
 
     return ang_sep
 
@@ -1090,7 +1096,8 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
         y = y0 * (bins[1:] ** (spectral_index + 1) - bins[:-1] ** (spectral_index + 1)) / (spectral_index + 1)
     return y
 
-@u.quantity_input(emin=u.eV, emax=u.eV, reco_energy=u.eV, simu_area=u.m)
+
+@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m ** 2)
 def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, true_energy, simu_area):
     """
     Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
@@ -1107,7 +1114,7 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
 
     Returns
     -------
-    (true_energy, effective_area) : (1d numpy array, 1d numpy array)
+    (true_energy bins, effective_area) : (`astropy.Quantity` array, 1d numpy array)
     """
 
     irf = irf_cta()
