@@ -362,10 +362,6 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     """
     ax = plt.gca() if ax is None else ax
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
     ax.set_ylabel(r'res')
 
     if not log:
@@ -374,8 +370,8 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
         x = ana.logbin_mean(bins)
         ax.set_xscale('log')
 
-    if 'fmt' not in kwargs:
-        kwargs['fmt'] = 'o'
+
+    kwargs.setdefault('fmt', 'o')
 
     ax.errorbar(x, res[:, 0], xerr=[x - bins[:-1], bins[1:] - x],
                 yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]), **kwargs)
@@ -688,26 +684,21 @@ def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, tru
                                                        bias_correction=bias_correction
                                                        )
     except Exception as e:
-        print('Angular resolution ', e)
+        print('Angular resolution could not be computed', e)
     else:
         # Angular resolution is traditionally presented in degrees
         res = res.to(u.deg)
 
         energy = ana.logbin_mean(e_bin)
 
-        if 'fmt' not in kwargs:
-            kwargs['fmt'] = 'o'
+        with quantity_support():
+            ax = plot_resolution(e_bin, res, ax=ax, **kwargs)
 
         ax.set_ylabel('Angular Resolution [deg]')
         ax.set_xlabel(rf'$E_R$ [{energy.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Angular resolution')
 
-        ax.errorbar(energy, res[:, 0],
-                    xerr=(e_bin[1:] - e_bin[:-1]) / 2.,
-                    yerr=(res[:, 0] - res[:, 1], res[:, 2] - res[:, 0]),
-                    **kwargs,
-                    )
         ax.grid(True, which='both')
     finally:
         return ax
