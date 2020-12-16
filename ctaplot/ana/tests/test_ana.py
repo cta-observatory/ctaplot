@@ -277,3 +277,33 @@ def test_stat_per_energy():
     stat, edges, number = ana.stat_per_energy(energy, y, statistic='mean')
     np.testing.assert_almost_equal(stat, 1, decimal=2)
 
+
+def test_effective_area():
+    simu = 10**np.random.rand(100000) * u.TeV
+    reco = 10**np.random.rand(1000) * u.TeV
+    simu_area = 1*u.km**2
+    np.testing.assert_almost_equal(len(reco)/len(simu)*simu_area.to_value(u.m**2),
+                                   ana.effective_area(simu, reco, simu_area).to_value(u.m**2),
+                                   )
+
+
+def test_effective_area_per_energy():
+    simu = np.random.uniform(1, 2, 1000000) * u.TeV
+    reco = np.random.uniform(1, 2, 10000) * u.TeV
+    simu_area = 1 * u.km ** 2
+    expected_area = len(reco) / len(simu) * simu_area.to_value(u.m ** 2)
+    bins, eff_area = ana.effective_area_per_energy(simu, reco, simu_area)
+    np.testing.assert_almost_equal(eff_area[eff_area!=0].to_value(u.m ** 2)/expected_area,
+                                   1,
+                                   decimal=2
+                                   )
+
+
+def test_theta2():
+    true_alt = np.random.rand(10) * u.rad
+    reco_alt = np.random.rand(10) * u.rad
+    true_az = np.random.rand(10) * u.rad
+    reco_az = np.random.rand(10) * u.rad
+    t2 = ana.theta2(true_alt, reco_alt, true_az, reco_az)
+    assert t2.unit.is_equivalent(u.deg**2)
+
