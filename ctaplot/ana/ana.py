@@ -678,7 +678,7 @@ def theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False):
     assert (len(reco_az) == len(reco_alt))
     assert (len(reco_alt) == len(true_alt))
     if len(reco_alt) == 0:
-        return np.empty(0) * u.rad**2
+        return np.empty(0) * u.rad ** 2
     if bias_correction:
         bias_alt = bias(true_alt, reco_alt)
         bias_az = bias(true_az, reco_az)
@@ -757,8 +757,8 @@ def angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x,
     ang_res = []
     for ii in np.arange(1, len(x_bins)):
         mask = bin_index == ii
-        ang_res.append(angular_resolution(reco_alt[mask], reco_az[mask],
-                                          true_alt[mask], true_az[mask],
+        ang_res.append(angular_resolution(true_alt[mask], reco_alt[mask],
+                                          true_az[mask], reco_az[mask],
                                           percentile=percentile,
                                           confidence_level=confidence_level,
                                           bias_correction=bias_correction,
@@ -797,7 +797,7 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
 
     for i, e in enumerate(e_bin[:-1]):
         mask = (energy > e_bin[i]) & (energy <= e_bin[i + 1])
-        res.append(angular_resolution(reco_alt[mask], reco_az[mask], true_alt[mask], true_az[mask],
+        res.append(angular_resolution(true_alt[mask], reco_alt[mask], true_az[mask], reco_az[mask],
                                       percentile=percentile,
                                       confidence_level=confidence_level,
                                       bias_correction=bias_correction,
@@ -831,7 +831,7 @@ def angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_
     """
     ang_sep_to_pointing = angular_separation_altaz(true_alt, true_az, alt_pointing, az_pointing)
 
-    return angular_resolution_per_bin(true_alt, true_az, reco_alt, reco_az, ang_sep_to_pointing, bins=bins)
+    return angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, ang_sep_to_pointing, bins=bins)
 
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m ** 2)
@@ -990,7 +990,7 @@ def impact_resolution(true_x, reco_x, true_y, reco_y,
     (impact_resolution, lower_confidence_level, upper_confidence_level): (`numpy.array`, `numpy.array`, `numpy.array`)
     """
 
-    return distance2d_resolution(reco_x, reco_y, true_x, true_y,
+    return distance2d_resolution(true_x, reco_x, true_y, reco_y,
                                  percentile=percentile,
                                  confidence_level=confidence_level,
                                  bias_correction=bias_correction,
@@ -1032,7 +1032,7 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
 
     irf = irf_cta()
 
-    return distance2d_resolution_per_bin(true_energy, reco_x, reco_y, true_x, true_y,
+    return distance2d_resolution_per_bin(true_energy, true_x, reco_x, true_y, reco_y,
                                          bins=irf.energy_bin,
                                          percentile=percentile,
                                          confidence_level=confidence_level,
@@ -1197,14 +1197,22 @@ def distance2d_resolution_per_bin(x, true_x, reco_x, true_y, reco_y,
     x_bins, distance_res
     """
 
-    _, x_bins = np.histogram(x, bins=bins)
-    bin_index = np.digitize(x, x_bins)
+    # issue with numpy.digitize and astropy.Quantity: pass only values
+    if isinstance(x, u.Quantity):
+        if isinstance(bins, u.Quantity):
+            bins = bins.to_value(x.unit)
+        _, x_bins = np.histogram(x.value, bins=bins)
+        bin_index = np.digitize(x.value, x_bins)
+        x_bins *= x.unit
+    else:
+        _, x_bins = np.histogram(x, bins=bins)
+        bin_index = np.digitize(x, x_bins)
 
     dist_res = []
     for ii in np.arange(1, len(x_bins)):
         mask = bin_index == ii
-        dist_res.append(distance2d_resolution(reco_x[mask], reco_y[mask],
-                                              true_x[mask], true_y[mask],
+        dist_res.append(distance2d_resolution(true_x[mask], reco_x[mask],
+                                              true_y[mask], reco_y[mask],
                                               percentile=percentile,
                                               confidence_level=confidence_level,
                                               bias_correction=bias_correction,
