@@ -4,18 +4,17 @@ plots.py
 Functions to make IRF and other reconstruction quality-check plots
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.stats import binned_statistic
-from ..ana import ana
 from sklearn import metrics
 from sklearn.multiclass import LabelBinarizer
-from ..io.dataset import load_any_resource
 import astropy.units as u
 from astropy.visualization import quantity_support
-
+from matplotlib.ticker import FormatStrFormatter
+from ..ana import ana
+from ..io.dataset import load_any_resource
 
 __all__ = ['plot_resolution',
            'plot_resolution_difference',
@@ -244,7 +243,7 @@ def plot_theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False, ax=
         reco_alt = reco_alt - bias_alt
         reco_az = reco_az - bias_az
 
-    theta2 = ana.theta2(true_alt, reco_alt, true_az, reco_az).to(u.deg**2)
+    theta2 = ana.theta2(true_alt, reco_alt, true_az, reco_az).to(u.deg ** 2)
     ang_res = ana.angular_resolution(true_alt, reco_alt, true_az, reco_az).to(u.deg)
 
     ax.set_xlabel(r'$\theta^2 [deg^2]$')
@@ -316,11 +315,10 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     xmin = multiplicity.min()
     xmax = multiplicity.max()
 
-
     if 'label' not in kwargs:
         kwargs['label'] = 'Telescope multiplicity'
 
-    n, bins, patches = ax.hist(multiplicity, bins=(xmax-xmin), range=(xmin, xmax), rwidth=0.7, align='left', **kwargs)
+    n, bins, patches = ax.hist(multiplicity, bins=(xmax - xmin), range=(xmin, xmax), rwidth=0.7, align='left', **kwargs)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     x50 = m[int(np.floor(0.5 * len(m)))] + 0.5
@@ -337,7 +335,6 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
 
     return ax
-
 
 
 def plot_resolution(bins, res, log=False, ax=None, **kwargs):
@@ -369,7 +366,6 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     else:
         x = ana.logbin_mean(bins)
         ax.set_xscale('log')
-
 
     kwargs.setdefault('fmt', 'o')
 
@@ -517,7 +513,6 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
-
     if not 'label' in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
 
@@ -554,12 +549,11 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
     e_cta, ef_cta = cta_perf.get_sensitivity()
     e_bin = cta_perf.energy_bin
 
-
     if not 'label' in kwargs:
         kwargs['label'] = "CTA performance {}".format(cta_site)
 
     with quantity_support():
-        ax.errorbar(e_cta, ef_cta, xerr=u.Quantity([e_cta-e_bin[:-1], e_bin[1:]-e_cta]), **kwargs)
+        ax.errorbar(e_cta, ef_cta, xerr=u.Quantity([e_cta - e_bin[:-1], e_bin[1:] - e_cta]), **kwargs)
 
     ax.grid(True, which='both')
     ax.set_xlabel(rf"$E_R$ [{e_cta.unit.to_string('latex')}]")
@@ -698,6 +692,7 @@ def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, tru
         ax.set_xlabel(rf'$E_R$ [{energy.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Angular resolution')
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
         ax.grid(True, which='both')
     finally:
@@ -869,7 +864,7 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    if not len(true_energy) ==  len(reco_energy):
+    if not len(true_energy) == len(reco_energy):
         raise ValueError("simulated and reconstructured true_energy arrrays should have the same length")
 
     ax = plt.gca() if ax is None else ax
@@ -1088,7 +1083,7 @@ def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energ
         ax.set_title('Impact resolution')
 
         with quantity_support():
-            plot_resolution(e_bin, res, **kwargs)
+            plot_resolution(e_bin, res, ax=ax, **kwargs)
 
         ax.grid(True, which='both')
     finally:
@@ -1503,7 +1498,7 @@ def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=No
 
     ax = plt.gca() if ax is None else ax
     delta_res = new_resolution - reference_resolution
-    delta_res[:, 1:] = 0    # the condidence intervals have no meaning here
+    delta_res[:, 1:] = 0  # the condidence intervals have no meaning here
     with quantity_support():
         plot_resolution(bins, delta_res, ax=ax, **kwargs)
     ax.set_ylabel(r"$\Delta$ res")
@@ -1891,6 +1886,7 @@ def plot_sensitivity_magic_performance(key='lima_5off', ax=None, **kwargs):
 
     return ax
 
+
 @u.quantity_input(e_min=u.eV, e_max=u.eV, rate=u.Hz, rate_err=u.Hz)
 def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
     """
@@ -1918,7 +1914,7 @@ def plot_rate(e_min, e_max, rate, rate_err=None, ax=None, **kwargs):
     e_center = np.sqrt(e_min * e_max)
 
     with quantity_support():
-        ax.errorbar(e_center, rate, xerr=[e_center-e_min, e_max-e_center], yerr=rate_err, **kwargs)
+        ax.errorbar(e_center, rate, xerr=[e_center - e_min, e_max - e_center], yerr=rate_err, **kwargs)
 
     ax.set_xlabel(fr"$E_R$ [{e_center.unit.to_string('latex')}]")
     ax.set_ylabel(fr"Event rate [{rate.unit.to_string('latex')}]")
@@ -1959,6 +1955,7 @@ def plot_background_rate(e_min, e_max, background_rate, background_rate_err=None
 
     return ax
 
+
 @u.quantity_input(e_min=u.eV, e_max=u.eV, gamma_rate=u.Hz, gamma_rate_err=u.Hz)
 def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kwargs):
     """
@@ -1987,7 +1984,6 @@ def plot_gamma_rate(e_min, e_max, gamma_rate, gamma_rate_err=None, ax=None, **kw
     ax.set_ylabel(fr"Gamma rate [{gamma_rate.unit.to_string('latex')}]")
 
     return ax
-
 
 
 def plot_background_rate_magic(ax=None, **kwargs):
