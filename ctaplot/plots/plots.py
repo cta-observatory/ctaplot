@@ -376,7 +376,7 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     return ax
 
 
-@u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m)
+@u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m**2)
 def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, **kwargs):
     """
     Plot the effective area as a function of the true true_energy
@@ -1271,7 +1271,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     return ax
 
 
-@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m)
+@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m**2)
 def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                              true_energy, simu_area, ax=None, **kwargs):
     """
