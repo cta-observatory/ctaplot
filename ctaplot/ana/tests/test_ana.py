@@ -178,7 +178,7 @@ def test_distance2d_resolution_per_bin():
     reco_x = 3 * np.cos(t)
     reco_y = 3 * np.sin(t)
 
-    bin, res = ana.distance2d_resolution_per_bin(x, reco_x, reco_y, true_x, true_y, bins=10, bias_correction=True)
+    bin, res = ana.distance2d_resolution_per_bin(x, true_x, reco_x, true_y, reco_y, bins=10, bias_correction=True)
 
     np.testing.assert_allclose(res, 3, rtol=1e-1)
 

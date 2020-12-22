@@ -97,7 +97,7 @@ def test_plot_effective_area_per_energy():
     plt.close('all')
     true_e = 10 ** (6 * np.random.rand(100) - 3) * u.TeV
     reco_e = 10 ** (6 * np.random.rand(10) - 3) * u.TeV
-    simu_area = 1000 * u.m
+    simu_area = (1000 * u.m)**2
     plots.plot_effective_area_per_energy(true_e, reco_e, simu_area)
 
 
@@ -148,7 +148,7 @@ def test_plot_effective_area_per_energy_power_law():
     total_number_events = 100000
     spectral_index = 2.4
     reco_energy = 10 ** (6 * np.random.rand(1000) - 3) * u.TeV
-    simu_area = 1e7 * u.m
+    simu_area = 1e7 * u.m**2
 
     plots.plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                                    reco_energy, simu_area, color='black')
