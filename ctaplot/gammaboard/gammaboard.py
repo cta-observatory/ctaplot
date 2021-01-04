@@ -42,7 +42,7 @@ def find_data_files(experiment, experiments_directory):
     for dirname, dirnames, filenames in os.walk(data_folder):
         for file in filenames:
             filename, ext = os.path.splitext(file)
-            if ext == '.h5':
+            if ext == '.h5' and filename.split('_')[-1] != '1':  # currently, we don't load electrons dl2  # TODO fix it
                 file_set.add(dirname + '/' + file)
     return tuple(file_set)
 
@@ -493,11 +493,12 @@ class Experiment(object):
             to_remove.pop().remove()
         self.plot_effective_area_ratio(ax)
 
-    def plot_roc_curve(self, ax=None):
+    def plot_roc_curve(self, ax=None, label=None):
         if self.get_loaded() and 'reco_gammaness' in self.data:
+            lab = label if label is not None else self.name
             self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
                                                          self.data.reco_gammaness,
-                                                         label=self.name,
+                                                         label=lab,
                                                          ax=ax,
                                                          color=self.color)
             binarized_class = np.ones_like(self.data.mc_particle)
