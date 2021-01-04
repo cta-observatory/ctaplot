@@ -1,0 +1,23 @@
+#### MATPLOTLIBRC FORMAT
+
+
+## figure ##
+
+figure.dpi : 200
+figure.titlesize : 12
+
+## axes ##
+
+axes.titlesize : 19
+axes.labelsize : 15
+legend.fontsize : 14
+
+## font ##
+
+text.usetex : True
+mathtext.fontset : cm
+font.family : STIXGeneral
+
+
+
+

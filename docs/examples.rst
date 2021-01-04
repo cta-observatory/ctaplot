@@ -10,3 +10,4 @@ Examples
    notebooks/ROC curves.ipynb
    notebooks/dashboard.ipynb
    notebooks/style.ipynb
+   notebooks/roc_curves.ipynb

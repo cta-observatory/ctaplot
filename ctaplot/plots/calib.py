@@ -88,15 +88,22 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     """
     ax = plt.gca() if ax is None else ax
 
-    mask = (reco_pe > 0)
-    y = np.log10(reco_pe[mask])
-    x = true_pe[mask]
+
+    y = reco_pe.ravel()
+    x = true_pe.ravel()
+    if 'bin' in kwargs and np.ndim(kwargs['bin']) == 0:
+        nbin = kwargs['bin']
+        kwargs.pop('bin')
+    else:
+        nbin = 300
+
+    bins = np.logspace(-1, np.log10(max(x.max(), y.max())), nbin)
 
     kwargs.setdefault('cumulative', -1)
     kwargs.setdefault('histtype', 'step')
     kwargs.setdefault('density', False)
     kwargs.setdefault('log', True)
-    kwargs.setdefault('bins', 300)
+    kwargs.setdefault('bins', bins)
     kwargs.setdefault('linewidth', 3)
 
     if 'label' in kwargs:
@@ -106,9 +113,8 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     ax.hist(y[x > 0], **kwargs, label='pixels with signal')
     ax.hist(y[x == 0], **kwargs, label='pixels with no signal')
     ax.hist(np.log10(true_pe[true_pe > 0]), **kwargs, label='true signal pixels', alpha=0.4)
-    ax.set_xlim(-1, 5)
-    ax.set_xlabel('log10(true pe)')
-    ax.set_ylabel('reco pe')
+    ax.set_xlabel('photo-electron per pixel')
+    ax.set_xscale('log')
     ax.legend(fontsize=16)
     ax.grid()
     return ax

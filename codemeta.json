@@ -1,0 +1,56 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@type": "SoftwareSourceCode",
+    "license": "https://spdx.org/licenses/MIT",
+    "codeRepository": "https://github.com/cta-observatory/ctaplot.git",
+    "contIntegration": "https://travis-ci.org/github/cta-observatory/ctaplot",
+    "dateCreated": "2018-07-06",
+    "datePublished": "2018-07-06",
+    "dateModified": "2020-12-22",
+    "downloadUrl": "https://github.com/cta-observatory/ctaplot/archive/v0.5.6.zip",
+    "issueTracker": "https://github.com/cta-observatory/ctaplot/issues",
+    "name": "ctaplot",
+    "version": "0.5.6",
+    "description": "ctaplot provides low-level reconstruction quality-checks metrics computation and vizualisation for Imaging Atmospheric Cherenkov Telescopes such as CTA",
+    "applicationCategory": "Astronomy",
+    "releaseNotes": "adding coverage do travis (#143) @vuillaut\nRemove deprecated code and overall code cleanup (#139) @vuillaut\nadding ctaplot style sheets to datasets (#140) @vuillaut\nadding readthedocs config file to pip install ctaplot (#141) @vuillaut\nContext styling (#138) @vuillaut\nadd plot_rate functions (#137) @vuillaut\nFix magic sens (#136) @vuillaut",
+    "funding": "Grant 824064",
+    "funder": {
+        "@type": "Organization",
+        "name": "European Union’s Horizon 2020"
+    },
+    "keywords": [
+        "astronomy"
+    ],
+    "programmingLanguage": [
+        "Python 3"
+    ],
+    "softwareRequirements": [
+        "Python>=3.6"
+    ],
+    "author": [
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0002-5686-2078",
+            "givenName": "Thomas",
+            "familyName": "Vuillaume",
+            "email": "thomas.vuillaume@lapp.in2p3.fr",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "LAPP, Univ. Grenoble Alpes, Univ. Savoie Mont Blanc, CNRS-IN2P3"
+            }
+        }
+    ],
+    "contributor": [
+        {
+            "@type": "Person",
+            "givenName": "Mikael",
+            "familyName": "Jacquemont",
+            "email": "mikael.jacquemont@lapp.in2p3.fr",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "LAPP, Univ. Grenoble Alpes, Univ. Savoie Mont Blanc, CNRS-IN2P3"
+            }
+        }
+    ]
+}

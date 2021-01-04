@@ -1,82 +1,62 @@
 import matplotlib as mpl
+from distutils.spawn import find_executable
+from contextlib import contextmanager
+from ..io.dataset import get
 
-_SizeTitlePaper = 11
-_SizeLabelPaper = 9
-_SizeTickPaper = 8
-_SizeTitleSlides = 28
-_SizeLabelSlides = 24
-_SizeTickSlides = 20
 
-_global_style = 'notebook'  # internal - set by `set_style`
+def check_latex():
+    """
+    Check if a latex distribution is installed.
+
+    Returns
+    -------
+    bool: True if a LaTeX distribution could be found
+    """
+    return not find_executable('latex') is None
+
+
+@contextmanager
+def context(style='notebook'):
+    """
+    Context manager for styling options
+    Styling adapted from the `seaborn-deep` style.
+    'slides' and 'paper' will use the LaTeX distribution if one is available
+
+    Parameters
+    ----------
+    style: str
+        'notebook', 'slides' or 'paper'
+
+    Example
+    -------
+    >>> import matplotlib.pyplot as plt
+    >>> from ctaplot.plots.style import context
+    >>> with context('notebook'):
+    >>>     plt.plot([1, 2, 4])
+    """
+    style_path = get(f'ctaplot-{style}')
+    with mpl.style.context(['seaborn-deep', style_path]):
+        if not check_latex():
+            mpl.rcParams['text.usetex'] = False
+        yield
 
 
 def set_style(style='notebook'):
     """
-    Set styling for plots
+    Set styling for plots adapted from the `seaborn-deep` style.
+    'slides' and 'paper' will use the LaTeX distribution if one is available
 
     Parameters
     ----------
     style: str
         'notebook', 'slides' or 'paper'
     """
-    mpl.pyplot.style.use('seaborn-deep')
-    set_figsize()
-    _global_style = style
-    set_font(style=style)
+    mpl.rcParams.update(mpl.rcParamsDefault)
 
+    style_path = get(f'ctaplot-{style}')
+    mpl.pyplot.style.use(['seaborn-deep', style_path])
 
-def set_figsize(style='notebook'):
-    """
-    Set default figsize
-    Parameters
-    ----------
-    style: str
-        'notebook', 'slides' or 'paper'
-    """
-    if style == 'notebook' or 'slides':
-        mpl.rcParams['figure.figsize'] = (12, 8)
-    elif style == 'paper':
-        mpl.rcParams['figure.figsize'] = (5.25, 3.5)  # column-width in inches of a 2-columns article
-    else:
-        raise ValueError
+    if not check_latex():
+        mpl.rcParams['text.usetex'] = False
 
-
-def set_font(style='notebook'):
-    """
-    Set font style
-
-    Parameters
-    ----------
-    output: str
-        'notebook', 'slides' or 'paper'
-    """
-    if style == 'slides' or 'notebook':
-        size_label = _SizeLabelSlides
-        size_tick = _SizeTickSlides
-        size_title = _SizeTitleSlides
-        if style == 'slides':
-            mpl.rc('text', usetex=True)
-        else:
-            mpl.rc('text', usetex=False)
-    elif style == 'paper':
-        size_label = _SizeLabelPaper
-        size_tick = _SizeTickPaper
-        size_title = _SizeTitlePaper
-        mpl.rc('text', usetex=True)
-    else:
-        raise ValueError
-
-    params = {
-        'axes.labelsize': size_label,
-        'axes.titlesize': size_label,
-        'figure.titlesize': size_title,
-        'xtick.labelsize': size_tick,
-        'ytick.labelsize': size_tick,
-        'legend.fontsize': size_label,
-        'legend.title_fontsize': size_title,
-    }
-    mpl.pyplot.rcParams.update(params)
-    mpl.rc('font', **{'size': size_label})
-    mpl.rcParams['mathtext.fontset'] = 'cm'
-    mpl.rcParams['font.family'] = 'STIXGeneral'
 

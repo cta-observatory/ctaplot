@@ -1,0 +1,24 @@
+#### MATPLOTLIBRC FORMAT
+
+
+## figure ##
+
+# column-width in inches of a 2-columns article
+figure.figsize : 5.25, 3.5
+figure.dpi : 200
+figure.titlesize : 11
+
+## axes ##
+
+axes.titlesize : 11
+axes.labelsize : 9
+legend.fontsize : 9
+
+## font ##
+
+text.usetex : True
+mathtext.fontset : cm
+font.family : STIXGeneral
+
+
+
