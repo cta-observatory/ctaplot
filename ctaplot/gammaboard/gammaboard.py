@@ -14,7 +14,7 @@ from sklearn.multiclass import LabelBinarizer
 from .. import plots
 from .. import ana
 from ..io.dataset import get
-from ..io import read_lst_dl2_data
+from ..io import read_lst_dl2_data, read_glearn_dl2_data
 
 
 __all__ = ['open_dashboard',
@@ -24,6 +24,7 @@ __all__ = ['open_dashboard',
            ]
 
 GAMMA_ID = 0
+ELECTRON_ID = 1
 
 
 def find_data_files(experiment, experiments_directory):
@@ -64,7 +65,7 @@ def load_data_from_h5(experiment, experiments_directory):
     result_data = []
     for r_file in result_files:
         try:
-            data = pd.read_hdf(r_file, key='data')
+            data = read_glearn_dl2_data(r_file)
         except KeyError:
             try:
                 data = read_lst_dl2_data(r_file)
@@ -229,6 +230,8 @@ class Experiment(object):
 
     def load_data(self):
         self.data = load_data_from_h5(self.name, self.experiments_directory)
+        # currently, electrons are used to compute the results
+        self.data = self.data[self.data.mc_type != ELECTRON_ID]
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_type' in self.data:
