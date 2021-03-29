@@ -1293,7 +1293,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     ax = plt.gca() if ax is None else ax
 
     bin_stat, bin_edges, binnumber = binned_statistic(x, y, statistic=statistic, bins=bins)
-    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_width = np.diff(bin_edges)
     bin_centers = bin_edges[1:] - bin_width / 2
 
     bin_with_data = np.setdiff1d(binnumber, len(bin_edges)) - 1
