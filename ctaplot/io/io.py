@@ -60,9 +60,9 @@ def read_glearn_dl2_data(filename):
             "reco_impact_y": "reco_core_y",
         })
 
-    data['mc_core_x'] *= 1000
-    data['mc_core_y'] *= 1000
-    data['reco_core_x'] *= 1000
-    data['reco_core_y'] *= 1000
+        data['mc_core_x'] *= 1000
+        data['mc_core_y'] *= 1000
+        data['reco_core_x'] *= 1000
+        data['reco_core_y'] *= 1000
 
     return data
