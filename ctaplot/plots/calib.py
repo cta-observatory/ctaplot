@@ -112,7 +112,7 @@ def plot_pixels_pe_spectrum(true_pe, reco_pe, ax=None, **kwargs):
     ax.hist(y, **kwargs, label='all pixels')
     ax.hist(y[x > 0], **kwargs, label='pixels with signal')
     ax.hist(y[x == 0], **kwargs, label='pixels with no signal')
-    ax.hist(np.log10(true_pe[true_pe > 0]), **kwargs, label='true signal pixels', alpha=0.4)
+    ax.hist(true_pe[true_pe > 0], **kwargs, label='true signal pixels', alpha=0.4)
     ax.set_xlabel('photo-electron per pixel')
     ax.set_xscale('log')
     ax.legend(fontsize=16)
