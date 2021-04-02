@@ -14,7 +14,7 @@ from sklearn.multiclass import LabelBinarizer
 from .. import plots
 from .. import ana
 from ..io.dataset import get
-from ..io import read_lst_dl2_data
+from ..io import read_lst_dl2_data, read_pyirf_dl2_data
 
 
 __all__ = ['open_dashboard',
@@ -42,7 +42,7 @@ def find_data_files(experiment, experiments_directory):
     for dirname, dirnames, filenames in os.walk(data_folder):
         for file in filenames:
             filename, ext = os.path.splitext(file)
-            if ext == '.h5':
+            if ext == '.h5' and filename.split('_')[-1] != '1':  # currently, we don't load electrons dl2  # TODO fix it
                 file_set.add(dirname + '/' + file)
     return tuple(file_set)
 
@@ -68,9 +68,12 @@ def load_data_from_h5(experiment, experiments_directory):
         except KeyError:
             try:
                 data = read_lst_dl2_data(r_file)
-            except Exception as e:
-                print(e)
-                continue
+            except KeyError:
+                try:
+                    data = read_pyirf_dl2_data(r_file)
+                except Exception as e:
+                    print(e)
+                    continue
         result_data.append(data)
     return pd.concat(result_data)
 
@@ -275,6 +278,7 @@ class Experiment(object):
                                                                        ax=ax,
                                                                        label=self.name,
                                                                        color=self.color)
+            self.ax_ang_res.set_xlabel(r'$E_{MC}$ [TeV]')
 
             self.set_plotted(True)
 
@@ -291,6 +295,7 @@ class Experiment(object):
                                                                            label=self.name + '_reco',
                                                                            color=self.color,
                                                                            )
+                self.ax_ang_res.set_xlabel(r'$E_{MC}$ [TeV]')
 
     def update_angular_resolution_reco(self, ax):
         for c in ax.containers:
@@ -380,11 +385,13 @@ class Experiment(object):
                     self.ax_eff_area.plot(E_trig[:-1], S_trig, label=self.name + '_triggered', color=self.color,
                                           linestyle='-.')
 
+                energies = self.gamma_data.reco_energy if 'reco_energy' in self.gamma_data else self.gamma_data.mc_energy
+
                 E, S = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                self.run_configs[0]['energy_range_max'],
                                                                self.run_configs[0]['num_showers'],
                                                                self.run_configs[0]['spectral_index'],
-                                                               self.gamma_data.reco_energy,
+                                                               energies,
                                                                self.run_configs[0]['scattering_surface'])
                 self.ax_eff_area.plot(E[:-1], S, label=self.name, color=self.color)
 
@@ -397,19 +404,23 @@ class Experiment(object):
 
             if self.run_configs is not None and GAMMA_ID in self.run_configs:
                 if self.reco_gamma_data is not None:
+                    gamma_energies = self.reco_gamma_data.reco_energy if 'reco_energy' in self.reco_gamma_data \
+                        else self.reco_gamma_data.mc_energy
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             gamma_energies,
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
+                    noise_energies = self.noise_reco_gamma.reco_energy if 'reco_energy' in self.noise_reco_gamma \
+                        else self.noise_reco_gamma.mc_energy
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
                         self.run_configs[0]['energy_range_min'],
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        noise_energies,
                         self.run_configs[0]['scattering_surface']
                     )
                     self.ax_eff_area.plot(E_reco[:-1], S_reco,
@@ -435,26 +446,30 @@ class Experiment(object):
             self.ax_eff_area_ratio = ax if ax is not None else plt.gca()
 
             if self.run_configs is not None and GAMMA_ID in self.run_configs:
-                if self.mc_trig_events is not None:
+                if self.mc_trig_events is not None and self.reco_gamma_data is not None:
                     E_max, S_max = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                            self.run_configs[0]['energy_range_max'],
                                                                            self.run_configs[0]['num_showers'],
                                                                            self.run_configs[0]['spectral_index'],
                                                                            self.mc_trig_events.mc_trig_energies,
                                                                            self.run_configs[0]['scattering_surface'])
+                    gamma_energies = self.reco_gamma_data.reco_energy if 'reco_energy' in self.reco_gamma_data \
+                        else self.reco_gamma_data.mc_energy
                     E_reco, S_reco = ana.effective_area_per_energy_power_law(self.run_configs[0]['energy_range_min'],
                                                                              self.run_configs[0]['energy_range_max'],
                                                                              self.run_configs[0]['num_showers'],
                                                                              self.run_configs[0]['spectral_index'],
-                                                                             self.reco_gamma_data.reco_energy,
+                                                                             gamma_energies,
                                                                              self.run_configs[0]['scattering_surface']
                                                                              )
+                    noise_energies = self.noise_reco_gamma.reco_energy if 'reco_energy' in self.noise_reco_gamma \
+                        else self.noise_reco_gamma.mc_energy
                     E_reco_prot, S_reco_prot = ana.effective_area_per_energy_power_law(
                         self.run_configs[0]['energy_range_min'],
                         self.run_configs[0]['energy_range_max'],
                         self.run_configs[0]['num_showers'],
                         self.run_configs[0]['spectral_index'],
-                        self.noise_reco_gamma.reco_energy,
+                        noise_energies,
                         self.run_configs[0]['scattering_surface']
                     )
                     assert np.all(E_reco_prot == E_max) and np.all(E_reco == E_max), \
@@ -478,11 +493,12 @@ class Experiment(object):
             to_remove.pop().remove()
         self.plot_effective_area_ratio(ax)
 
-    def plot_roc_curve(self, ax=None):
+    def plot_roc_curve(self, ax=None, label=None):
         if self.get_loaded() and 'reco_gammaness' in self.data:
+            lab = label if label is not None else self.name
             self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
                                                          self.data.reco_gammaness,
-                                                         label=self.name,
+                                                         label=lab,
                                                          ax=ax,
                                                          color=self.color)
             binarized_class = np.ones_like(self.data.mc_particle)
@@ -499,7 +515,8 @@ class Experiment(object):
                 ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
                 precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
                                                               self.data.reco_gammaness,
-                                                              pos_label=GAMMA_ID)
+                                                              pos_label=GAMMA_ID if len(label_binarizer.classes_) == 2
+                                                              else 1)
             else:
                 raise ValueError
             self.ax_pr.plot(recall, precision, label=self.name, color=self.color)
