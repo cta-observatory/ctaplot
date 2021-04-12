@@ -58,24 +58,24 @@ class irf_cta:
 
     def __init__(self):
         self.site = ''
-        self.energy_bin = np.logspace(np.log10(2.51e-02), 2, 19) * u.TeV
-        self.energy = logbin_mean(self.energy_bin)
+        self.energy_bins = np.logspace(np.log10(2.51e-02), 2, 19) * u.TeV
+        self.energy = logbin_mean(self.energy_bins)
 
         # Area of CTA sites in meters
         self.ParanalArea_prod3 = 19.63e6 * u.m ** 2
         self.LaPalmaArea_prod3 = 11341149 * u.m ** 2  # 6.61e6
 
-    @u.quantity_input(E_bin=u.TeV)
-    def set_ebin(self, energy_bin):
-        self.energy_bin = energy_bin
-        self.energy = logbin_mean(self.energy_bin)
+    @u.quantity_input(energy_bins=u.TeV)
+    def set_ebin(self, energy_bins):
+        self.energy_bins = energy_bins
+        self.energy = logbin_mean(self.energy_bins)
 
 
 class cta_performance:
     def __init__(self, site):
         self.site = site
         self.energy = np.empty(0) * u.TeV
-        self.energy_bin = np.empty(0) * u.TeV
+        self.energy_bins = np.empty(0) * u.TeV
         self.effective_area = np.empty(0) * u.m
         self.angular_resolution = np.empty(0) * u.deg
         self.energy_resolution = np.empty(0)
@@ -175,8 +175,8 @@ class cta_performance:
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
-            self.energy_bin = np.append(Emin, Emax[-1]) * u.TeV
-            self.energy = logbin_mean(self.energy_bin)
+            self.energy_bins = np.append(Emin, Emax[-1]) * u.TeV
+            self.energy = logbin_mean(self.energy_bins)
             self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
 
         elif self.site in _north_site_names:
@@ -186,8 +186,8 @@ class cta_performance:
                                  }
             Emin, Emax, sensitivity = np.loadtxt(ds.get(observation_times[observation_time]),
                                                  skiprows=10, unpack=True)
-            self.energy_bin = np.append(Emin, Emax[-1]) * u.TeV
-            self.energy = logbin_mean(self.energy_bin)
+            self.energy_bins = np.append(Emin, Emax[-1]) * u.TeV
+            self.energy = logbin_mean(self.energy_bins)
             self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
 
         else:
@@ -325,8 +325,8 @@ def logspace_decades_nbin(x_min, x_max, n=5):
         return bins
 
 
-@u.quantity_input(energy=u.TeV)
-def stat_per_energy(energy, y, statistic='mean'):
+@u.quantity_input(energy=u.TeV, bins=u.TeV)
+def stat_per_energy(energy, y, statistic='mean', bins=None):
     """
     Return statistic for the given quantity per energy bins.
     The binning is given by irf_cta
@@ -339,6 +339,7 @@ def stat_per_energy(energy, y, statistic='mean'):
         len(y) == len(energy)
     statistic: string
         see `scipy.stat.binned_statistic`
+    bins: `astropy.Quantity` (1d array)
 
     Returns
     -------
@@ -346,12 +347,14 @@ def stat_per_energy(energy, y, statistic='mean'):
         bin_stat, bin_edges, binnumber
     """
 
-    irf = irf_cta()
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
 
     bin_stat, bin_edges, binnumber = binned_statistic(energy.to_value(u.TeV),
                                                       y,
                                                       statistic=statistic,
-                                                      bins=irf.energy_bin.to_value(u.TeV))
+                                                      bins=bins.to_value(u.TeV))
     if isinstance(y, u.Quantity):
         bin_stat = u.Quantity(bin_stat, y.unit)
 
@@ -522,13 +525,17 @@ def resolution_per_bin(x, y_true, y_reco,
     return x_bins, res
 
 
-@u.quantity_input(true_energy=u.TeV)
-def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
+@u.quantity_input(true_energy=u.TeV, bins=u.TeV)
+def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_level=0.95, bias_correction=False,
+                          bins=None):
     """
     Parameters
     ----------
-    true: 1d `numpy.ndarray` of simulated energy
-    reco: 1d `numpy.ndarray` of reconstructed energy
+    true: 1d `numpy.ndarray` of simulated quantity
+    reco: 1d `numpy.ndarray` of reconstructed quantity
+    true_energy: `astropy.Quantity` (1d array)
+        len(true_energy) == len(true) == len(reco)
+    bins: `astropy.Quantity` (1d array)
 
     Returns
     -------
@@ -537,12 +544,15 @@ def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_
         resolution: - 3D `numpy.ndarray` see `ctaplot.ana.resolution`
     """
 
-    irf = irf_cta()
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
+
     return resolution_per_bin(true_energy, true, reco,
                               percentile=percentile,
                               confidence_level=confidence_level,
                               bias_correction=bias_correction,
-                              bins=irf.energy_bin)
+                              bins=bins)
 
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
@@ -572,7 +582,7 @@ def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_lev
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
 def energy_resolution_per_energy(true_energy, reco_energy,
-                                 percentile=68.27, confidence_level=0.95, bias_correction=False):
+                                 percentile=68.27, confidence_level=0.95, bias_correction=False, bins=None):
     """
     The true_energy resolution ΔE / energy is obtained from the distribution of (ER – ET) / ET, where R and T refer
     to the reconstructed and true energy of gamma-ray events.
@@ -587,6 +597,7 @@ def energy_resolution_per_energy(true_energy, reco_energy,
     confidence_level: float
         between 0 and 1
     bias_correction: bool
+    bins: numpy array
 
     Returns
     -------
@@ -596,37 +607,49 @@ def energy_resolution_per_energy(true_energy, reco_energy,
 
     res_e = []
     irf = irf_cta()
-    for i, e in enumerate(irf.energy):
-        mask = (reco_energy > irf.energy_bin[i]) & (reco_energy < irf.energy_bin[i + 1])
+
+    if bins is None:
+        bins = irf.energy_bins
+
+    for i in range(len(E)):
+        mask = (reco_energy > bins[i]) & (reco_energy < bins[i + 1])
+
         res_e.append(energy_resolution(true_energy[mask], reco_energy[mask],
                                        percentile=percentile,
                                        confidence_level=confidence_level,
                                        bias_correction=bias_correction))
 
-    return irf.energy_bin, np.array(res_e)
+    return irf.energy_bins, np.array(res_e)
 
 
-@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV)
-def energy_bias(true_energy, reco_energy):
+@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, bins=u.TeV)
+def energy_bias(true_energy, reco_energy, bins=None):
     """
     Compute the true_energy relative bias per true_energy bin.
 
     Parameters
     ----------
-    true_energy: 1d numpy array of simulated energy
-    reco_energy: 1d numpy array of reconstructed energy
+    true_energy: `astropy.Quantity` (1d array)
+        simulated energies
+    reco_energy: `astropy.Quantity` (1d array)
+        reconstructed energies
+    bins:`astropy.Quantity` (1d array)
+        energy bins - if None, standard CTA binning is used
 
     Returns
     -------
     (energy_bins, bias) : tuple of 1d numpy arrays - true_energy, true_energy bias
     """
     bias_e = []
+
     irf = irf_cta()
+    if bins is None:
+        bins = irf.energy_bins
     for i, e in enumerate(irf.energy):
-        mask = (reco_energy > irf.energy_bin[i]) & (reco_energy < irf.energy_bin[i + 1])
+        mask = (reco_energy > irf.energy_bins[i]) & (reco_energy < irf.energy_bins[i + 1])
         bias_e.append(relative_bias(true_energy[mask], reco_energy[mask], relative_scaling_method='s1'))
 
-    return irf.energy_bin, np.array(bias_e)
+    return bins, np.array(bias_e)
 
 
 def get_angles_pipi(angles):
@@ -767,10 +790,9 @@ def angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x,
 
     return x_bins, u.Quantity(ang_res)
 
-
-@u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, energy=u.TeV)
+@u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, energy=u.TeV, bins=u.TeV)
 def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
-                                  percentile=68.27, confidence_level=0.95, bias_correction=False):
+                                  percentile=68.27, confidence_level=0.95, bias_correction=False, bins=None):
     """
     Plot the angular resolution as a function of the event simulated true_energy
 
@@ -781,6 +803,7 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
     true_alt: `astropy.Quantity`
     true_az: `astropy.Quantity`
     energy: `astropy.Quantity`
+    bins: `astropy.Quantity`
     **kwargs: args for `angular_resolution`
 
     Returns
@@ -790,13 +813,14 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
     if not len(reco_alt) == len(reco_az) == len(energy) > 0:
         raise ValueError("reco_alt, reco_az and true_energy must have the same length")
 
-    irf = irf_cta()
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
 
-    e_bin = irf.energy_bin
     res = []
 
-    for i, e in enumerate(e_bin[:-1]):
-        mask = (energy > e_bin[i]) & (energy <= e_bin[i + 1])
+    for i, e in enumerate(bins[:-1]):
+        mask = (energy > bins[i]) & (energy <= bins[i + 1])
         res.append(angular_resolution(true_alt[mask], reco_alt[mask], true_az[mask], reco_az[mask],
                                       percentile=percentile,
                                       confidence_level=confidence_level,
@@ -805,7 +829,8 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
                    )
 
     res_q = u.Quantity(res)
-    return e_bin, res_q.to(u.deg)
+    return bins, res_q.to(u.deg)
+
 
 
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, alt_pointing=u.rad, az_pointing=u.rad)
@@ -821,7 +846,7 @@ def angular_resolution_per_off_pointing_angle(true_alt, reco_alt, true_az, reco_
     reco_az: `astropy.Quantity`
     alt_pointing: `astropy.Quantity`
     az_pointing: `astropy.Quantity`
-    bins: float or `astropy.Quantity`
+    bins: int or `astropy.Quantity`
 
     Returns
     -------
@@ -850,8 +875,9 @@ def effective_area(true_energy, reco_energy, simu_area):
     return simu_area * len(reco_energy) / len(true_energy)
 
 
-@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m ** 2)
-def effective_area_per_energy(true_energy, reco_energy, simu_area):
+
+@u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, simu_area=u.m ** 2, bins=u.TeV)
+def effective_area_per_energy(true_energy, reco_energy, simu_area, bins=None):
     """
     Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
 
@@ -861,19 +887,22 @@ def effective_area_per_energy(true_energy, reco_energy, simu_area):
     reco_energy: `astropy.Quantity`
     simu_area: `astropy.Quantity`
         area on which events are simulated
+    bins:  `astropy.Quantity`
 
     Returns
     -------
     (energy, Seff) : (1d numpy array, 1d numpy array)
     """
 
-    irf = irf_cta()
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
 
-    count_R, bin_R = np.histogram(reco_energy, bins=irf.energy_bin)
-    count_S, bin_S = np.histogram(true_energy, bins=irf.energy_bin)
+    count_R, bin_R = np.histogram(reco_energy, bins=bins)
+    count_S, bin_S = np.histogram(true_energy, bins=bins)
 
     np.seterr(divide='ignore', invalid='ignore')
-    return irf.energy_bin, np.nan_to_num(simu_area * count_R / count_S)
+    return irf.energy_bins, np.nan_to_num(simu_area * count_R / count_S)
 
 
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
@@ -998,12 +1027,13 @@ def impact_resolution(true_x, reco_x, true_y, reco_y,
                                  )
 
 
-@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.TeV)
+@u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.TeV, bins=u.TeV)
 def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
                                  percentile=68.27,
                                  confidence_level=0.95,
                                  bias_correction=False,
-                                 relative_scaling_method=None):
+                                 relative_scaling_method=None,
+                                 bins=None):
     """
     Plot the angular resolution as a function of the event simulated true_energy
 
@@ -1022,6 +1052,7 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
         see `ctaplot.ana.resolution`
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
+    bins: `astropy.Quantity`
 
     Returns
     -------
@@ -1030,10 +1061,12 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
     assert len(reco_x) == len(true_energy)
     assert len(true_energy) > 0, "Empty arrays"
 
-    irf = irf_cta()
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
 
     return distance2d_resolution_per_bin(true_energy, true_x, reco_x, true_y, reco_y,
-                                         bins=irf.energy_bin,
+                                         bins=bins,
                                          percentile=percentile,
                                          confidence_level=confidence_level,
                                          bias_correction=bias_correction,
@@ -1075,7 +1108,7 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
     """
     For each bin, return the expected number of events for a power-law distribution.
     bins: `numpy.ndarray`, e.g. `np.logspace(np.log10(emin), np.logspace(xmax))`
-    
+
     Parameters
     ----------
     xmin: `float`, min of the simulated power-law
@@ -1083,7 +1116,7 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
     total_number_events: `int`
     spectral_index: `float`
     bins: `numpy.ndarray`
-    
+
     Returns
     -------
     y: `numpy.ndarray`, len(y) = len(bins) - 1
@@ -1097,8 +1130,9 @@ def power_law_integrated_distribution(xmin, xmax, total_number_events, spectral_
     return y
 
 
-@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m ** 2)
-def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, true_energy, simu_area):
+@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m ** 2, bins=u.eV)
+def effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index, true_energy, simu_area,
+                                        bins=None):
     """
     Compute the effective area per true_energy bins from a list of simulated energy and reconstructed energy
 
@@ -1111,14 +1145,17 @@ def effective_area_per_energy_power_law(emin, emax, total_number_events, spectra
     true_energy: 1d `astropy.Quantity`
     simu_area: `astropy.Quantity`
         area on which events are simulated
+    bins: `astropy.Quantity`
 
     Returns
     -------
     (true_energy bins, effective_area) : (`astropy.Quantity` array, 1d numpy array)
     """
 
-    irf = irf_cta()
-    bins = irf.energy_bin
+    if bins is None:
+        irf = irf_cta()
+        bins = irf.energy_bins
+
     simu_per_bin = power_law_integrated_distribution(emin, emax, total_number_events, spectral_index, bins)
     count_R, bin_R = np.histogram(true_energy, bins=bins)
 
@@ -1259,8 +1296,9 @@ def bias_per_bin(true, reco, x, relative_scaling_method=None, bins=10):
     return x_bins, b
 
 
-@u.quantity_input(energy=u.eV)
-def bias_per_energy(true, reco, energy, relative_scaling_method=None):
+
+@u.quantity_input(energy=u.eV, bins=u.eV)
+def bias_per_energy(true, reco, energy, relative_scaling_method=None, energy_bins=None):
     """
     Bias between `true` and `reco` per bins of true_energy
 
@@ -1271,16 +1309,18 @@ def bias_per_energy(true, reco, energy, relative_scaling_method=None):
     energy: : `astropy.Quantity`
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
+    bins: `astropy.Quantity`
 
     Returns
     -------
     bins, bias: `astropy.Quantity`, `numpy.ndarray`
     """
 
-    irf = irf_cta()
-    energy_bin = irf.energy_bin
+    if energy_bins is None:
+        irf = irf_cta()
+        energy_bins = irf.energy_bins
 
-    return bias_per_bin(true, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bin)
+    return bias_per_bin(true, reco, energy, relative_scaling_method=relative_scaling_method, bins=energy_bins)
 
 
 def get_magic_sensitivity():

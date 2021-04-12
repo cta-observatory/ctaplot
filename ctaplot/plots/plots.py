@@ -377,7 +377,7 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
 
 
 @u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m**2)
-def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, **kwargs):
+def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, bins=None, **kwargs):
     """
     Plot the effective area as a function of the true true_energy
 
@@ -389,6 +389,7 @@ def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=
         all reconstructed event energy
     simulated_area: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: options for `maplotlib.pyplot.errorbar`
 
     Returns
@@ -407,7 +408,7 @@ def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=
 
     ax = plt.gca() if ax is None else ax
 
-    e_bin, seff = ana.effective_area_per_energy(true_energy, reco_energy, simulated_area)
+    e_bin, seff = ana.effective_area_per_energy(true_energy, reco_energy, simulated_area, bins=bins)
     E = ana.logbin_mean(e_bin)
 
     if 'fmt' not in kwargs:
@@ -598,7 +599,7 @@ def plot_layout_map(tel_x, tel_y, tel_type=None, ax=None, **kwargs):
 
 
 @u.quantity_input(energy=u.eV)
-def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
+def plot_resolution_per_energy(true, reco, energy, ax=None, bins=None, **kwargs):
     """
     Plot a variable resolution as a function of the true_energy
 
@@ -611,6 +612,7 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     energy: `astropy.Quantity`
         event energy in TeV
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
     Returns
@@ -624,7 +626,7 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
     ax.set_xlabel(f'Energy [{energy.unit.to_string("latex")}]')
     ax.set_xscale('log')
 
-    energy_bin, resolution = ana.resolution_per_energy(true, reco, energy)
+    energy_bin, resolution = ana.resolution_per_energy(true, reco, energy, bins=bins)
 
     E = ana.logbin_mean(energy_bin)
 
@@ -645,7 +647,7 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, **kwargs):
 @u.quantity_input(true_alt=u.rad, reco_alt=u.rad, true_az=u.rad, reco_az=u.rad, true_energy=u.eV)
 def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, true_energy,
                                        percentile=68.27, confidence_level=0.95, bias_correction=False,
-                                       ax=None, **kwargs):
+                                       ax=None, bins=None, **kwargs):
     """
     Plot the angular resolution as a function of the reconstructed true_energy
 
@@ -662,6 +664,7 @@ def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, tru
     reco_energy: `astropy.Quantity`
         array of energy in TeV
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
     Returns
@@ -675,7 +678,8 @@ def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, tru
         e_bin, res = ana.angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, true_energy,
                                                        percentile=percentile,
                                                        confidence_level=confidence_level,
-                                                       bias_correction=bias_correction
+                                                       bias_correction=bias_correction,
+                                                       bins=bins
                                                        )
     except Exception as e:
         print('Angular resolution could not be computed', e)
@@ -768,24 +772,26 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
 
 
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.TeV)
-def plot_impact_parameter_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy, ax=None, **kwargs):
+def plot_impact_parameter_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy, ax=None, bins=None,
+                                                **kwargs):
     """
-
     Parameters
     ----------
-    true_x: `numpy.ndarray`
-    reco_x: `numpy.ndarray`
-    true_y: `numpy.ndarray`
-    reco_y: `numpy.ndarray`
-    energy: `numpy.ndarray`
+    true_x: `astropy.Quantity`
+    reco_x: `astropy.Quantity`
+    true_y: `astropy.Quantity`
+    reco_y: `astropy.Quantity`
+    true_energy: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
+    bins: `astropy.Quantity`
     kwargs: args for `ctaplot.plots.plot_resolution`
 
     Returns
     -------
     `matplotlib.pyplot.axes`
     """
-    bin, res = ana.impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy)
+
+    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy, bins=bins)
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
     ax.set_xlabel(fr"$E_T$ [{true_energy.unit.to_string('latex')}]")
     ax.set_ylabel(fr"Impact parameter resolution [{reco_x.unit.to_string('latex')}]")
@@ -849,7 +855,7 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
 
 
 @u.quantity_input(true_energy=u.eV, reco_energy=u.eV)
-def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
+def plot_energy_bias(true_energy, reco_energy, ax=None, bins=None, **kwargs):
     """
     Plot the true_energy bias
 
@@ -858,6 +864,7 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
     true_energy: `astropy.Quantity`
     reco_energy: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.plot`
 
     Returns
@@ -869,7 +876,7 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
 
     ax = plt.gca() if ax is None else ax
 
-    e_bin, bias_e = ana.energy_bias(true_energy, reco_energy)
+    e_bin, bias_e = ana.energy_bias(true_energy, reco_energy, bins=bins)
     energy_center = ana.logbin_mean(e_bin)
 
     if 'fmt' not in kwargs:
@@ -890,7 +897,7 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, **kwargs):
 @u.quantity_input(true_energy=u.eV, reco_energy=u.eV)
 def plot_energy_resolution(true_energy, reco_energy,
                            percentile=68.27, confidence_level=0.95, bias_correction=False,
-                           ax=None, **kwargs):
+                           ax=None, bins=None, **kwargs):
     """
     Plot the enregy resolution as a function of the true_energy
 
@@ -900,6 +907,7 @@ def plot_energy_resolution(true_energy, reco_energy,
     reco_energy: `astropy.Quantity`
     ax: `matplotlib.pyplot.axes`
     bias_correction: `bool`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.plot`
 
     Returns
@@ -916,6 +924,7 @@ def plot_energy_resolution(true_energy, reco_energy,
                                                         percentile=percentile,
                                                         confidence_level=confidence_level,
                                                         bias_correction=bias_correction,
+                                                        bins=bins,
                                                         )
     except Exception as e:
         print('Energy resolution ', e)
@@ -1044,7 +1053,7 @@ def plot_impact_parameter_error_site_center(true_x, reco_x, true_y, reco_y, ax=N
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m, true_energy=u.eV)
 def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
                                       percentile=68.27, confidence_level=0.95, bias_correction=False,
-                                      ax=None, **kwargs):
+                                      ax=None, bins=None, **kwargs):
     """
     Plot the impact resolution as a function of the true_energy
 
@@ -1056,6 +1065,7 @@ def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energ
     true_y: `astropy.Quantity`
     true_energy: `numpy.ndarray`
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
     Returns
@@ -1069,6 +1079,7 @@ def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energ
                                                       percentile=percentile,
                                                       confidence_level=confidence_level,
                                                       bias_correction=bias_correction,
+                                                      bins=bins
                                                       )
     except Exception as e:
         print('Impact resolution ', e)
@@ -1090,7 +1101,7 @@ def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energ
         return ax
 
 
-def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_args={}, line_args={}):
+def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_args=None, line_args=None):
     """
     Make a simple plot of a migration matrix
 
@@ -1116,6 +1127,10 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     >>> plot_migration_matrix(x, y, colorbar=True, hist2d_args=dict(norm=matplotlib.colors.LogNorm()))
     In this example, the colorbar will be log normed
     """
+    if hist2d_args is None:
+        hist2d_args = {}
+    if line_args is None:
+        line_args = {}
 
     if 'bins_x' not in hist2d_args:
         hist2d_args['bins'] = 50
@@ -1234,7 +1249,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     ax = plt.gca() if ax is None else ax
 
     bin_stat, bin_edges, binnumber = binned_statistic(x, y, statistic=statistic, bins=bins)
-    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_width = np.diff(bin_edges)
     bin_centers = bin_edges[1:] - bin_width / 2
 
     bin_with_data = np.setdiff1d(binnumber, len(bin_edges)) - 1
@@ -1273,7 +1288,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
 
 @u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m**2)
 def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
-                                             true_energy, simu_area, ax=None, **kwargs):
+                                             true_energy, simu_area, ax=None, bins=None, **kwargs):
     """
     Plot the effective area as a function of the true true_energy.
     The effective area is computed using the `ctaplot.ana.effective_area_per_energy_power_law`.
@@ -1293,6 +1308,7 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     simu_area: `astropy.Quantity`
         simulated core area
     ax: `matplotlib.pyplot.axes`
+    bins: `numpy.ndarray`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
     Returns
@@ -1303,7 +1319,7 @@ def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, sp
     ax = plt.gca() if ax is None else ax
 
     ebin, seff = ana.effective_area_per_energy_power_law(emin, emax, total_number_events,
-                                                         spectral_index, true_energy, simu_area)
+                                                         spectral_index, true_energy, simu_area, bins=bins)
 
     energy_nodes = ana.logbin_mean(ebin)
 
@@ -1435,8 +1451,9 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
     return ax
 
 
-@u.quantity_input(energy=u.eV)
-def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=None, **kwargs):
+
+@u.quantity_input(energy=u.eV, bins=u.eV)
+def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=None, bins=None, **kwargs):
     """
     Plot the bias per bins of true_energy
 
@@ -1448,6 +1465,7 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
     relative_scaling_method: str
         see `ctaplot.ana.relative_scaling`
     ax: `matplotlib.pyplot.axis`
+    bins: `astropy.Quantity`
     kwargs: args for `matplotlib.pyplot.errorbar`
 
     Returns
@@ -1461,7 +1479,7 @@ def plot_bias_per_energy(simu, reco, energy, relative_scaling_method=None, ax=No
 
     ax = plt.gca() if ax is None else ax
 
-    bins, bias = ana.bias_per_energy(simu, reco, energy, relative_scaling_method=relative_scaling_method)
+    bins, bias = ana.bias_per_energy(simu, reco, energy, relative_scaling_method=relative_scaling_method, bins=bins)
     mean_bins = ana.logbin_mean(bins)
 
     if 'fmt' not in kwargs:
@@ -1772,7 +1790,7 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
     return ax
 
 
-def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
+def plot_any_resource(filename, columns_xy=None, ax=None, **kwargs):
     """
     Naive plot of any resource text file that present data organised in a table after n lines of comments
 
@@ -1789,6 +1807,8 @@ def plot_any_resource(filename, columns_xy=[0, 1], ax=None, **kwargs):
 
     """
 
+    if columns_xy is None:
+        columns_xy = [0, 1]
     ax = plt.gca() if ax is None else ax
 
     data = load_any_resource(filename)
