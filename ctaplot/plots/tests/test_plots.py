@@ -203,7 +203,7 @@ def test_plot_resolution_difference():
     reco = 2 * simu
     reco2 = 3 * simu
     irf = irf_cta()
-    bin = irf.energy_bin
+    bin = irf.energy_bins
     bins, res1 = resolution_per_bin(simu, simu, reco, bins=bin, relative_scaling_method='s1')
     bins, res2 = resolution_per_bin(simu, simu, reco2, bins=bin, relative_scaling_method='s1')
     plots.plot_resolution_difference(bins, res1, res2, ax=None, color='red', alpha=0.8, label='nice diff')

@@ -548,7 +548,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
 
     cta_perf = ana.cta_performance(cta_site)
     e_cta, ef_cta = cta_perf.get_sensitivity()
-    e_bin = cta_perf.energy_bin
+    e_bin = cta_perf.energy_bins
 
     if not 'label' in kwargs:
         kwargs['label'] = "CTA performance {}".format(cta_site)
@@ -626,16 +626,16 @@ def plot_resolution_per_energy(true, reco, energy, ax=None, bins=None, **kwargs)
     ax.set_xlabel(f'Energy [{energy.unit.to_string("latex")}]')
     ax.set_xscale('log')
 
-    energy_bin, resolution = ana.resolution_per_energy(true, reco, energy, bins=bins)
+    energy_bins, resolution = ana.resolution_per_energy(true, reco, energy, bins=bins)
 
-    E = ana.logbin_mean(energy_bin)
+    E = ana.logbin_mean(energy_bins)
 
     if 'fmt' not in kwargs:
         kwargs['fmt'] = 'o'
 
     with quantity_support():
         ax.errorbar(E, resolution[:, 0],
-                    xerr=(energy_bin[1:] - energy_bin[:-1]) / 2.,
+                    xerr=(energy_bins[1:] - energy_bins[:-1]) / 2.,
                     yerr=(resolution[:, 0] - resolution[:, 1], resolution[:, 2] - resolution[:, 0]),
                     **kwargs,
                     )
