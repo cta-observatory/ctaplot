@@ -1,6 +1,8 @@
 import pandas as pd
+from astropy.utils.decorators import deprecated
 
 
+@deprecated("30/11/2020", "In the future, this format will no longer be supported")
 def read_lst_dl1_data(filename, key='dl1/event/telescope/parameters/LST_LSTCam'):
     """
     Read lst dl1 data and return a dataframe with right keys for gammaboard
@@ -22,6 +24,7 @@ def read_lst_dl1_data(filename, key='dl1/event/telescope/parameters/LST_LSTCam')
     return data
 
 
+@deprecated("30/11/2020", "In the future, this format will no longer be supported")
 def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam'):
     """
     Read lst dl1 data and return a dataframe with right keys for gammaboard
@@ -47,8 +50,8 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
     })
 
     if data['true_energy'].min() > 0.1 and data['true_energy'].max() < 10:
-        # energy is probably in log(GeV)
-        data['reco_energy'] = 10 ** (data['reco_energy'] - 3)
+        # true_energy is probably in log(GeV)
+        data['true_energy'] = 10**(data['true_energy'] - 3)
         data['true_energy'] = 10**(data['true_energy'] - 3)
 
     return data
