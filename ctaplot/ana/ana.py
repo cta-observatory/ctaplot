@@ -611,7 +611,7 @@ def energy_resolution_per_energy(true_energy, reco_energy,
     if bins is None:
         bins = irf.energy_bins
 
-    for i in range(len(E)):
+    for i in range(len(bins)-1):
         mask = (reco_energy > bins[i]) & (reco_energy < bins[i + 1])
 
         res_e.append(energy_resolution(true_energy[mask], reco_energy[mask],

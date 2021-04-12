@@ -307,3 +307,8 @@ def test_theta2():
     t2 = ana.theta2(true_alt, reco_alt, true_az, reco_az)
     assert t2.unit.is_equivalent(u.deg**2)
 
+
+def test_energy_resolution_per_energy():
+    true_energy = 10**np.random.rand(50) * u.TeV
+    reco_energy = 10 ** np.random.rand(50) * u.TeV
+    ana.energy_resolution_per_energy(true_energy, reco_energy, bins=np.logspace(-1, 2)*u.TeV)
