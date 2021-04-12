@@ -312,3 +312,9 @@ def test_energy_resolution_per_energy():
     true_energy = 10**np.random.rand(50) * u.TeV
     reco_energy = 10 ** np.random.rand(50) * u.TeV
     ana.energy_resolution_per_energy(true_energy, reco_energy, bins=np.logspace(-1, 2)*u.TeV)
+
+
+def test_energy_resolution():
+    true_energy = 10 ** np.random.rand(50) * u.TeV
+    reco_energy = 10 ** np.random.rand(50) * u.TeV
+    ana.energy_resolution(true_energy, reco_energy)
