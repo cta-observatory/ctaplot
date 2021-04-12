@@ -328,3 +328,13 @@ def test_angular_resolution_per_bin():
     reco_az = np.random.rand(size) * u.rad
     x = np.random.rand(size) * u.m
     ana.angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x, bins=np.linspace(0, 1)*u.m)
+
+
+def test_angular_resolution_per_energy():
+    size = 100
+    true_alt = np.random.rand(size) * u.rad
+    reco_alt = np.random.rand(size) * u.rad
+    true_az = np.random.rand(size) * u.rad
+    reco_az = np.random.rand(size) * u.rad
+    x = 10**np.random.rand(size) * u.TeV
+    ana.angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, x, bins=np.logspace(0, 1) * u.TeV)
