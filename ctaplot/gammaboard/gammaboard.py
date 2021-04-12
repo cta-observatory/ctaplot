@@ -14,7 +14,7 @@ from sklearn.multiclass import LabelBinarizer
 from .. import plots
 from .. import ana
 from ..io.dataset import get
-from ..io import read_lst_dl2_data
+from ..io import read_lst_dl2_data, read_glearn_dl2_data
 
 
 __all__ = ['open_dashboard',
@@ -24,6 +24,7 @@ __all__ = ['open_dashboard',
            ]
 
 GAMMA_ID = 0
+ELECTRON_ID = 1
 
 
 def find_data_files(experiment, experiments_directory):
@@ -64,7 +65,7 @@ def load_data_from_h5(experiment, experiments_directory):
     result_data = []
     for r_file in result_files:
         try:
-            data = pd.read_hdf(r_file, key='data')
+            data = read_glearn_dl2_data(r_file)
         except KeyError:
             try:
                 data = read_lst_dl2_data(r_file)
@@ -229,14 +230,16 @@ class Experiment(object):
 
     def load_data(self):
         self.data = load_data_from_h5(self.name, self.experiments_directory)
+        # currently, electrons are used to compute the results
+        self.data = self.data[self.data.mc_type != ELECTRON_ID]
         if self.data is not None:
             self.set_loaded(True)
-            if 'mc_particle' in self.data:
-                self.gamma_data = self.data[self.data.mc_particle == GAMMA_ID]
+            if 'mc_type' in self.data:
+                self.gamma_data = self.data[self.data.mc_type == GAMMA_ID]
                 self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_particle == GAMMA_ID]
-                noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
+                noise_mask = (self.data.mc_type != GAMMA_ID) & (self.data.reco_particle == GAMMA_ID)
                 self.noise_reco_gamma = self.data[noise_mask]
-                self.gammaness_cut = 1/len(np.unique(self.data.mc_particle)) if 'reco_gammaness' in self.data else None
+                self.gammaness_cut = 1/len(np.unique(self.data.mc_type)) if 'reco_gammaness' in self.data else None
             else:
                 self.gamma_data = self.data
         self.mc_trig_events = load_trig_events(self.name, self.experiments_directory)
@@ -246,7 +249,7 @@ class Experiment(object):
 
         self.gammaness_cut = new_cut
         self.reco_gamma_data = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-        noise_mask = (self.data.mc_particle != GAMMA_ID) & (self.data.reco_gammaness >= self.gammaness_cut)
+        noise_mask = (self.data.mc_type != GAMMA_ID) & (self.data.reco_gammaness >= self.gammaness_cut)
         self.noise_reco_gamma = self.data[noise_mask]
 
     def get_data(self):
@@ -266,10 +269,10 @@ class Experiment(object):
 
     def plot_angular_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.gamma_data.reco_altitude,
-                                                                       self.gamma_data.reco_azimuth,
-                                                                       self.gamma_data.mc_altitude,
-                                                                       self.gamma_data.mc_azimuth,
+            self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.gamma_data.reco_alt,
+                                                                       self.gamma_data.reco_az,
+                                                                       self.gamma_data.mc_alt,
+                                                                       self.gamma_data.mc_az,
                                                                        self.gamma_data.mc_energy,
                                                                        bias_correction=self.bias_correction,
                                                                        ax=ax,
@@ -281,10 +284,10 @@ class Experiment(object):
     def plot_angular_resolution_reco(self, ax=None):
         if self.get_loaded():
             if self.reco_gamma_data is not None:
-                self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_altitude,
-                                                                           self.reco_gamma_data.reco_azimuth,
-                                                                           self.reco_gamma_data.mc_altitude,
-                                                                           self.reco_gamma_data.mc_azimuth,
+                self.ax_ang_res = plots.plot_angular_resolution_per_energy(self.reco_gamma_data.reco_alt,
+                                                                           self.reco_gamma_data.reco_az,
+                                                                           self.reco_gamma_data.mc_alt,
+                                                                           self.reco_gamma_data.mc_az,
                                                                            self.reco_gamma_data.mc_energy,
                                                                            bias_correction=self.bias_correction,
                                                                            ax=ax,
@@ -329,10 +332,10 @@ class Experiment(object):
 
     def plot_impact_resolution(self, ax=None):
         if self.get_loaded():
-            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data.reco_impact_x,
-                                                                      self.gamma_data.reco_impact_y,
-                                                                      self.gamma_data.mc_impact_x,
-                                                                      self.gamma_data.mc_impact_y,
+            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data.reco_core_x,
+                                                                      self.gamma_data.reco_core_y,
+                                                                      self.gamma_data.mc_core_x,
+                                                                      self.gamma_data.mc_core_y,
                                                                       self.gamma_data.mc_energy,
                                                                       bias_correction=self.bias_correction,
                                                                       ax=ax,
@@ -347,10 +350,10 @@ class Experiment(object):
     def plot_impact_resolution_reco(self, ax=None):
         if self.get_loaded():
             if self.reco_gamma_data is not None:
-                self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_impact_x,
-                                                                          self.reco_gamma_data.reco_impact_y,
-                                                                          self.reco_gamma_data.mc_impact_x,
-                                                                          self.reco_gamma_data.mc_impact_y,
+                self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data.reco_core_x,
+                                                                          self.reco_gamma_data.reco_core_y,
+                                                                          self.reco_gamma_data.mc_core_x,
+                                                                          self.reco_gamma_data.mc_core_y,
                                                                           self.reco_gamma_data.mc_energy,
                                                                           bias_correction=self.bias_correction,
                                                                           ax=ax,
@@ -480,13 +483,14 @@ class Experiment(object):
 
     def plot_roc_curve(self, ax=None):
         if self.get_loaded() and 'reco_gammaness' in self.data:
-            self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_particle,
+            self.ax_roc = plots.plot_roc_curve_gammaness(self.data.mc_type,
                                                          self.data.reco_gammaness,
                                                          label=self.name,
                                                          ax=ax,
                                                          color=self.color)
-            binarized_class = np.ones_like(self.data.mc_particle)
-            binarized_class[self.data.mc_particle != GAMMA_ID] = 0
+            binarized_class = np.ones_like(self.data.mc_type)
+            mask = np.array(self.data.mc_type != GAMMA_ID)
+            binarized_class[mask] = 0
             self.auc = roc_auc_score(binarized_class, self.data.reco_gammaness,)
             self.set_plotted(True)
 
@@ -495,7 +499,7 @@ class Experiment(object):
             self.ax_pr = plt.gca() if ax is None else ax
             if 'reco_gammaness' in self.data:
                 label_binarizer = LabelBinarizer()
-                binarized_classes = label_binarizer.fit_transform(self.data.mc_particle)
+                binarized_classes = label_binarizer.fit_transform(self.data.mc_type)
                 ii = np.where(label_binarizer.classes_ == GAMMA_ID)[0][0]
                 precision, recall, _ = precision_recall_curve(binarized_classes[:, ii],
                                                               self.data.reco_gammaness,
@@ -509,7 +513,7 @@ class Experiment(object):
         if self.get_loaded() and self.gammaness_cut is not None and self.ax_pr is not None:
             if 'reco_gammaness' in self.data:
                 true_positive = self.gamma_data[self.gamma_data.reco_gammaness >= self.gammaness_cut]
-                noise = self.data[self.data.mc_particle != GAMMA_ID]
+                noise = self.data[self.data.mc_type != GAMMA_ID]
                 false_positive = noise[noise.reco_gammaness >= self.gammaness_cut]
             else:
                 raise ValueError
@@ -597,13 +601,13 @@ class Experiment(object):
                     c.set_visible(visible)
 
     def visibility_all_plot(self, visible: bool):
-        if 'reco_altitude' in self.data and 'reco_azimuth' in self.data:
+        if 'reco_alt' in self.data and 'reco_az' in self.data:
             self.visibility_angular_resolution_plot(visible)
             self.visibility_angular_resolution_reco_plot(visible)
         if 'reco_energy' in self.data:
             self.visibility_energy_resolution_plot(visible)
             self.visibility_energy_resolution_reco_plot(visible)
-        if 'reco_impact_x' in self.data and 'reco_impact_y' in self.data:
+        if 'reco_core_x' in self.data and 'reco_core_y' in self.data:
             self.visibility_impact_resolution_plot(visible)
             self.visibility_impact_resolution_reco_plot(visible)
         if 'reco_gammaness' in self.data:
@@ -655,8 +659,8 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_altitude
-            reco = self.gamma_data.reco_altitude
+            mc = self.gamma_data.mc_alt
+            reco = self.gamma_data.reco_alt
             ax = plots.plot_migration_matrix(mc, reco,
                                              ax=ax,
                                              colorbar=colorbar,
@@ -684,8 +688,8 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_azimuth
-            reco = self.gamma_data.reco_azimuth
+            mc = self.gamma_data.mc_az
+            reco = self.gamma_data.reco_az
             ax = plots.plot_migration_matrix(mc, reco,
                                              ax=ax,
                                              colorbar=colorbar,
@@ -713,8 +717,8 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_impact_x
-            reco = self.gamma_data.reco_impact_x
+            mc = self.gamma_data.mc_core_x
+            reco = self.gamma_data.reco_core_x
             ax = plots.plot_migration_matrix(mc, reco,
                                              ax=ax,
                                              colorbar=colorbar,
@@ -742,8 +746,8 @@ class Experiment(object):
 
         ax = plt.gca() if ax is None else ax
         if self.get_loaded():
-            mc = self.gamma_data.mc_impact_y
-            reco = self.gamma_data.reco_impact_y
+            mc = self.gamma_data.mc_core_y
+            reco = self.gamma_data.reco_core_y
             ax = plots.plot_migration_matrix(mc, reco,
                                              ax=ax,
                                              colorbar=colorbar,
@@ -766,13 +770,13 @@ def plot_migration_matrices(exp, colorbar=True, **kwargs):
     fig, axes = plt.subplots(1, 5, **kwargs)
     if 'reco_energy' in exp.data:
         axes[0] = exp.plot_energy_matrix(ax=axes[0], colorbar=colorbar)
-    if 'reco_altitude' in exp.data:
+    if 'reco_alt' in exp.data:
         axes[1] = exp.plot_altitude_matrix(ax=axes[1], colorbar=colorbar)
-    if 'reco_azimuth' in exp.data:
+    if 'reco_az' in exp.data:
         axes[2] = exp.plot_azimuth_matrix(ax=axes[2], colorbar=colorbar)
-    if 'reco_impact_x' in exp.data:
+    if 'reco_core_x' in exp.data:
         axes[3] = exp.plot_impact_x_matrix(ax=axes[3], colorbar=colorbar)
-    if 'reco_impact_y' in exp.data:
+    if 'reco_core_y' in exp.data:
         axes[4] = exp.plot_impact_y_matrix(ax=axes[4], colorbar=colorbar)
     fig.tight_layout()
     return fig
@@ -858,13 +862,13 @@ def plot_exp_on_fig(exp, fig):
     ax_eff_area_ratio = axes[5]
     ax_pr = axes[6]
 
-    if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
+    if 'reco_alt' in exp.data and 'reco_az' in exp.data:
         exp.plot_angular_resolution(ax=ax_ang_res)
         exp.plot_angular_resolution_reco(ax=ax_ang_res)
     if 'reco_energy' in exp.data:
         exp.plot_energy_resolution(ax=ax_ene_res)
         exp.plot_energy_resolution_reco(ax=ax_ene_res)
-    if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
+    if 'reco_core_x' in exp.data and 'reco_core_y' in exp.data:
         exp.plot_impact_resolution(ax=ax_imp_res)
         exp.plot_impact_resolution_reco(ax=ax_imp_res)
     if 'reco_gammaness' in exp.data:
@@ -1002,11 +1006,11 @@ def create_update_gammaness_cut(experiments_dict, fig_resolution, visible_experi
         ax_eff_area_ratio = axes[5]
         ax_pr = axes[6]
 
-        if 'reco_altitude' in exp.data and 'reco_azimuth' in exp.data:
+        if 'reco_alt' in exp.data and 'reco_az' in exp.data:
             exp.update_angular_resolution_reco(ax_ang_res)
         if 'reco_energy' in exp.data:
             exp.update_energy_resolution_reco(ax_ene_res)
-        if 'reco_impact_x' in exp.data and 'reco_impact_y' in exp.data:
+        if 'reco_core_x' in exp.data and 'reco_core_y' in exp.data:
             exp.update_impact_resolution_reco(ax_imp_res)
         if 'mc_energy' in exp.data:
             exp.update_effective_area_reco(ax_eff_area)
