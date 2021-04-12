@@ -791,7 +791,7 @@ def plot_impact_parameter_resolution_per_energy(true_x, reco_x, true_y, reco_y, 
     `matplotlib.pyplot.axes`
     """
 
-    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, energy, bins=bins)
+    bin, res = ana.impact_resolution_per_energy(reco_x, reco_y, true_x, true_y, true_energy, bins=bins)
     ax = plot_resolution(bin, res, log=True, ax=ax, **kwargs)
     ax.set_xlabel(fr"$E_T$ [{true_energy.unit.to_string('latex')}]")
     ax.set_ylabel(fr"Impact parameter resolution [{reco_x.unit.to_string('latex')}]")
