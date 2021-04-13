@@ -43,7 +43,9 @@ def find_data_files(experiment, experiments_directory):
     for dirname, dirnames, filenames in os.walk(data_folder):
         for file in filenames:
             filename, ext = os.path.splitext(file)
-            if ext == '.h5':
+            # currently, electrons are used to compute the results
+            particle = filename.split('_')[-1]
+            if ext == '.h5' and particle != str(ELECTRON_ID):
                 file_set.add(dirname + '/' + file)
     return tuple(file_set)
 
@@ -230,8 +232,8 @@ class Experiment(object):
 
     def load_data(self):
         self.data = load_data_from_h5(self.name, self.experiments_directory)
-        # currently, electrons are used to compute the results
-        self.data = self.data[self.data.mc_type != ELECTRON_ID]
+        # # currently, electrons are used to compute the results
+        # self.data = self.data[self.data.mc_type != ELECTRON_ID]
         if self.data is not None:
             self.set_loaded(True)
             if 'mc_type' in self.data:
