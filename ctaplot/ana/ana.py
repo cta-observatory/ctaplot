@@ -374,7 +374,7 @@ def bias(true, reco):
     -------
     float
     """
-    if not len(true) == len(reco):
+    if len(true) != len(reco):
         raise ValueError("both arrays should have the same size")
     if len(true) == 0:
         return 0
@@ -517,11 +517,7 @@ def resolution_per_bin(x, y_true, y_reco,
                               )
                    )
 
-    if isinstance(res[0], u.Quantity):
-        res = u.Quantity(res)
-    else:
-        res = np.array(res)
-
+    res = u.Quantity(res) if isinstance(res[0], u.Quantity) else np.array(res)
     return x_bins, res
 
 
@@ -987,9 +983,8 @@ def logbin_mean(x_bin):
     """
     if not isinstance(x_bin, u.Quantity):
         return 10 ** ((np.log10(x_bin[:-1]) + np.log10(x_bin[1:])) / 2.)
-    else:
-        unit = x_bin.unit
-        return (10 ** ((np.log10(x_bin[:-1].to_value(unit)) + np.log10(x_bin[1:].to_value(unit))) / 2.)) * unit
+    unit = x_bin.unit
+    return (10 ** ((np.log10(x_bin[:-1].to_value(unit)) + np.log10(x_bin[1:].to_value(unit))) / 2.)) * unit
 
 
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
@@ -1288,11 +1283,7 @@ def bias_per_bin(true, reco, x, relative_scaling_method=None, bins=10):
         mask = bin_index == ii
         b.append(relative_bias(true[mask], reco[mask], relative_scaling_method=relative_scaling_method))
 
-    if isinstance(b[0], u.Quantity):
-        b = u.Quantity(b)
-    else:
-        b = np.array(b)
-
+    b = u.Quantity(b) if isinstance(b[0], u.Quantity) else np.array(b)
     return x_bins, b
 
 
