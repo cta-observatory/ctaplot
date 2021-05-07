@@ -446,8 +446,9 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
-    if not 'label' in kwargs:
+    if 'label' not in kwargs:
         kwargs['label'] = "CTA requirement {}".format(cta_site)
+    kwargs.set
 
     with quantity_support():
         ax.plot(e_cta, ef_cta, **kwargs)
@@ -514,8 +515,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirement {}".format(cta_site)
+    kwargs['label'].setdefault('label', "CTA requirement {}".format(cta_site))
 
     with quantity_support():
         ax.plot(e_cta, ef_cta, **kwargs)
@@ -550,8 +550,7 @@ def plot_sensitivity_cta_performance(cta_site, ax=None, **kwargs):
     e_cta, ef_cta = cta_perf.get_sensitivity()
     e_bin = cta_perf.energy_bins
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performance {}".format(cta_site)
+    kwargs.setdefault('label', "CTA performance {}".format(cta_site))
 
     with quantity_support():
         ax.errorbar(e_cta, ef_cta, xerr=u.Quantity([e_cta - e_bin[:-1], e_bin[1:] - e_cta]), **kwargs)
@@ -722,8 +721,7 @@ def plot_angular_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirement {}".format(cta_site)
+    kwargs.setdefault('label', "CTA requirement {}".format(cta_site))
 
     with quantity_support():
         ax.plot(e_cta, ar_cta, **kwargs)
@@ -758,8 +756,7 @@ def plot_angular_resolution_cta_performance(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_performance(cta_site)
     e_cta, ar_cta = cta_req.get_angular_resolution()
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performance {}".format(cta_site)
+    kwargs.setdefault('label', "CTA performance {}".format(cta_site))
 
     ax.plot(e_cta, ar_cta, **kwargs)
     ax.set_xscale('log')
@@ -804,8 +801,8 @@ def plot_impact_parameter_resolution_per_energy(true_x, reco_x, true_y, reco_y, 
 def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
                     ax=None,
                     outfile=None,
-                    hist_kwargs={},
-                    scatter_kwargs={},
+                    hist_kwargs=None,
+                    scatter_kwargs=None,
                     ):
     """
     Map of the site with telescopes positions and impact points heatmap
@@ -824,13 +821,16 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
     """
     ax = plt.gca() if ax is None else ax
 
+    hist_kwargs = {} if hist_kwargs is None else hist_kwargs
+    scatter_kwargs = {} if scatter_kwargs is None else scatter_kwargs
+
     hist_kwargs.setdefault('bins', 40)
     unit = impact_x.value
     ax.hist2d(impact_x.to_value(unit), impact_y.to_value(unit), **hist_kwargs)
     pcm = ax.get_children()[0]
     plt.colorbar(pcm, ax=ax)
 
-    if not len(tel_x) == len(tel_y):
+    if len(tel_x) != len(tel_y):
         raise ValueError("tel_x and tel_y should have the same length")
 
     scatter_kwargs.setdefault('s', 50)
@@ -838,15 +838,12 @@ def plot_impact_map(impact_x, impact_y, tel_x, tel_y, tel_types=None,
     if tel_types and 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
         scatter_kwargs['color'] = tel_types
         assert (len(tel_types) == len(tel_x)), "tel_types and tel_x should have the same length"
-        with quantity_support():
-            ax.scatter(tel_x, tel_y, **scatter_kwargs)
     else:
         if 'color' not in scatter_kwargs and 'c' not in scatter_kwargs:
             scatter_kwargs['color'] = 'black'
         scatter_kwargs['marker'] = '+' if 'marker' not in scatter_kwargs else scatter_kwargs['marker']
-        with quantity_support():
-            ax.scatter(tel_x, tel_y, **scatter_kwargs)
-
+    with quantity_support():
+        ax.scatter(tel_x, tel_y, **scatter_kwargs)
     ax.axis('equal')
     if outfile is not None:
         plt.savefig(outfile, bbox_inches="tight", format='png', dpi=200)
@@ -871,7 +868,7 @@ def plot_energy_bias(true_energy, reco_energy, ax=None, bins=None, **kwargs):
     -------
     ax: `matplotlib.pyplot.axes`
     """
-    if not len(true_energy) == len(reco_energy):
+    if len(true_energy) != len(reco_energy):
         raise ValueError("simulated and reconstructured true_energy arrrays should have the same length")
 
     ax = plt.gca() if ax is None else ax
@@ -971,8 +968,7 @@ def plot_energy_resolution_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA requirement {}".format(cta_site)
+    kwargs.setdefault('label', "CTA requirement {}".format(cta_site))
 
     ax.set_ylabel(r"$(\Delta energy/energy)_{68}$")
     ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')
@@ -1005,8 +1001,7 @@ def plot_energy_resolution_cta_performance(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_performance(cta_site)
     e_cta, ar_cta = cta_req.get_energy_resolution()
 
-    if not 'label' in kwargs:
-        kwargs['label'] = "CTA performance {}".format(cta_site)
+    kwargs.setdefault('label', "CTA performance {}".format(cta_site))
 
     ax.set_ylabel(r"$(\Delta energy/energy)_{68}$")
     ax.set_xlabel(rf'$E_R$ [{e_cta.unit.to_string("latex")}]')

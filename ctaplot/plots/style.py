@@ -12,7 +12,7 @@ def check_latex():
     -------
     bool: True if a LaTeX distribution could be found
     """
-    return not find_executable('latex') is None
+    return find_executable('latex') is not None
 
 
 @contextmanager
