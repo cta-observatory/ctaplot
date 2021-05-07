@@ -512,7 +512,7 @@ def plot_sensitivity_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_sensitivity()
 
-    kwargs['label'].setdefault('label', "CTA requirement {}".format(cta_site))
+    kwargs.setdefault('label', "CTA requirement {}".format(cta_site))
 
     with quantity_support():
         ax.plot(e_cta, ef_cta, **kwargs)
