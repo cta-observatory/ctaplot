@@ -315,8 +315,7 @@ def plot_multiplicity_hist(multiplicity, ax=None, outfile=None, quartils=False, 
     xmin = multiplicity.min()
     xmax = multiplicity.max()
 
-    if 'label' not in kwargs:
-        kwargs['label'] = 'Telescope multiplicity'
+    kwargs.setdefault('label', 'Telescope multiplicity')
 
     n, bins, patches = ax.hist(multiplicity, bins=(xmax - xmin), range=(xmin, xmax), rwidth=0.7, align='left', **kwargs)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -446,9 +445,7 @@ def plot_effective_area_cta_requirement(cta_site, ax=None, **kwargs):
     cta_req = ana.cta_requirement(cta_site)
     e_cta, ef_cta = cta_req.get_effective_area()
 
-    if 'label' not in kwargs:
-        kwargs['label'] = "CTA requirement {}".format(cta_site)
-    kwargs.set
+    kwargs.setdefault('label', "CTA requirement {}".format(cta_site))
 
     with quantity_support():
         ax.plot(e_cta, ef_cta, **kwargs)
@@ -1554,8 +1551,7 @@ def plot_roc_curve(true_type, reco_proba,
     if auc_score < 0.5:
         auc_score = 1 - auc_score
 
-    if 'label' not in kwargs:
-        kwargs['label'] = "auc score = {:.3f}".format(auc_score)
+    kwargs.setdefault('label', "auc score = {:.3f}".format(auc_score))
 
     fpr, tpr, thresholds = metrics.roc_curve(true_type,
                                              reco_proba,
@@ -1808,8 +1804,7 @@ def plot_any_resource(filename, columns_xy=None, ax=None, **kwargs):
 
     data = load_any_resource(filename)
 
-    if 'label' not in kwargs:
-        kwargs['label'] = filename
+    kwargs.setdefault('label', filename)
     ax.plot(data[columns_xy[0]], data[columns_xy[1]], **kwargs)
 
     return ax
