@@ -1119,10 +1119,9 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     >>> plot_migration_matrix(x, y, colorbar=True, hist2d_args=dict(norm=matplotlib.colors.LogNorm()))
     In this example, the colorbar will be log normed
     """
-    if hist2d_args is None:
-        hist2d_args = {}
-    if line_args is None:
-        line_args = {}
+
+    hist2d_args = {} if hist2d_args is None else hist2d_args
+    line_args = {} if line_args is None else line_args
 
     if 'bins_x' not in hist2d_args:
         hist2d_args['bins'] = 50
