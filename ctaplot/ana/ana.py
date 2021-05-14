@@ -1326,3 +1326,28 @@ def get_magic_sensitivity():
     `astropy.table.table.QTable`
     """
     return read(ds.get('magic_sensitivity_2014.ecsv'))
+
+
+def gammaness_threshold_efficiency(gammaness, efficiency):
+    """
+    Compute the gammaness threshold required to get a given efficiency on a single category.
+    The efficiency, or recall, is the number of correctly classified particle among true ones.
+
+    Parameters
+    ----------
+    gammaness: `numpy.ndarray`
+        gammaness of true events (e.g. gammas)
+    efficiency: `float`
+        between 0 and 1
+
+    Returns
+    -------
+    treshold: `float`
+        between 0 and 1
+    """
+    hist, edges = np.histogram(gammaness, bins=len(gammaness), range=(0, 1))
+    relative_cum_hist = np.cumsum(hist[::-1])[::-1] / len(gammaness)
+    threshold = edges[:-1][relative_cum_hist >= efficiency][-1]
+    return threshold
+
+
