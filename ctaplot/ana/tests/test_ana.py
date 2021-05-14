@@ -338,3 +338,10 @@ def test_angular_resolution_per_energy():
     reco_az = np.random.rand(size) * u.rad
     x = 10**np.random.rand(size) * u.TeV
     ana.angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, x, bins=np.logspace(0, 1) * u.TeV)
+
+
+def test_gammaness_threshold_efficiency():
+    gammaness = np.linspace(0, 1, 10000)
+    efficiency = np.random.rand()
+    threshold = ana.gammaness_threshold_efficiency(gammaness, efficiency)
+    np.testing.assert_almost_equal(efficiency, 1-threshold, decimal=3)
