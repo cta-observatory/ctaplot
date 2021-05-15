@@ -16,6 +16,7 @@ from matplotlib.ticker import FormatStrFormatter
 from ..ana import ana
 from ..io.dataset import load_any_resource
 from sklearn.metrics import precision_recall_curve, PrecisionRecallDisplay
+from sklearn.metrics import recall_score, precision_score
 
 __all__ = ['plot_resolution',
            'plot_resolution_difference',
@@ -2132,6 +2133,8 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, t
     prec, recall, thresholds = precision_recall_curve(y_true, proba_pred, pos_label=pos_label,
                                                       sample_weight=sample_weigth)
 
+    pr_display = PrecisionRecallDisplay(precision=prec, recall=recall, pos_label=pos_label).plot(ax=ax, **kwargs)
+
     if threshold is not None:
         pred = (proba_pred > threshold).astype(int)
         neg_label = list(set(y_true))
@@ -2144,4 +2147,4 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, t
         p = precision_score(y_true, pred_labels, pos_label=pos_label)
         pr_display.ax_.scatter(r, p)
 
-    return PrecisionRecallDisplay(precision=prec, recall=recall, pos_label=pos_label).plot(ax=ax, **kwargs)
+    return pr_display
