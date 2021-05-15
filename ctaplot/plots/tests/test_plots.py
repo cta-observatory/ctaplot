@@ -325,4 +325,7 @@ def test_plot_gammaness_threshold_efficiency():
 
 def test_plot_precision_recall():
     size = 1000
-    plots.plot_precision_recall(np.random.choice([0, 101], size=size), np.random.rand(size), color='green')
+    plots.plot_precision_recall(np.random.choice([0, 101], size=size),
+                                np.random.rand(size),
+                                threshold=np.random.rand(),
+                                color='green')

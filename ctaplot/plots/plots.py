@@ -2101,7 +2101,7 @@ def plot_gammaness_threshold_efficiency(gammaness, efficiency, ax=None, **kwargs
     return ax, threshold
 
 
-def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, ax=None, **kwargs):
+def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, threshold=None, ax=None, **kwargs):
     """
     Precision as a function of recall.
 
@@ -2118,6 +2118,8 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, a
         ``pos_label`` is set to 1, otherwise an error will be raised.
     sample_weigth: array-like of shape (n_samples,), default=None
         Sample weights.
+    threshold: `float`
+        between 0 and 1. Add a point on the curve corresponding to the given threshold.
     ax: `matplotlib.pyplot.axes`
     kwargs: kwargs for `sklearn.metrics.PrecisionRecallDisplay`
 
@@ -2129,5 +2131,17 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, a
 
     prec, recall, thresholds = precision_recall_curve(y_true, proba_pred, pos_label=pos_label,
                                                       sample_weight=sample_weigth)
+
+    if threshold is not None:
+        pred = (proba_pred > threshold).astype(int)
+        neg_label = list(set(y_true))
+        neg_label.remove(pos_label)
+        if not len(neg_label) == 1:
+            raise ValueError("`y_true` should contain only two labels")
+        neg_label = neg_label[0]
+        pred_labels = np.where(pred == 1, np.ones_like(pred) * pos_label, np.ones_like(pred) * neg_label)
+        r = recall_score(y_true, pred_labels, pos_label=pos_label)
+        p = precision_score(y_true, pred_labels, pos_label=pos_label)
+        pr_display.ax_.scatter(r, p)
 
     return PrecisionRecallDisplay(precision=prec, recall=recall, pos_label=pos_label).plot(ax=ax, **kwargs)
