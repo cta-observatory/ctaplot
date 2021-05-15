@@ -15,6 +15,7 @@ from astropy.visualization import quantity_support
 from matplotlib.ticker import FormatStrFormatter
 from ..ana import ana
 from ..io.dataset import load_any_resource
+from sklearn.metrics import precision_recall_curve, PrecisionRecallDisplay
 
 __all__ = ['plot_resolution',
            'plot_resolution_difference',
@@ -62,6 +63,8 @@ __all__ = ['plot_resolution',
            'plot_background_rate',
            'plot_background_rate_magic',
            'plot_gamma_rate_magic',
+           'plot_gammaness_threshold_efficiency',
+           'plot_precision_recall',
            ]
 
 
@@ -375,7 +378,7 @@ def plot_resolution(bins, res, log=False, ax=None, **kwargs):
     return ax
 
 
-@u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m**2)
+@u.quantity_input(true_energy=u.eV, reco_energy=u.eV, simulated_area=u.m ** 2)
 def plot_effective_area_per_energy(true_energy, reco_energy, simulated_area, ax=None, bins=None, **kwargs):
     """
     Plot the effective area as a function of the true true_energy
@@ -1277,7 +1280,7 @@ def plot_binned_stat(x, y, statistic='mean', bins=20, errorbar=False, percentile
     return ax
 
 
-@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m**2)
+@u.quantity_input(emin=u.eV, emax=u.eV, true_energy=u.eV, simu_area=u.m ** 2)
 def plot_effective_area_per_energy_power_law(emin, emax, total_number_events, spectral_index,
                                              true_energy, simu_area, ax=None, bins=None, **kwargs):
     """
@@ -1440,7 +1443,6 @@ def plot_binned_bias(simu, reco, x, relative_scaling_method=None, ax=None, bins=
     ax.errorbar(mean_bins, bias, xerr=(mean_bins - bins[:-1], bins[1:] - mean_bins), **kwargs)
 
     return ax
-
 
 
 @u.quantity_input(energy=u.eV, bins=u.eV)
@@ -2097,3 +2099,35 @@ def plot_gammaness_threshold_efficiency(gammaness, efficiency, ax=None, **kwargs
     ax.set_yticks(yticks)
     ax.grid(True)
     return ax, threshold
+
+
+def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, ax=None, **kwargs):
+    """
+    Precision as a function of recall.
+
+    Parameters
+    ----------
+    y_true: ndarray of shape (n_samples,)
+        True binary labels. If labels are not either {-1, 1} or {0, 1}, then
+        pos_label should be explicitly given.
+    proba_pred: ndarray of shape (n_samples,)
+        Estimated probabilities or output of a decision function.
+    pos_label: int or str, default=0
+        The label of the positive class. The default is 0 for gammas'.
+        When ``pos_label=None``, if y_true is in {-1, 1} or {0, 1},
+        ``pos_label`` is set to 1, otherwise an error will be raised.
+    sample_weigth: array-like of shape (n_samples,), default=None
+        Sample weights.
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `sklearn.metrics.PrecisionRecallDisplay`
+
+    Returns
+    -------
+    display: `sklearn.metrics.PrecisionRecallDisplay`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    prec, recall, thresholds = precision_recall_curve(y_true, proba_pred, pos_label=pos_label,
+                                                      sample_weight=sample_weigth)
+
+    return PrecisionRecallDisplay(precision=prec, recall=recall, pos_label=pos_label).plot(ax=ax, **kwargs)
