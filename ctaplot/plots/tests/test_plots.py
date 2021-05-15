@@ -318,3 +318,6 @@ def test_plot_dispersion():
     plots.plot_dispersion(x, y, x_log=True, bins=20)
     plots.plot_dispersion(x, y, x_log=False, bins=(np.logspace(0, 1, 10), np.linspace(-1, 1, 10)))
 
+
+def test_plot_gammaness_threshold_efficiency():
+    plots.plot_gammaness_threshold_efficiency(np.random.rand(1000), np.random.rand(), color='black', alpha=0.4)

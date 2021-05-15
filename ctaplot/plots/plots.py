@@ -2053,3 +2053,47 @@ def plot_gamma_rate_magic(ax=None, **kwargs):
                              )
 
     return ax
+
+
+def plot_gammaness_threshold_efficiency(gammaness, efficiency, ax=None, **kwargs):
+    """
+    Plot the cumulative histogram of the gammaness with the threshold to obtain a give efficiency.
+    See also `ctaplot.ana.gammaness_threshold_efficiency`.
+
+    Parameters
+    ----------
+    gammaness: `numpy.ndarray`
+         gammaness of true events (e.g. gammas)
+    efficiency: `float`
+        between 0 and 1
+    ax: `matplotlib.pyplot.axes`
+    kwargs: kwargs for `matplotlib.pyplot.hist`
+
+    Returns
+    -------
+    ax, threshold
+        ax: `matplotlib.pyplot.axes`
+        threshold: `float`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    kwargs.setdefault('bins', 100)
+    kwargs.setdefault('range', (0, 1))
+    kwargs['cumulative'] = -1
+    kwargs['density'] = True
+    kwargs.setdefault('color', 'darkblue')
+    n, bins, _ = ax.hist(gammaness, **kwargs)
+    threshold = bins[:-1][n > efficiency][-1]
+    ax.vlines(threshold, 0, 1, color='red')
+    ax.hlines(efficiency, 0, 1, color='red')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_ylabel('efficiency')
+    ax.set_xlabel('gammaness')
+
+    xticks = np.sort(np.append(ax.get_xticks(), threshold))
+    yticks = np.sort(np.append(ax.get_yticks(), efficiency))
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
+    ax.grid(True)
+    return ax, threshold
