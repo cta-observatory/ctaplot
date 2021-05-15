@@ -2091,9 +2091,11 @@ def plot_gammaness_threshold_efficiency(gammaness, efficiency, ax=None, **kwargs
     ax.set_ylabel('efficiency')
     ax.set_xlabel('gammaness')
 
-    xticks = np.sort(np.append(ax.get_xticks(), threshold))
-    yticks = np.sort(np.append(ax.get_yticks(), efficiency))
-    ax.set_xticks(xticks)
-    ax.set_yticks(yticks)
+    ax2 = ax.twiny()
+    ax2.set_xticks([threshold])
+    ay2 = ax.twinx()
+    ay2.set_yticks([efficiency])
+
+    ax.set_title('Cumulative gammaness distribution')
     ax.grid(True)
     return ax, threshold
