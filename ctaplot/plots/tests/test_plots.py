@@ -321,3 +321,11 @@ def test_plot_dispersion():
 
 def test_plot_gammaness_threshold_efficiency():
     plots.plot_gammaness_threshold_efficiency(np.random.rand(1000), np.random.rand(), color='black', alpha=0.4)
+
+
+def test_plot_precision_recall():
+    size = 1000
+    plots.plot_precision_recall(np.random.choice([0, 101], size=size),
+                                np.random.rand(size),
+                                threshold=np.random.rand(),
+                                color='green')
