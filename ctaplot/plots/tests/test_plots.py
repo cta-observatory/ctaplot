@@ -329,3 +329,9 @@ def test_plot_precision_recall():
                                 np.random.rand(size),
                                 threshold=np.random.rand(),
                                 color='green')
+
+
+def test_plot_roc_auc_per_energy():
+    energy_bins = np.array([0.05, 0.5, 5, 50]) * u.TeV
+    roc_auc_scores = np.array([0.6, 0.7, 0.8])
+    plots.plot_roc_auc_per_energy(energy_bins, roc_auc_scores, color='black', label='label', alpha=0.3, ls='--')
