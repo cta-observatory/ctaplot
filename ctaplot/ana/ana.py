@@ -5,10 +5,11 @@ Contain mathematical functions to make results analysis
 (compute angular resolution, effective surface, true_energy resolution... )
 """
 import numpy as np
-from ..io import dataset as ds
 from scipy.stats import binned_statistic, norm
 from astropy.io.ascii import read
 import astropy.units as u
+from sklearn import metrics
+from ..io import dataset as ds
 
 _relative_scaling_method = 's1'
 
@@ -48,6 +49,7 @@ __all__ = ['irf_cta',
            'logbin_mean',
            'get_magic_sensitivity',
            'logspace_decades_nbin',
+           'roc_auc_per_energy',
            ]
 
 
@@ -1351,3 +1353,43 @@ def gammaness_threshold_efficiency(gammaness, efficiency):
     return threshold
 
 
+def roc_auc_per_energy(true_type, gammaness, true_energy, energy_bins=None, gamma_label=0, **roc_auc_score_opt):
+    """
+    Compute AUC score as a function of the true gamma energy.
+    The AUC score is calculated in a gamma versus all fashion.
+
+    Parameters
+    ----------
+    true_type: `numpy.ndarray`
+        labels
+    gammaness: `numpy.ndarray`
+        likeliness of a particle to be a gamma
+    true_energy: `numpy.ndarray`
+        particles true energy
+    energy_bins: `astropy.Quantity`
+    gamma_label: label of gammas in `true_type` array
+    roc_auc_score_opt: see `sklearn.metrics.roc_auc_score` options
+
+    Returns
+    -------
+    energy_bins, auc_scores: `numpy.ndarray, numpy.ndarray`
+    """
+    energy_bins = np.logspace(-2, 2, 10) * u.TeV if energy_bins is None else energy_bins
+
+    binarized_label = (true_type == gamma_label).astype(int)
+
+    auc_scores = []
+    for i in range(len(energy_bins) - 1):
+        gamma_mask = (true_type == gamma_label) & (true_energy >= energy_bins[i]) & (true_energy < energy_bins[i + 1])
+        cosmic_mask = (true_type != gamma_label)
+        mask = gamma_mask | cosmic_mask
+
+        if np.count_nonzero(mask) > 0:
+            auc_score = metrics.roc_auc_score(binarized_label[mask], gammaness[mask], **roc_auc_score_opt)
+            if auc_score < 0.5:
+                auc_score = 1 - auc_score
+            auc_scores.append(auc_score)
+        else:
+            auc_scores.append(np.nan)
+
+    return energy_bins, np.array(auc_scores)

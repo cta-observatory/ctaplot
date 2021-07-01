@@ -345,3 +345,13 @@ def test_gammaness_threshold_efficiency():
     efficiency = np.random.rand()
     threshold = ana.gammaness_threshold_efficiency(gammaness, efficiency)
     np.testing.assert_almost_equal(efficiency, 1-threshold, decimal=3)
+
+
+def test_roc_auc_per_energy():
+    true_type = np.array([0, 1, 1, 0, 0, 1, 0, 1])
+    gammaness = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+    true_energy = np.array([0.1, 1, 1, 1, 10, 10, 10, 10]) * u.TeV
+    energy_bins = np.array([0.05, 0.5, 5, 50]) * u.TeV
+    b, r = ana.roc_auc_per_energy(true_type, gammaness, true_energy, energy_bins)
+    np.testing.assert_array_equal(r, [0.75, 0.75, 0.75])
+    np.testing.assert_array_equal(b, energy_bins)
