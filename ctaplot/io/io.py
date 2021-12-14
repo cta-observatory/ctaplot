@@ -43,16 +43,19 @@ def read_lst_dl2_data(filename, key='dl2/event/telescope/parameters/LST_LSTCam')
 
     data = data.rename(columns={
         "true_alt": "mc_altitude",
+        "mc_alt": "mc_altitude",
         "true_az": "mc_azimuth",
+        "mc_az": "mc_azimuth",
         "reco_alt": "reco_altitude",
         "reco_az": "reco_azimuth",
         "gammaness": "reco_gammaness",
+        "mc_type": "mc_particle",
     })
 
-    if data['true_energy'].min() > 0.1 and data['true_energy'].max() < 10:
+    if data['mc_energy'].min() > 0.1 and data['mc_energy'].max() < 10:
         # true_energy is probably in log(GeV)
-        data['true_energy'] = 10**(data['true_energy'] - 3)
-        data['true_energy'] = 10**(data['true_energy'] - 3)
+        data['mc_energy'] = 10**(data['mc_energy'] - 3)
+        data['mc_energy'] = 10**(data['mc_energy'] - 3)
 
     return data
 
