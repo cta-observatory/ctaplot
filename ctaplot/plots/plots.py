@@ -66,6 +66,7 @@ __all__ = ['plot_resolution',
            'plot_gamma_rate_magic',
            'plot_gammaness_threshold_efficiency',
            'plot_precision_recall',
+           'plot_roc_auc_per_energy',
            ]
 
 
@@ -2151,3 +2152,35 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, t
 
     return pr_display
 
+
+def plot_roc_auc_per_energy(energy_bins, auc_scores, ax=None, **kwargs):
+    """
+    Plot AUC scores as a function of the energy.
+    These can be computed thanks to `ctaplot.ana.auc_per_energy`
+
+    Parameters
+    ----------
+    energy_bins: `numpy.ndarray`
+    auc_scores: `numpy.ndarray`
+    ax: `matplotlib.pyplot.axes` or None
+    kwargs: options for `matplotlib.pyplot.errorbar`
+
+    Returns
+    -------
+    `matplotlib.pyplot.axes`
+    """
+    ax = plt.gca() if ax is None else ax
+
+    energy_means = np.sqrt(energy_bins[:-1] * energy_bins[1:])
+    xerr = (energy_means - energy_bins[:-1], energy_bins[1:] - energy_means)
+
+
+    with quantity_support():
+        ax.errorbar(energy_means, auc_scores, xerr=xerr, **kwargs)
+
+    ax.set_xscale('log')
+    ax.set_xlabel(f'Gammas true energy {energy_bins.unit}')
+    ax.set_ylabel('AUC')
+    ax.grid(True, which='both')
+
+    return ax
