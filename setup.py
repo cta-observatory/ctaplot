@@ -38,6 +38,8 @@ setup(
         'jupyter',
         'ipywidgets',
         'pyyaml',
+        'ipympl',
+        'tqdm',
     ],
     tests_require=['pytest'],
     classifiers=[
