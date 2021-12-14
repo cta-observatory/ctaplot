@@ -13,6 +13,7 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve
 from sklearn.multiclass import LabelBinarizer
 from astropy.table import Table
 import astropy.units as u
+from tqdm.auto import tqdm
 from .. import plots
 from .. import ana
 from ..io.dataset import get
@@ -87,7 +88,7 @@ def load_data_from_h5(experiment, experiments_directory):
 
     result_files = find_data_files(experiment, experiments_directory)
     result_data = []
-    for r_file in result_files:
+    for r_file in tqdm(result_files):
         try:
             data = pd.read_hdf(r_file, key='data')
         except KeyError:
