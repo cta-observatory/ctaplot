@@ -16,3 +16,5 @@ dependencies:
   - pytest
   - scikit-learn
   - scipy
+  - ipympl
+  - tqdm
