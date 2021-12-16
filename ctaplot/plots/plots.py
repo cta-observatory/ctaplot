@@ -1085,13 +1085,14 @@ def plot_impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energ
 
         if 'fmt' not in kwargs:
             kwargs['fmt'] = 'o'
+
+        with quantity_support():
+            plot_resolution(e_bin, res, ax=ax, **kwargs)
+
         ax.set_ylabel(f'Impact Resolution [{res.unit.to_string("latex")}]')
         ax.set_xlabel(f'Energy [{energy_center.unit.to_string("latex")}]')
         ax.set_xscale('log')
         ax.set_title('Impact resolution')
-
-        with quantity_support():
-            plot_resolution(e_bin, res, ax=ax, **kwargs)
 
         ax.grid(True, which='both')
     finally:
@@ -1394,6 +1395,9 @@ def plot_impact_parameter_resolution_per_bin(x, true_x, reco_x, true_y, reco_y, 
     bin, res = ana.distance_per_bin(x, true_x, reco_x, true_y, reco_y)
     with quantity_support():
         ax = plot_resolution(bin, res, bins=bins, ax=ax, **kwargs)
+
+    ax.set_ylabel(f'Impact Resolution [{res.unit.to_string("latex")}]')
+    ax.set_title('Impact resolution')
 
     return ax
 
