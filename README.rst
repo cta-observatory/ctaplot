@@ -86,7 +86,7 @@ Imaging Atmospheric Cherenkov Telescopes (IACTs).
 Deep learning is a lot about bookkeeping and trials and errors. GammaBoard ease this bookkeeping and allows quick
 comparison of the reconstruction performances of your machine learning experiments.
 
-It is a working prototype used in CTA, especially by the [GammaLearn](https://gitlab.lapp.in2p3.fr/GammaLearn/) project.
+It is a working prototype used especially by the `GammaLearn <https://purl.org/gammalearn>`_ project.
 
 
 Run GammaBoard
