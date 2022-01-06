@@ -222,19 +222,18 @@ class cta_requirement:
         -------
         `numpy.ndarray`, `numpy.ndarray`
         """
-        if observation_time == 50 * u.h:
-            if self.site in _south_site_names:
-                energy, effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
-                                                    unpack=True)
-            elif self.site in _north_site_names:
-                energy, effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
-                                                    unpack=True)
-            else:
-                raise ValueError(
-                    f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
-        else:
+        if observation_time != 50 * u.h:
             raise ValueError(f"no effective area for an observation time of {observation_time}")
 
+        if self.site in _south_site_names:
+            energy, effective_area = np.loadtxt(ds.get('cta_requirements_South-30m-EffectiveArea.dat'),
+                                                unpack=True)
+        elif self.site in _north_site_names:
+            energy, effective_area = np.loadtxt(ds.get('cta_requirements_North-30m-EffectiveArea.dat'),
+                                                unpack=True)
+        else:
+            raise ValueError(
+                f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
         self.energy = energy * u.TeV
         self.effective_area = effective_area * u.m
         return self.energy, self.effective_area
@@ -264,16 +263,15 @@ class cta_requirement:
 
     @u.quantity_input(observation_time=u.h)
     def get_sensitivity(self, observation_time=50 * u.h):
-        if observation_time == 50 * u.h:
-            if self.site in _south_site_names:
-                energy, sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
-            elif self.site in _north_site_names:
-                energy, sensitivity = np.loadtxt(ds.get('cta_requirements_North-50h.dat'), unpack=True)
-            else:
-                raise ValueError(
-                    f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
-        else:
+        if observation_time != 50 * u.h:
             raise ValueError(f"no sensitivity for an observation time of {observation_time}")
+        if self.site in _south_site_names:
+            energy, sensitivity = np.loadtxt(ds.get('cta_requirements_South-50h.dat'), unpack=True)
+        elif self.site in _north_site_names:
+            energy, sensitivity = np.loadtxt(ds.get('cta_requirements_North-50h.dat'), unpack=True)
+        else:
+            raise ValueError(
+                f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
         self.energy = energy * u.TeV
         self.sensitivity = sensitivity * u.erg / (u.cm ** 2 * u.s)
         return self.energy, self.sensitivity
@@ -933,13 +931,12 @@ def _percentile(x, percentile=68.27):
     -------
     float
     """
-    if len(x) == 0:
-        if isinstance(x, u.Quantity):
-            return 0 * x.unit
-        else:
-            return 0
-    else:
+    if len(x) != 0:
         return np.percentile(x, percentile)
+    if isinstance(x, u.Quantity):
+        return 0 * x.unit
+    else:
+        return 0
 
 
 @u.quantity_input(alt1=u.rad, az1=u.rad, alt2=u.rad, az2=u.rad)
@@ -966,9 +963,7 @@ def angular_separation_altaz(alt1, az1, alt2, az2):
     cosdelta[cosdelta > 1] = 1.
     cosdelta[cosdelta < -1] = -1.
 
-    ang_sep = np.arccos(cosdelta) * u.rad
-
-    return ang_sep
+    return np.arccos(cosdelta) * u.rad
 
 
 def logbin_mean(x_bin):

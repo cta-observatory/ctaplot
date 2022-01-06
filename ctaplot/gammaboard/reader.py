@@ -7,8 +7,7 @@ def read_params(filename):
     readers =  [LstchainDL2Reader, GammaLearnv01DL2Reader]
     for reader in readers:
         try:
-            data = reader(filename).read()
-            return data
+            return reader(filename).read()
         except:
             continue
     raise ValueError(f"Can't read data from {filename}")
