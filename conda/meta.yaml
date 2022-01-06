@@ -1,0 +1,47 @@
+{% set version = "0.5.6" %}
+
+package:
+  name: "ctaplot"
+  version: "{{ version }}"
+
+source:
+  git_rev: v0.5.6
+  git_url: https://github.com/cta-observatory/ctaplot.git
+
+
+requirements:
+  host:
+    - python
+    - setuptools
+  build:
+    - python
+  run:
+    - python=3.8
+    - numpy>1.16
+    - matplotlib>=2.0
+    - scipy>=0.19
+    - astropy
+    - pytables
+    - pandas
+    - scikit-learn
+    - jupyter
+    - ipywidgets
+    - pyyaml
+    - ipympl
+    - tqdm
+
+
+about:
+  home: https://github.com/cta-observatory/ctaplot
+  license: MIT
+  license_familY: MIT
+  license_file: LICENSE
+  summary: "Low-level reconstruction quality-checks metrics computation and vizualisation for
+  Imaging Atmospheric Cherenkov Telescopes such as CTA"
+  description: |
+    dev_url: https://github.com/cta-observatory/ctaplot
+    doc_url: https://ctaplot.readthedocs.io/en/latest/
+
+extra:
+  recipe-maintainers:
+    - vuillaut
