@@ -158,7 +158,7 @@ def test_distance2d_resolution():
     res, err_min, err_max = ana.distance2d_resolution(true_x, reco_x, true_y, reco_y,
                                                       percentile=68.27, confidence_level=0.95, bias_correction=False)
 
-    np.testing.assert_equal(res, 3)
+    np.testing.assert_almost_equal(res, 3)
 
     # with different bias on X and Y:
     reco_x = 5 + 2 * np.cos(t)
