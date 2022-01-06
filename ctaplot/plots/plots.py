@@ -2146,7 +2146,7 @@ def plot_precision_recall(y_true, proba_pred, pos_label=0, sample_weigth=None, t
         pred = (proba_pred > threshold).astype(int)
         neg_label = list(set(y_true))
         neg_label.remove(pos_label)
-        if not len(neg_label) == 1:
+        if len(neg_label) != 1:
             raise ValueError("`y_true` should contain only two labels")
         neg_label = neg_label[0]
         pred_labels = np.where(pred == 1, np.ones_like(pred) * pos_label, np.ones_like(pred) * neg_label)
