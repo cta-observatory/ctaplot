@@ -4,12 +4,27 @@ ctaplot
 
 ctaplot provides low-level reconstruction quality-checks metrics computation and vizualisation for Imaging Atmospheric Cherenkov Telescopes such as CTA
 
+.. image:: https://travis-ci.org/cta-observatory/ctaplot.svg?branch=master
+    :target: https://travis-ci.org/cta-observatory/ctaplot
+    :alt: Travis CI
 
-You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_.     
-Or you can run a simple one here:
+.. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
+   :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+    
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :target: https://opensource.org/licenses/MIT
+   :alt: License: MIT
 
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/cta-observatory/ctaplot/master?filepath=examples%2Fnotebooks%2Fresolution_examples.ipynb
+ :target: https://mybinder.org/v2/gh/cta-observatory/ctaplot/master?filepath=examples%2Fnotebooks
+ 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5833854.svg
+  :target: https://doi.org/10.5281/zenodo.5833854
+
+
+You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_ and run them via mybinder.
+
 
 ----
 
@@ -28,21 +43,6 @@ In cases for which the CTA instrument response functions are used in a research 
 “This research has made use of the CTA instrument response functions provided by the CTA Consortium and Observatory, see http://www.cta-observatory.org/science/cta-performance/ (version prod3b-v2) for more details.”
 
 ----
-
-.. image:: https://travis-ci.org/cta-observatory/ctaplot.svg?branch=master
-    :target: https://travis-ci.org/cta-observatory/ctaplot
-    :alt: Travis CI
-
-.. image:: https://readthedocs.org/projects/ctaplot/badge/?version=latest
-   :target: https://ctaplot.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
-    
-.. image:: https://img.shields.io/badge/license-MIT-blue.svg
-   :target: https://opensource.org/licenses/MIT
-   :alt: License: MIT
-
-.. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/cta-observatory/ctaplot/master?filepath=examples%2Fnotebooks
 
 
 Install
@@ -122,3 +122,8 @@ When an experiment is deselected, it simply is removed from the plots.
 .. image:: /share/gammaboard.gif
    :alt: gammaboard_demo
 
+
+Cite
+====
+
+We would appreciate you cite the version of ctaplot you used using the corresponding Zenodo DOI that cound find here: https://doi.org/10.5281/zenodo.5833854
