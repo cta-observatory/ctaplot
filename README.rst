@@ -20,7 +20,7 @@ ctaplot provides low-level reconstruction quality-checks metrics computation and
  :target: https://mybinder.org/v2/gh/cta-observatory/ctaplot/master?filepath=examples%2Fnotebooks
  
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5833854.svg
-  :target: https://doi.org/10.5281/zenodo.5833854
+  :target: https://doi.org/10.5281/zenodo.5833853
 
 
 You may find examples in the `documentation <https://ctaplot.readthedocs.io/en/latest/>`_ and run them via mybinder.
@@ -126,4 +126,4 @@ When an experiment is deselected, it simply is removed from the plots.
 Cite
 ====
 
-We would appreciate you cite the version of ctaplot you used using the corresponding Zenodo DOI that cound find here: https://doi.org/10.5281/zenodo.5833854
+We would appreciate you cite the version of ctaplot you used using the corresponding Zenodo DOI that cound find here: https://doi.org/10.5281/zenodo.5833853
