@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def read_params(filename):
-    readers =  [LstchainDL2Reader, GammaLearnv01DL2Reader]
+    readers = [LstchainDL2Reader, GammaLearnv01DL2Reader]
     for reader in readers:
         try:
             return reader(filename).read()

@@ -51,13 +51,15 @@ def find_data_files(experiment, experiments_directory):
     return tuple(file_set)
 
 
-def load_data_from_h5(experiment, experiments_directory):
+def load_data_from_h5(experiment, experiments_directory, join_type='exact', metadata_conflicts='silent'):
     """
     Load an hdf5 file containing results from an experiment
 
     Args
         experiment (str): the name of the experiment
         experiments_directory (str): the path to the folder containing the experiment folders
+        join_type (str): 'inner' | 'exact' (default) | 'outer'
+        metadata_conflicts (str): 'silent' (default) | 'warn' | 'error'
 
     Returns
         `pandas.DataFrame`
@@ -68,7 +70,7 @@ def load_data_from_h5(experiment, experiments_directory):
     from astropy.table import vstack
     result_files = find_data_files(experiment, experiments_directory)
     result_data = [read_params(r_file) for r_file in tqdm(result_files)]
-    return vstack(result_data)
+    return vstack(result_data, join_type=join_type, metadata_conflicts=metadata_conflicts)
 
 
 # TODO Find a more suitable naming
@@ -101,47 +103,17 @@ def guess_particle_type_from_file(filename):
     Ever changing data formats...
     Try guessing the simulated particle type from the data format.
 
-    Parameters
-    ----------
-    filename: path, str
+    Args
+        filename (str): path to the file
 
     Returns
-    -------
-    int: particle id
-        if None, no identified particle type
+        particle id (int): if None, no identified particle type
     """
     def get_id_from_array(array):
         if len(set(array)) == 1:
             return set(array)[0]
         else:
             return None
-
-    with tables.open_file(filename) as tab:
-        try:
-            array = tab.root.simulation.event.subarray.shower.col('true_shower_primary_id')
-            return get_id_from_array(array)
-        except:
-            pass
-        try:
-            array = tab.root.dl1.event.telescope.parameters.LST_LSTCam.col('mc_type')
-            return get_id_from_array(array)
-        except:
-            pass
-        try:
-            array = tab.root.dl2.event.telescope.parameters.LST_LSTCam.col('mc_type')
-            return get_id_from_array(array)
-        except:
-            pass
-        try:
-            array = tab.root.data.col('mc_type')
-            return get_id_from_array(array)
-        except:
-            pass
-        try:
-            mc_type = tab.root.simulation._v_attrs['mc_type']
-            return mc_type
-        except:
-            pass
 
     if 'gamma' in filename:
         return GAMMA_ID
@@ -150,7 +122,34 @@ def guess_particle_type_from_file(filename):
     elif 'electron' in filename:
         return ELECTRON_ID
     else:
-        return None
+        with tables.open_file(filename) as tab:
+            try:
+                array = tab.root.simulation.event.subarray.shower.col('true_shower_primary_id')
+                return get_id_from_array(array)
+            except:
+                pass
+            try:
+                array = tab.root.dl1.event.telescope.parameters.LST_LSTCam.col('mc_type')
+                return get_id_from_array(array)
+            except:
+                pass
+            try:
+                array = tab.root.dl2.event.telescope.parameters.LST_LSTCam.col('mc_type')
+                return get_id_from_array(array)
+            except:
+                pass
+            try:
+                array = tab.root.data.col('mc_type')
+                return get_id_from_array(array)
+            except:
+                pass
+            try:
+                mc_type = tab.root.simulation._v_attrs['mc_type']
+                return mc_type
+            except:
+                pass
+
+    return None
 
 
 def load_run_configs(experiment, experiments_directory):
