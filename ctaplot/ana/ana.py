@@ -586,18 +586,21 @@ def energy_resolution_per_energy(true_energy, reco_energy,
 
     Parameters
     ----------
-    true_energy: 1d numpy array of simulated energy
-    reco_energy: 1d numpy array of reconstructed energy
+    true_energy: `astropy.Quantity`
+        1d array of simulated energy
+    reco_energy: `astropy.Quantity`
+        1d array of reconstructed energy
     percentile: float
         between 0 and 100
     confidence_level: float
         between 0 and 1
     bias_correction: bool
-    bins: numpy array
+    bins: int | `astropy.Quantity`
 
     Returns
     -------
-    (e, e_res) : tuple of 1d numpy arrays - true_energy, resolution in true_energy
+    (e, e_res): (`astropy.Quantity, numpy.array)
+        true_energy, resolution in true_energy
     """
     assert len(reco_energy) > 0, "Empty arrays"
 
@@ -634,7 +637,8 @@ def energy_bias(true_energy, reco_energy, bins=None):
 
     Returns
     -------
-    (energy_bins, bias) : tuple of 1d numpy arrays - true_energy, true_energy bias
+    (energy_bins, bias): (`astropy.Quantity, numpy.array)
+        true_energy, true_energy bias
     """
     bias_e = []
 
@@ -692,7 +696,7 @@ def theta2(true_alt, reco_alt, true_az, reco_az, bias_correction=False):
 
     Returns
     -------
-    1d `numpy.ndarray`
+    theta2: `astropy.Quantity` (~deg2)
     """
     assert (len(reco_az) == len(reco_alt))
     assert (len(reco_alt) == len(true_alt))
@@ -717,10 +721,14 @@ def angular_resolution(true_alt, reco_alt, true_az, reco_az,
 
     Parameters
     ----------
-    reco_alt: `astropy.Quantity` - reconstructed altitude angle in radians
-    reco_az: `astropy.Quantity` - reconstructed azimuth angle in radians
-    true_alt: `astropy.Quantity` - true altitude angle in radians
-    true_az: `astropy.Quantity` - true azimuth angle in radians
+    reco_alt: `astropy.Quantity`
+        reconstructed altitude angle in radians
+    reco_az: `astropy.Quantity`
+        reconstructed azimuth angle in radians
+    true_alt: `astropy.Quantity`
+        true altitude angle in radians
+    true_az: `astropy.Quantity`
+        true azimuth angle in radians
     percentile: float - percentile, 68 corresponds to one sigma
     confidence_level: float
 
@@ -766,9 +774,7 @@ def angular_resolution_per_bin(true_alt, reco_alt, true_az, reco_az, x,
 
     Returns
     -------
-    bins, ang_res:
-        bins: 1D `numpy.ndarray`
-        ang_res: 2D `numpy.ndarray`
+    bins, ang_res: (numpy.ndarray, numpy.ndarray)
     """
     _, x_bins = np.histogram(x, bins=bins)
     bin_index = np.digitize(x, x_bins)
@@ -804,7 +810,7 @@ def angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, energy,
 
     Returns
     -------
-    (energy, RES) : (1d numpy array, 1d numpy array) = Energies, Resolution
+    (energy, RES) : (astropy.Quantity, numpy.array)
     """
     if not len(reco_alt) == len(reco_az) == len(energy) > 0:
         raise ValueError("reco_alt, reco_az and true_energy must have the same length")
@@ -1048,7 +1054,7 @@ def impact_resolution_per_energy(true_x, reco_x, true_y, reco_y, true_energy,
 
     Returns
     -------
-    (true_energy, resolution) : (1d numpy array, 1d numpy array)
+    (true_energy, resolution) : (`astropy.Quantity`, 1d numpy array)
     """
     assert len(reco_x) == len(true_energy)
     assert len(true_energy) > 0, "Empty arrays"
