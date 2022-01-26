@@ -1097,8 +1097,9 @@ def percentile_confidence_interval(x, percentile=68, confidence_level=0.95):
     if len(x) == 0:
         return 0, 0
     q = percentile / 100.
-    j = np.max([0, np.int(len(x) * q - z * np.sqrt(len(x) * q * (1 - q)))])
-    k = np.min([np.int(len(x) * q + z * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
+
+    j = np.max([0, int(len(x) * q - z * np.sqrt(len(x) * q * (1 - q)))])
+    k = np.min([int(len(x) * q + z * np.sqrt(len(x) * q * (1 - q))), len(x) - 1])
     return sorted_x[j], sorted_x[k]
 
 
