@@ -22,7 +22,7 @@ Modules
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: ctaplot.io.io
+.. automodule:: ctaplot.io
     :members:
     :undoc-members:
     :show-inheritance:
