@@ -51,7 +51,6 @@ def set_style(style='notebook'):
     style: str
         'notebook', 'slides' or 'paper'
     """
-    mpl.rcParams.update(mpl.rcParamsDefault)
 
     style_path = get(f'ctaplot-{style}')
     mpl.pyplot.style.use(['seaborn-deep', style_path])

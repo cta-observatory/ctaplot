@@ -1,11 +1,6 @@
 #### MATPLOTLIBRC FORMAT
 
 
-## figure ##
-
-figure.dpi : 200
-
-
 ## font ##
 
 text.usetex : False
