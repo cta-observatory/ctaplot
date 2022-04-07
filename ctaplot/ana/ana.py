@@ -64,8 +64,8 @@ class irf_cta:
         self.energy = logbin_mean(self.energy_bins)
 
         # Area of CTA sites in meters
-        self.ParanalArea_prod3 = 19.63e6 * u.m ** 2
-        self.LaPalmaArea_prod3 = 11341149 * u.m ** 2  # 6.61e6
+        self.ParanalArea_prod3 = 19.63e6 * u.m**2
+        self.LaPalmaArea_prod3 = 11341149 * u.m**2  # 6.61e6
 
     @u.quantity_input(energy_bins=u.TeV)
     def set_ebin(self, energy_bins):
@@ -78,7 +78,7 @@ class cta_performance:
         self.site = site
         self.energy = np.empty(0) * u.TeV
         self.energy_bins = np.empty(0) * u.TeV
-        self.effective_area = np.empty(0) * u.m
+        self.effective_area = np.empty(0) * u.m**2
         self.angular_resolution = np.empty(0) * u.deg
         self.energy_resolution = np.empty(0)
         self.sensitivity = np.empty(0) * u.erg / (u.cm ** 2 * u.s)
@@ -103,13 +103,13 @@ class cta_performance:
                     ds.get('CTA-Performance-prod3b-v2-South-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
-                self.effective_area = effective_area * u.m
+                self.effective_area = effective_area * u.m**2
             elif observation_time == 0.5 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
-                self.effective_area = effective_area * u.m
+                self.effective_area = effective_area * u.m**2
             else:
                 raise ValueError("no effective area for this observation time")
 
@@ -119,13 +119,13 @@ class cta_performance:
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-50h-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
-                self.effective_area = effective_area * u.m
+                self.effective_area = effective_area * u.m**2
             elif observation_time == 0.5 * u.h:
                 energy, effective_area = np.loadtxt(
                     ds.get('CTA-Performance-prod3b-v2-North-20deg-30m-EffArea.txt'),
                     skiprows=11, unpack=True)
                 self.energy = energy * u.TeV
-                self.effective_area = effective_area * u.m
+                self.effective_area = effective_area * u.m**2
             else:
                 raise ValueError("no effective area for this observation time")
 
@@ -203,7 +203,7 @@ class cta_requirement:
     def __init__(self, site):
         self.site = site
         self.energy = np.empty(0) * u.TeV
-        self.effective_area = np.empty(0) * u.m
+        self.effective_area = np.empty(0) * u.m**2
         self.angular_resolution = np.empty(0) * u.deg
         self.energy_resolution = np.empty(0)
         self.sensitivity = np.empty(0) * u.erg / (u.cm ** 2 * u.s)
@@ -235,7 +235,7 @@ class cta_requirement:
             raise ValueError(
                 f'incorrect site specified, accepted values are {_north_site_names} or {_south_site_names}')
         self.energy = energy * u.TeV
-        self.effective_area = effective_area * u.m
+        self.effective_area = effective_area * u.m**2
         return self.energy, self.effective_area
 
     def get_angular_resolution(self):
