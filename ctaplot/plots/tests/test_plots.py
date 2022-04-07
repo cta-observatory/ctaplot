@@ -1,3 +1,4 @@
+import ctaplot
 from ctaplot.plots import plots
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,31 +33,43 @@ def test_plot_energy_resolution():
 def test_plot_energy_resolution_cta_requirement():
     plt.close('all')
     plots.plot_energy_resolution_cta_requirement('north', color='green')
+    plots.plot_energy_resolution(np.random.rand(2)*u.erg, np.random.rand(2)*u.J)
 
 
 def test_plot_energy_resolution_cta_performance():
     plt.close('all')
     plots.plot_energy_resolution_cta_performance('north', color='green')
+    plots.plot_energy_resolution(np.random.rand(2) * u.erg, np.random.rand(2) * u.J)
 
 
 def test_plot_angular_resolution_cta_performance():
     plt.close('all')
     plots.plot_angular_resolution_cta_performance('north', color='green')
+    a = np.random.rand(3) * u.rad
+    e = np.random.rand(3) * u.erg
+    plots.plot_angular_resolution_per_energy(a, a, a, a, e)
 
 
 def test_plot_angular_resolution_cta_requirement():
     plt.close('all')
     plots.plot_angular_resolution_cta_requirement('north', color='green')
+    a = np.random.rand(3) * u.rad
+    e = np.random.rand(3) * u.erg
+    plots.plot_angular_resolution_per_energy(a, a, a, a, e)
 
 
 def test_plot_effective_area_cta_performance():
     plt.close('all')
     plots.plot_effective_area_cta_performance('north', color='green')
+    e = np.random.rand(3)*u.erg
+    ctaplot.plot_effective_area_per_energy(e, e, 10*u.m**2)
 
 
 def test_plot_effective_area_cta_requirement():
     plt.close('all')
     plots.plot_effective_area_cta_requirement('north', color='green')
+    e = np.random.rand(3) * u.erg
+    ctaplot.plot_effective_area_per_energy(e, e, 10 * u.m ** 2)
 
 
 def test_plot_sensitivity_cta_performance():
