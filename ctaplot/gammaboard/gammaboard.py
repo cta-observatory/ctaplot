@@ -177,7 +177,7 @@ def load_run_configs(experiment, experiments_directory):
                     num_showers += row['num_showers'] * row['shower_reuse']
                 r_config['num_showers'] = num_showers
                 for col in run_config.colnames:
-                    if col not in ['num_showers', 'detector_prog_start', 'shower_prog_start']:
+                    if col not in ['num_showers', 'detector_prog_start', 'shower_prog_start', 'obs_id']:
                         try:
                             assert len(np.unique(run_config[:][col])) == (1 if col != 'run_array_direction' else 2)
                         except AssertionError:
