@@ -39,7 +39,6 @@ author = 'Thomas Vuillaume, Mikael Jacquemont'
 # The short X.Y version
 version = get_property('__version__', '../ctaplot')
 
-source_encoding = 'ascii'
 
 # -- General configuration ---------------------------------------------------
 
