@@ -361,6 +361,7 @@ class Experiment(object):
                                                                        ax=ax,
                                                                        label=self.name + '_reco',
                                                                        color=self.color,
+                                                                       marker='^'
                                                                        )
 
     def update_angular_resolution_reco(self, ax):
@@ -388,6 +389,7 @@ class Experiment(object):
                                                            ax=ax,
                                                            label=self.name + '_reco',
                                                            color=self.color,
+                                                           marker='^'
                                                            )
 
     def update_energy_resolution_reco(self, ax):
@@ -425,6 +427,7 @@ class Experiment(object):
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
+                                                                      marker='^'
                                                                       )
 
     def update_impact_resolution_reco(self, ax):
