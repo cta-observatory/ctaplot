@@ -409,11 +409,11 @@ def relative_scaling(true, reco, method='s0'):
     There are different ways to calculate this scaling factor.
     The easiest and most spread one is simply `np.abs(true)`. However this is possible only when `true != 0`.
     Possible methods:
-        - None or 's0': scale = 1
-        - 's1': `scale = np.abs(true)`
-        - 's2': `scale = np.abs(reco)`
-        - 's3': `scale = (np.abs(true) + np.abs(reco))/2.`
-        - 's4': `scale = np.max([np.abs(reco), np.abs(true)], axis=0)`
+    - None or 's0': scale = 1
+    - 's1': `scale = np.abs(true)`
+    - 's2': `scale = np.abs(reco)`
+    - 's3': `scale = (np.abs(true) + np.abs(reco))/2.`
+    - 's4': `scale = np.max([np.abs(reco), np.abs(true)], axis=0)`
 
     This method is not exposed but kept for tests and future reference.
     The `s1` method is used in all `ctaplot` functions.
@@ -444,7 +444,7 @@ def resolution(true, reco,
     """
     Compute the resolution of reco as the Qth (68.27 as standard = 1 sigma) containment radius of
     `(true-reco)/relative_scaling` with the lower and upper confidence limits defined the values inside
-     the error_percentile
+    the error_percentile
 
     Parameters
     ----------
@@ -555,7 +555,7 @@ def resolution_per_energy(true, reco, true_energy, percentile=68.27, confidence_
 def energy_resolution(true_energy, reco_energy, percentile=68.27, confidence_level=0.95, bias_correction=False):
     """
     Compute the true_energy resolution of true_energy as the percentile (68 as standard) containment radius of
-    `true_energy-true_energy)/true_energy
+    `true_energy-true_energy)/true_energy`
     with the lower and upper confidence limits defined by the given confidence level
 
     Parameters
@@ -582,7 +582,7 @@ def energy_resolution_per_energy(true_energy, reco_energy,
     """
     The true_energy resolution ΔE / energy is obtained from the distribution of (ER – ET) / ET, where R and T refer
     to the reconstructed and true energy of gamma-ray events.
-     ΔE/energy is the half-width of the interval around 0 which contains given percentile of the distribution.
+    ΔE/energy is the half-width of the interval around 0 which contains given percentile of the distribution.
 
     Parameters
     ----------
@@ -599,7 +599,7 @@ def energy_resolution_per_energy(true_energy, reco_energy,
 
     Returns
     -------
-    (e, e_res): (`astropy.Quantity, numpy.array)
+    (e, e_res): (astropy.Quantity, numpy.array)
         true_energy, resolution in true_energy
     """
     assert len(reco_energy) > 0, "Empty arrays"
@@ -632,12 +632,12 @@ def energy_bias(true_energy, reco_energy, bins=None):
         simulated energies
     reco_energy: `astropy.Quantity` (1d array)
         reconstructed energies
-    bins:`astropy.Quantity` (1d array)
+    bins: astropy.Quantity (1d array)
         energy bins - if None, standard CTA binning is used
 
     Returns
     -------
-    (energy_bins, bias): (`astropy.Quantity, numpy.array)
+    (energy_bins, bias): (astropy.Quantity, numpy.array)
         true_energy, true_energy bias
     """
     bias_e = []
