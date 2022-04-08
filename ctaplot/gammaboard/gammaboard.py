@@ -416,11 +416,11 @@ class Experiment(object):
 
     def plot_impact_resolution_reco(self, ax=None):
         if self.get_loaded() and self.reco_gamma_data is not None:
-            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.gamma_data['true_core_x'].quantity,
-                                                                      self.gamma_data['reco_core_x'].quantity,
-                                                                      self.gamma_data['true_core_y'].quantity,
-                                                                      self.gamma_data['reco_core_y'].quantity,
-                                                                      self.gamma_data['true_energy'].quantity,
+            self.ax_imp_res = plots.plot_impact_resolution_per_energy(self.reco_gamma_data['true_core_x'].quantity,
+                                                                      self.reco_gamma_data['reco_core_x'].quantity,
+                                                                      self.reco_gamma_data['true_core_y'].quantity,
+                                                                      self.reco_gamma_data['reco_core_y'].quantity,
+                                                                      self.reco_gamma_data['true_energy'].quantity,
                                                                       bias_correction=self.bias_correction,
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
