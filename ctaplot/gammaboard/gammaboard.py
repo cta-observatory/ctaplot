@@ -98,13 +98,13 @@ def load_trig_events(experiment, experiments_directory):
     return energies
 
 
-def guess_particle_type_from_file(filename):
+def guess_particle_type_from_file(file_path):
     """
     Ever changing data formats...
     Try guessing the simulated particle type from the data format.
 
     Args
-        filename (str): path to the file
+        file_path (str): path to the file
 
     Returns
         particle id (int): if None, no identified particle type
@@ -115,6 +115,8 @@ def guess_particle_type_from_file(filename):
         else:
             return None
 
+    filename = os.path.basename(file_path)
+
     if 'gamma' in filename:
         return GAMMA_ID
     elif 'proton' in filename:
@@ -122,7 +124,7 @@ def guess_particle_type_from_file(filename):
     elif 'electron' in filename:
         return ELECTRON_ID
     else:
-        with tables.open_file(filename) as tab:
+        with tables.open_file(file_path) as tab:
             try:
                 array = tab.root.simulation.event.subarray.shower.col('true_shower_primary_id')
                 return get_id_from_array(array)
