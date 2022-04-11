@@ -80,19 +80,22 @@ def load_trig_events(experiment, experiments_directory):
     result_files = find_data_files(experiment, experiments_directory)
     trig_energies = []
     for file in result_files:
-        try:
-            result_file = tables.open_file(file)
-        except Exception as e:
-            print('Could not open data file {}'.format(file))
-            print(e)
-        else:
+        if guess_particle_type_from_file(file) == GAMMA_ID:
             try:
-                if guess_particle_type_from_file(file) == GAMMA_ID:
-                    result_file.close()
+                with tables.open_file(file) as f:
+                    dl1_params = f.root.dl1.event.telescope.parameters.LST_LSTCam[:]
+                    for obs_id in np.unique(dl1_params['obs_id']):
+                        mask = dl1_params['obs_id'] == obs_id
+                        dl1_filtered = dl1_params[mask]
+                        _, indices = np.unique(dl1_filtered['event_id'],
+                                               return_index=True)
+                        trig_energies.append(pd.DataFrame({'mc_trig_energies': dl1_filtered['mc_energy'][indices]}))
+            except tables.NoSuchNodeError:
+                try:
                     trig_energies.append(pd.read_hdf(file, key='triggered_events'))
-            except:
-                print("Cannot load the number of triggered events for experiment {} file".format(experiment))
-                return None
+                except KeyError as e:
+                    print("Cannot load the number of triggered events for experiment {} file".format(experiment))
+                    return None
     energies = Table.from_pandas(pd.concat(trig_energies))
     energies['mc_trig_energies'] *= u.TeV
     return energies
