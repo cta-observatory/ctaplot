@@ -348,6 +348,7 @@ class Experiment(object):
                                                                        label=self.name,
                                                                        color=self.color)
 
+            self.ax_ang_res.legend()
             self.set_plotted(True)
 
     def plot_angular_resolution_reco(self, ax=None):
@@ -362,6 +363,7 @@ class Experiment(object):
                                                                        label=self.name + '_reco',
                                                                        color=self.color,
                                                                        )
+            self.ax_ang_res.legend()
 
     def update_angular_resolution_reco(self, ax):
         for c in ax.containers:
@@ -378,6 +380,7 @@ class Experiment(object):
                                                            ax=ax,
                                                            label=self.name,
                                                            color=self.color)
+            self.ax_ene_res.legend()
             self.set_plotted(True)
 
     def plot_energy_resolution_reco(self, ax=None):
@@ -389,6 +392,7 @@ class Experiment(object):
                                                            label=self.name + '_reco',
                                                            color=self.color,
                                                            )
+            self.ax_ene_res.legend()
 
     def update_energy_resolution_reco(self, ax):
         for c in ax.containers:
@@ -412,6 +416,7 @@ class Experiment(object):
             self.ax_imp_res.set_xscale('log')
             self.ax_imp_res.set_xlabel('Energy [TeV]')
             self.ax_imp_res.set_ylabel('Impact resolution [km]')
+            self.ax_imp_res.legend()
             self.set_plotted(True)
 
     def plot_impact_resolution_reco(self, ax=None):
@@ -426,6 +431,7 @@ class Experiment(object):
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
                                                                       )
+            self.ax_imp_res.legend()
 
     def update_impact_resolution_reco(self, ax):
         for c in ax.containers:
