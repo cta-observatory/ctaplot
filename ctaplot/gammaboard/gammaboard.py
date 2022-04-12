@@ -362,6 +362,7 @@ class Experiment(object):
                                                                        ax=ax,
                                                                        label=self.name + '_reco',
                                                                        color=self.color,
+                                                                       marker='^'
                                                                        )
             self.ax_ang_res.legend()
 
@@ -391,6 +392,7 @@ class Experiment(object):
                                                            ax=ax,
                                                            label=self.name + '_reco',
                                                            color=self.color,
+                                                           marker='^'
                                                            )
             self.ax_ene_res.legend()
 
@@ -430,6 +432,7 @@ class Experiment(object):
                                                                       ax=ax,
                                                                       label=self.name + '_reco',
                                                                       color=self.color,
+                                                                      marker='^'
                                                                       )
             self.ax_imp_res.legend()
 
