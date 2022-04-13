@@ -11,7 +11,7 @@ from collections import OrderedDict
 from ipywidgets import HBox, Tab, Output, VBox, FloatSlider, Layout, Button, Dropdown, Text, Label
 from sklearn.metrics import roc_auc_score, precision_recall_curve
 from sklearn.multiclass import LabelBinarizer
-from astropy.table import Table
+from astropy.table import Table, vstack
 import astropy.units as u
 from tqdm.auto import tqdm
 from .. import plots
@@ -82,21 +82,21 @@ def load_trig_events(experiment, experiments_directory):
     for file in result_files:
         if guess_particle_type_from_file(file) == GAMMA_ID:
             try:
-                with tables.open_file(file) as f:
-                    dl1_params = f.root.dl1.event.telescope.parameters.LST_LSTCam[:]
-                    for obs_id in np.unique(dl1_params['obs_id']):
-                        mask = dl1_params['obs_id'] == obs_id
-                        dl1_filtered = dl1_params[mask]
-                        _, indices = np.unique(dl1_filtered['event_id'],
-                                               return_index=True)
-                        trig_energies.append(pd.DataFrame({'mc_trig_energies': dl1_filtered['mc_energy'][indices]}))
-            except tables.NoSuchNodeError:
+                dl1_params = Table.read(file, path='dl1/event/telescope/parameters/LST_LSTCam')
+                for obs_id in np.unique(dl1_params['obs_id']):
+                    mask = dl1_params['obs_id'] == obs_id
+                    dl1_filtered = dl1_params[mask]
+                    _, indices = np.unique(dl1_filtered['event_id'],
+                                           return_index=True)
+                    trig_energies.append(dl1_filtered['mc_energy'][indices])
+            except OSError:
                 try:
-                    trig_energies.append(pd.read_hdf(file, key='triggered_events'))
+                    trig_energies.append(Table.from_pandas(pd.read_hdf(file, key='triggered_events')))
                 except KeyError as e:
                     print("Cannot load the number of triggered events for experiment {} file".format(experiment))
                     return None
-    energies = Table.from_pandas(pd.concat(trig_energies))
+    energies = vstack(trig_energies)
+    energies.rename_column('mc_energy', 'mc_trig_energies')
     energies['mc_trig_energies'] *= u.TeV
     return energies
 
