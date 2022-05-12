@@ -316,8 +316,8 @@ class Experiment(object):
     def update_gammaness_cut(self, new_cut):
 
         self.gammaness_cut = new_cut
-        self.reco_gamma_data = self.gamma_data[self.gamma_data['reco_particle'] >= self.gammaness_cut]
-        noise_mask = (self.data['true_particle'] != GAMMA_ID) & (self.data['reco_particle'] >= self.gammaness_cut)
+        self.reco_gamma_data = self.gamma_data[self.gamma_data['reco_gammaness'] >= self.gammaness_cut]
+        noise_mask = (self.data['true_particle'] != GAMMA_ID) & (self.data['reco_gammaness'] >= self.gammaness_cut)
         self.noise_reco_gamma = self.data[noise_mask]
 
     def get_data(self):
