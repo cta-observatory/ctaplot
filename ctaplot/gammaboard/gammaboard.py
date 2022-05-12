@@ -83,12 +83,8 @@ def load_trig_events(experiment, experiments_directory):
         if guess_particle_type_from_file(file) == GAMMA_ID:
             try:
                 dl1_params = Table.read(file, path='dl1/event/telescope/parameters/LST_LSTCam')
-                for obs_id in np.unique(dl1_params['obs_id']):
-                    mask = dl1_params['obs_id'] == obs_id
-                    dl1_filtered = dl1_params[mask]
-                    _, indices = np.unique(dl1_filtered['event_id'],
-                                           return_index=True)
-                    trig_energies.append(dl1_filtered['mc_energy'][indices])
+                _, indices = np.unique(dl1_params[['obs_id', 'event_id']], axis=0, return_index=True)
+                trig_energies = dl1_params['mc_energy'][indices]
             except OSError:
                 try:
                     trig_energies.append(Table.from_pandas(pd.read_hdf(file, key='triggered_events')))
