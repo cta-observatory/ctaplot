@@ -18,3 +18,4 @@ dependencies:
   - scipy
   - ipympl
   - tqdm
+  - h5py
