@@ -618,7 +618,7 @@ def energy_resolution_per_energy(true_energy, reco_energy,
                                        confidence_level=confidence_level,
                                        bias_correction=bias_correction))
 
-    return irf.energy_bins, np.array(res_e)
+    return bins, np.array(res_e)
 
 
 @u.quantity_input(true_energy=u.TeV, reco_energy=u.TeV, bins=u.TeV)
@@ -904,7 +904,7 @@ def effective_area_per_energy(true_energy, reco_energy, simu_area, bins=None):
     count_S, bin_S = np.histogram(true_energy, bins=bins)
 
     np.seterr(divide='ignore', invalid='ignore')
-    return irf.energy_bins, np.nan_to_num(simu_area * count_R / count_S)
+    return bins, np.nan_to_num(simu_area * count_R / count_S)
 
 
 @u.quantity_input(true_x=u.m, reco_x=u.m, true_y=u.m, reco_y=u.m)
