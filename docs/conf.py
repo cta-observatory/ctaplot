@@ -54,6 +54,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
