@@ -47,7 +47,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Astronomy',
     ],
-    data_files=[('ctaplot', dataset)],
+    data_files=[('ctaplot', dataset), ],
+    package_data={'': ['license.rst']},
     entry_points={
         'console_scripts': [
             'gammaboard = ctaplot.gammaboard:open_dashboard'
