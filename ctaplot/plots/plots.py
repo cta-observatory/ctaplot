@@ -1515,7 +1515,10 @@ def plot_resolution_difference(bins, reference_resolution, new_resolution, ax=No
 
     ax = plt.gca() if ax is None else ax
     delta_res = new_resolution - reference_resolution
-    delta_res[:, 1:] = 0  # the condidence intervals have no meaning here
+    # delta_res[:, 1:] = 0  # the condidence intervals have no meaning here
+    # the condidence intervals have no meaning here
+    delta_res[:, 1] = delta_res[:, 0]
+    delta_res[:, 2] = delta_res[:, 0]
     with quantity_support():
         plot_resolution(bins, delta_res, ax=ax, **kwargs)
     ax.set_ylabel(r"$\Delta$ res")
