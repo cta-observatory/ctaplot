@@ -114,7 +114,7 @@ def guess_particle_type_from_file(file_path):
     """
     def get_id_from_array(array):
         if len(set(array)) == 1:
-            return set(array)[0]
+            return array[0]
         else:
             return None
 
