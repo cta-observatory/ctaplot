@@ -27,6 +27,7 @@ dataset.append('README.rst')
 setup(
     packages=find_packages(),
     version=get_property('__version__', 'ctaplot'),
+    license_files=("license.rst"),
     install_requires=[
         'numpy>1.16',
         'matplotlib>=2.0',
