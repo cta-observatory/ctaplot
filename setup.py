@@ -27,7 +27,6 @@ dataset.append('README.rst')
 setup(
     packages=find_packages(),
     version=get_property('__version__', 'ctaplot'),
-    license_files=("license.rst"),
     install_requires=[
         'numpy>1.16',
         'matplotlib>=2.0',
@@ -48,7 +47,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Astronomy',
     ],
-    data_files=[('ctaplot', dataset)],
+    data_files=[('ctaplot', dataset), ],
+    package_data={'': ['license.rst']},
     entry_points={
         'console_scripts': [
             'gammaboard = ctaplot.gammaboard:open_dashboard'
