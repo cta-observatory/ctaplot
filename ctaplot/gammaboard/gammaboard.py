@@ -51,14 +51,17 @@ def find_data_files(experiment, experiments_directory):
     return tuple(file_set)
 
 
-def load_data_from_h5(experiment, experiments_directory, join_type='exact', metadata_conflicts='silent'):
+def load_data_from_h5(experiment, experiments_directory, join_type='inner', metadata_conflicts='silent'):
     """
     Load an hdf5 file containing results from an experiment
 
     Args
         experiment (str): the name of the experiment
         experiments_directory (str): the path to the folder containing the experiment folders
-        join_type (str): 'inner' | 'exact' (default) | 'outer'
+        join_type (str): 'inner' (default) | 'exact' | 'outer'
+            'inner': takes the intersection of all data tables
+            'exact': all data tables must have exactly the same columns
+            'outer': takes union of columns and fill missing values
         metadata_conflicts (str): 'silent' (default) | 'warn' | 'error'
 
     Returns
