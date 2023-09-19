@@ -29,7 +29,7 @@ setup(
     version=get_property('__version__', 'ctaplot'),
     install_requires=[
         'numpy>1.16',
-        'matplotlib>=2.0',
+        'matplotlib>=3.6',
         'scipy>=0.19',
         'astropy',
         'tables',

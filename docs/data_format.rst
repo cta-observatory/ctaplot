@@ -45,7 +45,9 @@ Columns names:
 
 
 * `triggered_events` - optional
+
 Single column table containing the list of triggered events energies:
+
 
 Column name:
 ::
@@ -86,22 +88,23 @@ Contains the reconstructed values
 
 Column names: same as the GammaBoard format (see above) OR :
 ::
-    `mc_alt`: float
-    `mc_az`: float
-    `mc_core_distance`: float
-    `mc_core_x`: float
-    `mc_core_y`: float
-    `mc_energy`: float
-    `mc_h_first_int`: float
-    `mc_type`: : int following the simtel convention: 0 for gamma, 1 for electron, 101 for protons
-    `mc_x_max`: float
-    `reco_energy`: float
-    `reco_src_x`: float
-    `reco_src_y`: float
-    `reco_alt`: float
-    `reco_az`: float
-    `reco_type`: int following the simtel convention: 0 for gamma, 1 for electron, 101 for protons
-    `gammaness`: float between 0 and 1
+
+   `mc_alt`: float
+   `mc_az`: float
+   `mc_core_distance`: float
+   `mc_core_x`: float
+   `mc_core_y`: float
+   `mc_energy`: float
+   `mc_h_first_int`: float
+   `mc_type`: : int following the simtel convention: 0 for gamma, 1 for electron, 101 for protons
+   `mc_x_max`: float
+   `reco_energy`: float
+   `reco_src_x`: float
+   `reco_src_y`: float
+   `reco_alt`: float
+   `reco_az`: float
+   `reco_type`: int following the simtel convention: 0 for gamma, 1 for electron, 101 for protons
+   `gammaness`: float between 0 and 1
 
 
 * `simulation/run_config` - mandatory to plot the effective area
@@ -110,14 +113,15 @@ Contains the simulation information from each simulation file used (1 file per l
 
 Column names:
 ::
-    `energy_range_max`
-    `energy_range_min`
-    `max_alt`
-    `max_scatter_range`
-    `min_alt`
-    `num_showers`
-    `shower_reuse`
-    `spectral_index`
+
+   `energy_range_max`
+   `energy_range_min`
+   `max_alt`
+   `max_scatter_range`
+   `min_alt`
+   `num_showers`
+   `shower_reuse`
+   `spectral_index`
 
 
 

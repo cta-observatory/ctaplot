@@ -35,7 +35,7 @@ def context(style='notebook'):
     >>>     plt.plot([1, 2, 4])
     """
     style_path = get(f'ctaplot-{style}')
-    with mpl.style.context(['seaborn-deep', style_path]):
+    with mpl.style.context(['seaborn-v0_8-deep', style_path]):
         if not check_latex():
             mpl.rcParams['text.usetex'] = False
         yield
@@ -53,7 +53,7 @@ def set_style(style='notebook'):
     """
 
     style_path = get(f'ctaplot-{style}')
-    mpl.pyplot.style.use(['seaborn-deep', style_path])
+    mpl.pyplot.style.use(['seaborn-v0_8-deep', style_path])
 
     if not check_latex():
         mpl.rcParams['text.usetex'] = False
