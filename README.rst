@@ -119,7 +119,7 @@ As many experiments results can be overlaid.
 When an experiment is deselected, it simply is removed from the plots.
 
 
-.. image:: ./share/gammaboard.gif
+.. image:: share/gammaboard.gif
    :alt: gammaboard_demo
 
 
