@@ -45,7 +45,9 @@ Columns names:
 
 
 * `triggered_events` - optional
+
 Single column table containing the list of triggered events energies:
+
 
 Column name:
 ::
