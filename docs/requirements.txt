@@ -8,6 +8,6 @@ scikit-learn
 jupyter
 ipywidgets
 recommonmark
-sphinx>=4.2<7
+sphinx==5.3.0
 nbsphinx
 sphinx_rtd_theme
