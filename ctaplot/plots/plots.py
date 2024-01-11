@@ -1129,12 +1129,9 @@ def plot_migration_matrix(x, y, ax=None, colorbar=False, xy_line=False, hist2d_a
     hist2d_args = {} if hist2d_args is None else hist2d_args
     line_args = {} if line_args is None else line_args
 
-    if 'bins_x' not in hist2d_args:
-        hist2d_args['bins'] = 50
-    if 'color' not in line_args:
-        line_args['color'] = 'black'
-    if 'lw' not in line_args:
-        line_args['lw'] = 0.4
+    hist2d_args.setdefault('bins', 50)
+    line_args.setdefault('color', 'black')
+    line_args.setdefault('lw', 0.4)
 
     ax = plt.gca() if ax is None else ax
 
