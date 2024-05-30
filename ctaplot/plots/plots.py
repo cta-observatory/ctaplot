@@ -279,13 +279,13 @@ def plot_impact_point_heatmap(reco_x, reco_y, ax=None, outfile=None, **kwargs):
     outfile: string
         path to the output file. If None, the figure is not saved.
     """
-
+    from matplotlib.cm import get_cmap
     ax = plt.gca() if ax is None else ax
 
     unit = reco_x.unit
 
     kwargs.setdefault('norm', LogNorm())
-    kwargs.setdefault('cmap', plt.cm.get_cmap('PuBu'))
+    kwargs.setdefault('cmap', get_cmap('PuBu'))
     kwargs.setdefault('bins', 50)
     h = ax.hist2d(reco_x.to_value(unit), reco_y.to_value(unit), **kwargs)
     cb = plt.colorbar(h[3], ax=ax)
