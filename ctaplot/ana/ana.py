@@ -1386,7 +1386,7 @@ def roc_auc_per_energy(true_type, gammaness, true_energy, energy_bins=None, gamm
         cosmic_mask = (true_type != gamma_label)
         mask = gamma_mask | cosmic_mask
 
-        if np.count_nonzero(mask) > 0:
+        if np.count_nonzero(gamma_mask) > 0 and np.count_nonzero(cosmic_mask) > 0:  # be sure to have both gamma and cosmic to be able to compute an auc
             auc_score = metrics.roc_auc_score(binarized_label[mask], gammaness[mask], **roc_auc_score_opt)
             if auc_score < 0.5:
                 auc_score = 1 - auc_score
