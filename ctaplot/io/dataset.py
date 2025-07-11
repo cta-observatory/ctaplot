@@ -1,11 +1,8 @@
 import os
 import sys
 import numpy as np
-try:
-    from importlib.resources import files as importlib_files, as_file
-except ImportError:
-    # Fallback for Python < 3.9
-    from importlib_resources import files as importlib_files, as_file
+from importlib.resources import files as importlib_files, as_file
+
 
 __all__ = ['get']
 
