@@ -1,7 +1,11 @@
-import pkg_resources
 import os
 import sys
 import numpy as np
+try:
+    from importlib.resources import files as importlib_files, as_file
+except ImportError:
+    # Fallback for Python < 3.9
+    from importlib_resources import files as importlib_files, as_file
 
 __all__ = ['get']
 
@@ -98,11 +102,18 @@ def get(resource_name):
     try:
         resource_path = find_resource(resource_name)
     except FileNotFoundError:
-        if not pkg_resources.resource_exists(__name__, resource_name):
+        # Check if resource exists using importlib.resources
+        try:
+            resource_ref = importlib_files(__name__) / resource_name
+            if resource_ref.is_file():
+                with as_file(resource_ref) as resource_path:
+                    return str(resource_path)
+            else:
+                raise FileNotFoundError("Couldn't find resource: '{}'"
+                                        .format(resource_name))
+        except (FileNotFoundError, AttributeError):
             raise FileNotFoundError("Couldn't find resource: '{}'"
                                     .format(resource_name))
-        else:
-            resource_path = pkg_resources.resource_filename(__name__, resource_name)
     return resource_path
 
 
@@ -120,8 +131,19 @@ def find_resource(resource_name):
     str - absolute path to the resource
     """
     # If ctaplot is installed via python setup.py develop, data files stay in share
-    share_dir = os.path.join(pkg_resources.resource_filename('ctaplot', ''), '../share/')
-    gammaboard_dir = os.path.join(pkg_resources.resource_filename('ctaplot', ''), 'gammaboard/')
+    try:
+        # Get the ctaplot package directory using importlib.resources
+        ctaplot_ref = importlib_files('ctaplot')
+        with as_file(ctaplot_ref) as ctaplot_path:
+            share_dir = os.path.join(str(ctaplot_path), '../share/')
+            gammaboard_dir = os.path.join(str(ctaplot_path), 'gammaboard/')
+    except (ImportError, FileNotFoundError):
+        # Fallback if importlib.resources doesn't work
+        import ctaplot
+        ctaplot_path = os.path.dirname(ctaplot.__file__)
+        share_dir = os.path.join(ctaplot_path, '../share/')
+        gammaboard_dir = os.path.join(ctaplot_path, 'gammaboard/')
+    
     resources_dirs = [share_dir, gammaboard_dir]
     for res_dir in resources_dirs:
         for root, dirs, files in os.walk(res_dir):
@@ -156,7 +178,7 @@ def load_any_resource(filename):
         try:
             data = np.loadtxt(get(filename), skiprows=sr, unpack=True)
             break
-        except:
+        except Exception:
             sr += 1
 
     return data
