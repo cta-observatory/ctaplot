@@ -19,3 +19,6 @@ dependencies:
   - ipympl
   - tqdm
   - h5py
+  # Optional: LaTeX support for enhanced plot rendering
+  # Note: LaTeX dependencies may need to be installed separately
+  # See README for platform-specific installation instructions

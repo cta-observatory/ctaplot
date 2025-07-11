@@ -51,11 +51,41 @@ Install
 
 Requirements packages:
 
-* python > 3.6
+* python >= 3.9
 * numpy  
 * scipy>=0.19    
-* matplotlib>=2.0
+* matplotlib>=3.6
 * astropy
+
+Optional LaTeX dependencies for enhanced plot rendering:
+
+* A LaTeX distribution (e.g., TeX Live, MiKTeX)
+* dvipng (for PNG output)
+* cm-super (Computer Modern fonts)
+
+**Installation instructions:**
+
+On Ubuntu/Debian:
+
+.. code-block:: bash
+
+   sudo apt-get install texlive-latex-base texlive-fonts-recommended dvipng cm-super
+
+On macOS with Homebrew:
+
+.. code-block:: bash
+
+   brew install --cask mactex
+   # dvipng and cm-super are included with MacTeX
+
+On macOS with MacPorts:
+
+.. code-block:: bash
+
+   sudo port install texlive +full
+
+**Note:** LaTeX dependencies are optional. If not installed, ctaplot will automatically 
+fall back to matplotlib's default text rendering without LaTeX support.
 
 We recommend the use of `anaconda <https://www.anaconda.com>`_
 
