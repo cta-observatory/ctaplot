@@ -1757,7 +1757,7 @@ def plot_roc_curve_gammaness_per_energy(true_type, gammaness, true_energy, gamma
 
     if energy_bins is None:
         irf = ana.irf_cta()
-        energy_bins = irf.energy_bin
+        energy_bins = irf.energy_bins
     elif isinstance(energy_bins, int):
         energy_bins = np.logspace(np.log10(gamma_energy).min(), np.log10(gamma_energy).max(), energy_bins + 1)
 
