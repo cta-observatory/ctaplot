@@ -1,5 +1,5 @@
 import matplotlib as mpl
-from distutils.spawn import find_executable
+from shutil import which
 from contextlib import contextmanager
 import logging
 from ..io.dataset import get
@@ -15,11 +15,11 @@ def check_latex():
     -------
     bool: True if a LaTeX distribution with required packages could be found
     """
-    if not find_executable('latex'):
+    if not which('latex'):
         return False
-    
+
     # Check if dvipng is available (needed for matplotlib LaTeX rendering)
-    if not find_executable('dvipng'):
+    if not which('dvipng'):
         logger.warning("LaTeX found but dvipng is missing. Install dvipng for full LaTeX support.")
         return False
     
