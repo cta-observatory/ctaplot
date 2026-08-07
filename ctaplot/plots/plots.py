@@ -654,15 +654,15 @@ def plot_angular_resolution_per_energy(true_alt, reco_alt, true_az, reco_az, tru
 
     Parameters
     ----------
-    reco_alt: `astropy.Quantity`
-        array of reconstructed altitudes in radians
-    reco_az: `astropy.Quantity`
-        array of reconstructed azimuths in radians
     true_alt: `astropy.Quantity`
-        array of true altitudes in radians
+        array of reconstructed altitudes in radians
+    reco_alt: `astropy.Quantity`
+        array of reconstructed azimuths in radians
     true_az: `astropy.Quantity`
+        array of true altitudes in radians
+    reco_az: `astropy.Quantity`
         array of true azimuths in radians
-    reco_energy: `astropy.Quantity`
+    true_energy: `astropy.Quantity`
         array of energy in TeV
     ax: `matplotlib.pyplot.axes`
     bins: `numpy.ndarray`
